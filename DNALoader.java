@@ -1,5 +1,3 @@
-import java.util.Arrays;
-
 public class DNALoader extends Loader {
     private static final StatusStage[] STAGES = {
         new StatusStage(20, "Extracting genome sequence:"),
@@ -10,7 +8,6 @@ public class DNALoader extends Loader {
     };
 
     private double A = 0; // Axis Rotation X
-    private double B = 0; // Axis Rotation Z
     private double C = 0; // Axis Rotation Y
 
     private final double cameraTilt = Math.PI / 12.0;

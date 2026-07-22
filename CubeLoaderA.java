@@ -1,9 +1,9 @@
 public class CubeLoaderA extends Loader {
     private static final StatusStage[] CUBE_STAGES = {
-        new StatusStage(30, "Mining blocks:"),
-        new StatusStage(60, "Forging gold:"),
-        new StatusStage(90, "Placing ? mark:"),
-        new StatusStage(100, "Power-up Ready!")
+        new StatusStage(30, "Stomping Enemies:"),
+        new StatusStage(60, "Collecting Coins:"),
+        new StatusStage(90, "Grabbing Flagpoles:"),
+        new StatusStage(100, "Power-Up Complete!")
     };
 
     // Shading characters for each of the 6 distinct faces

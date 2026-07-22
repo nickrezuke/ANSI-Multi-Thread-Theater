@@ -21,10 +21,10 @@ public class CubeLoaderB extends Loader {
 
     @Override
     protected void renderGeometry(String[] outputBuffer, double[] zBuffer) {
-        double rX = angle * 0.4; 
-        double rY = angle * 0.7; 
-        double rZ = angle * 0.2; 
-        
+        double rX = angle * 0.4;
+        double rY = angle * 0.7;
+        double rZ = angle * 0.2;
+
         double cosX = Math.cos(rX), sinX = Math.sin(rX);
         double cosY = Math.cos(rY), sinY = Math.sin(rY);
         double cosZ = Math.cos(rZ), sinZ = Math.sin(rZ);
@@ -33,34 +33,70 @@ public class CubeLoaderB extends Loader {
             // ==================== BACK-FACE CULLING ====================
             double nx = 0, ny = 0, nz = 0;
             switch (face) {
-                case 0: nz = -1; break; // Back
-                case 1: nz = 1;  break; // Front
-                case 2: ny = -1; break; // Bottom
-                case 3: ny = 1;  break; // Top
-                case 4: nx = -1; break; // Left
-                case 5: nx = 1;  break; // Right
+                case 0:
+                    nz = -1;
+                    break; // Back
+                case 1:
+                    nz = 1;
+                    break; // Front
+                case 2:
+                    ny = -1;
+                    break; // Bottom
+                case 3:
+                    ny = 1;
+                    break; // Top
+                case 4:
+                    nx = -1;
+                    break; // Left
+                case 5:
+                    nx = 1;
+                    break; // Right
             }
 
             double nz3 = -nx * sinY + (ny * sinX + nz * cosX) * cosY;
             if (nz3 > 0) {
-                continue; 
+                continue;
             }
             // ===========================================================
 
             for (double u = 0; u <= 1.0; u += 0.02) {
                 for (double v = 0; v <= 1.0; v += 0.02) {
-                    
+
                     double uc = 2.0 * u - 1.0;
                     double vc = 2.0 * v - 1.0;
                     double x = 0, y = 0, z = 0;
 
                     switch (face) {
-                        case 0: x = uc; y = vc; z = -1; break;
-                        case 1: x = uc; y = vc; z = 1;  break;
-                        case 2: x = uc; y = -1; z = vc; break; 
-                        case 3: x = uc; y = 1;  z = vc; break; 
-                        case 4: x = -1; y = uc; z = vc; break;
-                        case 5: x = 1;  y = uc; z = vc; break;
+                        case 0:
+                            x = uc;
+                            y = vc;
+                            z = -1;
+                            break;
+                        case 1:
+                            x = uc;
+                            y = vc;
+                            z = 1;
+                            break;
+                        case 2:
+                            x = uc;
+                            y = -1;
+                            z = vc;
+                            break;
+                        case 3:
+                            x = uc;
+                            y = 1;
+                            z = vc;
+                            break;
+                        case 4:
+                            x = -1;
+                            y = uc;
+                            z = vc;
+                            break;
+                        case 5:
+                            x = 1;
+                            y = uc;
+                            z = vc;
+                            break;
                     }
 
                     // --- 3D ROTATION ---
@@ -94,16 +130,32 @@ public class CubeLoaderB extends Loader {
 
                             // Standardized face layout alignment tracking
                             switch (face) {
-                                case 0: texU = u; texV = 1.0 - v; break;
-                                case 1: texU = 1.0 - u; texV = 1.0 - v; break;
-                                case 4: texU = 1.0 - v; texV = 1.0 - u; break;
-                                case 5: texU = v; texV = 1.0 - u; break;
-                                case 2: case 3: texU = u; texV = v; break;
+                                case 0:
+                                    texU = u;
+                                    texV = 1.0 - v;
+                                    break;
+                                case 1:
+                                    texU = 1.0 - u;
+                                    texV = 1.0 - v;
+                                    break;
+                                case 4:
+                                    texU = 1.0 - v;
+                                    texV = 1.0 - u;
+                                    break;
+                                case 5:
+                                    texU = v;
+                                    texV = 1.0 - u;
+                                    break;
+                                case 2:
+                                case 3:
+                                    texU = u;
+                                    texV = v;
+                                    break;
                             }
 
                             int texX = (int) (texU * 16);
                             int texY = (int) (texV * 16);
-                            
+
                             texX = Math.max(0, Math.min(15, texX));
                             texY = Math.max(0, Math.min(15, texY));
 
@@ -116,7 +168,7 @@ public class CubeLoaderB extends Loader {
                 }
             }
         }
-        angle += 0.04; 
+        angle += 0.04;
     }
 
     private VoxelTexel getIconicCubeTexel(int variant, int face, int x, int y) {
@@ -141,21 +193,27 @@ public class CubeLoaderB extends Loader {
             // 1. Central Pink/White Heart Art Matrix
             boolean isHeart = false;
             if (x >= 6 && x <= 9 && y >= 6 && y <= 9) {
-                if (y == 6 && (x == 6 || x == 9)) isHeart = true;
-                if (y == 7 && (x >= 5 && x <= 10)) isHeart = true;
-                if (y == 8 && (x >= 6 && x <= 9)) isHeart = true;
-                if (y == 9 && (x == 7 || x == 8)) isHeart = true;
+                if (y == 6 && (x == 6 || x == 9))
+                    isHeart = true;
+                if (y == 7 && (x >= 5 && x <= 10))
+                    isHeart = true;
+                if (y == 8 && (x >= 6 && x <= 9))
+                    isHeart = true;
+                if (y == 9 && (x == 7 || x == 8))
+                    isHeart = true;
             }
-            if (isHeart) return new VoxelTexel(245, 105, 155, 'O'); // Hot Pink
+            if (isHeart)
+                return new VoxelTexel(245, 105, 155, 'O'); // Hot Pink
 
             // 2. Central Core Circle Background Ring
             boolean isCenterPlaza = (x >= 5 && x <= 10 && y >= 5 && y <= 10);
-            if (isCenterPlaza) return new VoxelTexel(215, 215, 215, '='); // Soft White Ring Base
+            if (isCenterPlaza)
+                return new VoxelTexel(215, 215, 215, '='); // Soft White Ring Base
 
             // 3. Dual-Tone Outer Protective Corner Brackets
             boolean isCornerBezel = (x <= 3 || x >= 12) && (y <= 3 || y >= 12);
             boolean isEdgeBar = (x <= 1 || x >= 14 || y <= 1 || y >= 14);
-            
+
             if (isCornerBezel || isEdgeBar) {
                 return new VoxelTexel(165 - noise * 10, 165 - noise * 10, 170 - noise * 10, '#'); // Light Gray Trim
             }
@@ -172,17 +230,23 @@ public class CubeLoaderB extends Loader {
             // Segment the face index positions into cleanly separated sub-quadrants
             int row = (y < 5) ? 0 : (y < 10) ? 1 : 2;
             int col = (x < 5) ? 0 : (x < 10) ? 1 : 2;
-            
+
             // Deterministic color assignment hash per cell square variant layout
             int colorHash = Math.abs((row * 7 + col * 13 + face * 19)) % 6;
 
             switch (colorHash) {
-                case 0: return new VoxelTexel(235, 30, 30, 'X');    // Radiant Red
-                case 1: return new VoxelTexel(30, 95, 240, 'O');    // Deep Blue
-                case 2: return new VoxelTexel(245, 130, 20, '=');   // Bright Orange
-                case 3: return new VoxelTexel(40, 210, 60, '$');    // Neon Green
-                case 4: return new VoxelTexel(250, 250, 250, ';');  // Pure Ceramic White
-                default: return new VoxelTexel(240, 230, 25, '%');  // Vivid Canary Yellow
+                case 0:
+                    return new VoxelTexel(235, 30, 30, 'X'); // Radiant Red
+                case 1:
+                    return new VoxelTexel(30, 95, 240, 'O'); // Deep Blue
+                case 2:
+                    return new VoxelTexel(245, 130, 20, '='); // Bright Orange
+                case 3:
+                    return new VoxelTexel(40, 210, 60, '$'); // Neon Green
+                case 4:
+                    return new VoxelTexel(250, 250, 250, ';'); // Pure Ceramic White
+                default:
+                    return new VoxelTexel(240, 230, 25, '%'); // Vivid Canary Yellow
             }
         }
     }

@@ -1,5 +1,3 @@
-import java.util.Arrays;
-
 public class TextFallLoader extends Loader {
     private static final StatusStage[] TEXTFALL_STAGES = {
         new StatusStage(15, "Initializing construct:"),

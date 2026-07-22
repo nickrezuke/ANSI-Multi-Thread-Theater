@@ -50,7 +50,6 @@ public class LoaderSpinners {
             double rand = (Math.random() * totalVarients);
             if(rand < 6) { // Chances 0-5
                 loader = new DonutLoader();
-
             } else if(rand < 10) { // Chances 6-9
                 loader = new CubeLoaderA();
             } else if(rand < 13) { // Chances 10-12
@@ -67,7 +66,7 @@ public class LoaderSpinners {
                 loader = new RadarLoader();
             } else if(rand < 19) { // Chance 18
                 loader = new BlackHoleLoader();
-            } else {
+            } else {               // Chance 19
                 loader = new TextFallLoader();
             }
         }

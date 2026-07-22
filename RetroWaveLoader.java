@@ -1,5 +1,3 @@
-import java.util.Arrays;
-
 public class RetroWaveLoader extends Loader {
     private static final StatusStage[] STAGES = {
         new StatusStage(25, "Booting synthesizer arrays:"),
