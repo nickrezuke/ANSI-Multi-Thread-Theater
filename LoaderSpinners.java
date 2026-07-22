@@ -17,6 +17,24 @@ public class LoaderSpinners {
                 case "Pyramid": 
                     loader = new PyramidLoader(); 
                     break;
+                case "RetroWave": 
+                    loader = new RetroWaveLoader(); 
+                    break;
+                case "TextFall": 
+                    loader = new TextFallLoader(); 
+                    break;
+                case "Radar": 
+                    loader = new RadarLoader(); 
+                    break;
+                case "DNA": 
+                    loader = new DNALoader(); 
+                    break;
+                case "BlackHole": 
+                    loader = new BlackHoleLoader(); 
+                    break;
+                case "Lorenz": 
+                    loader = new LorenzLoader(); 
+                    break;
                 //case "Snake":   
                     //loader = new SnakeLoader();   
                     //break;
@@ -27,7 +45,8 @@ public class LoaderSpinners {
 
         // 2. If no arg was provided OR the arg was unsupported, pick a random varient
         if (loader == null) {
-            int totalVarients = 12; // Right now I have 6 Donuts, 4 CubeA, 3 CubeB, and 1 Pyramid
+            int totalVarients = 19; // Right now I have 6 Donuts, 4 CubeA, 3 CubeB, 
+            // 1 TextFall, 1 RetroWave, 1 DNA, 1 Radar, 1 BlackHole, and 1 Pyramid
             double rand = (Math.random() * totalVarients);
             if(rand < 6) { // Chances 0-5
                 loader = new DonutLoader();
@@ -36,8 +55,20 @@ public class LoaderSpinners {
                 loader = new CubeLoaderA();
             } else if(rand < 13) { // Chances 10-12
                 loader = new CubeLoaderB();
-            } else {
+            } else if(rand < 14) { // Chance 13
+                loader = new RetroWaveLoader();
+            } else if(rand < 15) { // Chance 14
                 loader = new PyramidLoader();
+            } else if(rand < 16) { // Chance 15
+                loader = new DNALoader();
+            } else if(rand < 17) { // Chance 16
+                loader = new LorenzLoader();
+            } else if(rand < 18) { // Chance 17
+                loader = new RadarLoader();
+            } else if(rand < 19) { // Chance 18
+                loader = new BlackHoleLoader();
+            } else {
+                loader = new TextFallLoader();
             }
         }
         

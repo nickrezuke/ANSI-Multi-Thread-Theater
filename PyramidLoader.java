@@ -139,9 +139,9 @@ public class PyramidLoader extends Loader {
         }
 
         // Pacing updates
-        pyramidAngle += 0.008; 
-        lightAngleX += 0.018;  
-        lightAngleY += 0.023;  
+        pyramidAngle += 0.012; 
+        lightAngleX += 0.014;  
+        lightAngleY += 0.018;  
         
         colorHue += 0.0014;
         if (colorHue > 1.0) {
