@@ -8,12 +8,15 @@ public class LoaderSpinners {
                 case "Donut":   
                     loader = new DonutLoader();   
                     break;
-                case "Cube":    
-                    loader = new CubeLoader();    
+                case "CubeA":    
+                    loader = new CubeLoaderA();    
                     break;
-                //case "Pyramid": 
-                    //loader = new PyramidLoader(); 
-                    //break;
+                case "CubeB":    
+                    loader = new CubeLoaderB();    
+                    break;
+                case "Pyramid": 
+                    loader = new PyramidLoader(); 
+                    break;
                 //case "Snake":   
                     //loader = new SnakeLoader();   
                     //break;
@@ -22,22 +25,19 @@ public class LoaderSpinners {
             }
         }
 
-        // 2. If no arg was provided OR the arg was unsupported, pick a random variant
+        // 2. If no arg was provided OR the arg was unsupported, pick a random varient
         if (loader == null) {
-            switch ((int) (Math.random() * 2) + 1) {
-                case 1:
-                    loader = new DonutLoader();
-                    break;
-                case 2:
-                    loader = new CubeLoader();
-                    break;
-                case 3:
-                    //loader = new PyramidLoader();
-                    //break;
-                case 4:
-                default:
-                    //loader = new SnakeLoader();
-                    //break;
+            int totalVarients = 12; // Right now I have 6 Donuts, 4 CubeA, 3 CubeB, and 1 Pyramid
+            double rand = (Math.random() * totalVarients);
+            if(rand < 6) { // Chances 0-5
+                loader = new DonutLoader();
+
+            } else if(rand < 10) { // Chances 6-9
+                loader = new CubeLoaderA();
+            } else if(rand < 13) { // Chances 10-12
+                loader = new CubeLoaderB();
+            } else {
+                loader = new PyramidLoader();
             }
         }
         
@@ -50,7 +50,7 @@ public class LoaderSpinners {
         try {
             for (int p = 0; p <= 100; p += 1) {
                 loader.setProgress(p); // Push progress values to the loader
-                Thread.sleep(100);          // Simulating 100ms of work time
+                Thread.sleep(200);          // Simulating 100ms of work time
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
