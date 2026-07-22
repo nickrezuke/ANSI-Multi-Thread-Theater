@@ -1,14 +1,29 @@
 public class PyramidLoader extends Loader {
     private static final StatusStage[] PYRAMID_STAGES = {
-        new StatusStage(40, "Carving limestone blocks:"),
-        new StatusStage(80, "Aligning golden capstone:"),
-        new StatusStage(100, "Monument Complete!")
+        new StatusStage(40, "Polishing chrome facets:"),
+        new StatusStage(80, "Igniting spectrum sweep:"),
+        new StatusStage(100, "Reflective Core Online!")
     };
 
-    // Shading levels based on character density (similar to the classic donut)
-    private static final char[] SHADE_CHARS = { '.', ':', '-', '=', '+', '*', 'X', '%', '#', '@' };
+    private static final char[] SHADE_CHARS = { ':', '=', '+', '*', 'X', '%', '&', '$', '#', '@' };
     
-    private double angle = 0.0;
+    private double pyramidAngle = 0.0;
+    private double lightAngleX = 0.0;
+    private double lightAngleY = 0.0;
+    
+    // Independent color cycle timeline variable (cycles from 0.0 to 1.0)
+    private double colorHue = 0.0;
+
+    // Pure reflective silver/chrome material base
+    private static final int BASE_R = 70;
+    private static final int BASE_G = 73;
+    private static final int BASE_B = 78;
+
+    // Fixed overhead camera downward pitch angle (~28 degrees)
+    private static final double CAMERA_TILT = 0.50; 
+    private final double cosTilt = Math.cos(CAMERA_TILT);
+    private final double sinTilt = Math.sin(CAMERA_TILT);
+
 
     public PyramidLoader() {
         super(PYRAMID_STAGES);
@@ -16,45 +31,58 @@ public class PyramidLoader extends Loader {
 
     @Override
     protected void initialize() {
-        // No heavy initialization needed for the basic shape geometry
+        // No random picking anymore; everything runs on real-time loops!
     }
 
     @Override
     protected void renderGeometry(String[] outputBuffer, double[] zBuffer) {
-        // Only rotating around the Y-axis (Horizontal spin) to match your requirement
-        double cosY = Math.cos(angle);
-        double sinY = Math.sin(angle);
+        double cosPyramid = Math.cos(pyramidAngle);
+        double sinPyramid = Math.sin(pyramidAngle);
 
-        // Define the 5 perfect key 3D structural vertices of our pyramid
-        // Coordinate layout: X = Left/Right, Y = Up/Down, Z = Forward/Backward
+        // Precompute dual-axis donut sweep math for the light location
+        double cosLX = Math.cos(lightAngleX), sinLX = Math.sin(lightAngleX);
+        double cosLY = Math.cos(lightAngleY), sinLY = Math.sin(lightAngleY);
+
+        double localLX = 0.0;
+        double localLY = 0.0;
+        double localLZ = 1.8;
+
+        double ly1 = localLY * cosLX - localLZ * sinLX;
+        double lz1 = localLY * sinLX + localLZ * cosLX;
+        double lx1 = localLX;
+
+        double lightX = lx1 * cosLY + lz1 * sinLY;
+        double lightY = ly1;
+        double lightZ = -lx1 * sinLY + lz1 * cosLY;
+
+        // Calculate the current RGB values of the moving light source using HSV math
+        int[] currentLightRGB = hueToRGB(colorHue);
+        int lightR = currentLightRGB[0];
+        int lightG = currentLightRGB[1];
+        int lightB = currentLightRGB[2];
+
+        // FIXED: Re-aligned vertex coordinates to standard 3D camera space bounds
+        // In this setup: -Z is closer to camera (Front), +Z is deeper (Back)
         double[][] vertices = {
-            {  0.0,  1.0,  0.0 }, // Vertex 0: Apex (Top Point)
-            { -1.0, -1.0,  1.0 }, // Vertex 1: Front-Left Corner
-            {  1.0, -1.0,  1.0 }, // Vertex 2: Front-Right Corner
-            {  1.0, -1.0, -1.0 }, // Vertex 3: Back-Right Corner
-            { -1.0, -1.0, -1.0 }  // Vertex 4: Back-Left Corner
+            {  0.0, -1.0,  0.0 }, // Vertex 0: Apex (Top Point)
+            { -1.0,  1.0, -1.0 }, // Vertex 1: Front-Left Corner
+            {  1.0,  1.0, -1.0 }, // Vertex 2: Front-Right Corner
+            {  1.0,  1.0,  1.0 }, // Vertex 3: Back-Right Corner
+            { -1.0,  1.0,  1.0 }  // Vertex 4: Back-Left Corner
         };
 
-        // Define the 5 structural faces using indices from our vertices array above
+        // FIXED: Winding configurations updated so all 5 face normals point outward 
         int[][] faces = {
-            { 0, 1, 2 }, // Face 0: Front Triangle Side
-            { 0, 2, 3 }, // Face 1: Right Triangle Side
-            { 0, 3, 4 }, // Face 2: Back Triangle Side
-            { 0, 4, 1 }, // Face 3: Left Triangle Side
-            { 4, 3, 2, 1 } // Face 4: Square Base (Bottom Plane)
+            { 0, 1, 2 },    // Face 0: Front Triangle Side
+            { 0, 2, 3 },    // Face 1: Right Triangle Side
+            { 0, 3, 4 },    // Face 2: Back Triangle Side
+            { 0, 4, 1 },    // Face 3: Left Triangle Side
+            { 1, 4, 3, 2 }  // Face 4: Square Base (Bottom Plane)
         };
 
-        // Static directional lighting vector coming down over the viewer's right shoulder
-        double lx = 0.5, ly = 0.7, lz = -0.5;
-        // Normalize the light vector manually
-        double lMag = Math.sqrt(lx*lx + ly*ly + lz*lz);
-        lx /= lMag; ly /= lMag; lz /= lMag;
-
-        // Loop through all 5 geometric faces of the pyramid
         for (int i = 0; i < faces.length; i++) {
             int[] faceVertices = faces[i];
 
-            // 1. Calculate Face Normal using Cross-Product of two edge vectors
             double[] v0 = vertices[faceVertices[0]];
             double[] v1 = vertices[faceVertices[1]];
             double[] v2 = vertices[faceVertices[2]];
@@ -64,93 +92,139 @@ public class PyramidLoader extends Loader {
             double edge1z = v1[2] - v0[2];
 
             double edge2x = v2[0] - v0[0];
-            double edge2y = v2[2] == -1.0 && faceVertices.length > 3 ? v2[1] - v0[1] : v2[1] - v0[1]; // Adjust for base configuration mapping
-            if (i == 4) { // Explicit base overrides for accuracy
-                edge2x = vertices[faceVertices[2]][0] - v0[0];
-                edge2y = vertices[faceVertices[2]][1] - v0[1];
-            }
+            double edge2y = v2[1] - v0[1];
             double edge2z = v2[2] - v0[2];
-            if (i == 4) {
-                edge2z = vertices[faceVertices[2]][2] - v0[2];
-            }
 
-            // Cross product vector math calculation
             double nx = edge1y * edge2z - edge1z * edge2y;
             double ny = edge1z * edge2x - edge1x * edge2z;
             double nz = edge1x * edge2y - edge1y * edge2x;
 
-            // Normalize the calculated normal vector coordinates
             double nMag = Math.sqrt(nx*nx + ny*ny + nz*nz);
             nx /= nMag; ny /= nMag; nz /= nMag;
 
-            // 2. Apply Y-Axis Rotation to the Normal Vector
-            double rNx = nx * cosY + nz * sinY;
-            double rNy = ny;
-            double rNz = -nx * sinY + nz * cosY;
+            double rNx = nx * cosPyramid + nz * sinPyramid;
+            double rNy1 = ny;
+            double rNz1 = -nx * sinPyramid + nz * cosPyramid;
 
-            // Back-face culling check: Skip rendering if pointing away from the camera lens
+            double rNy = rNy1 * cosTilt - rNz1 * sinTilt;
+            double rNz = rNy1 * sinTilt + rNz1 * cosTilt;
+
             if (rNz > 0) {
                 continue;
             }
 
-            // 3. Compute static structural shading intensity based on lighting directional dot product
-            double dotProduct = rNx * lx + rNy * ly + rNz * lz;
-            int shadeIndex = (int) ((dotProduct + 1.0) * 4.9); // Map range [-1, 1] across the 10 shade characters
-            shadeIndex = Math.max(0, Math.min(9, shadeIndex));
-            char renderChar = SHADE_CHARS[shadeIndex];
-
-            // 4. Face Point Plotter (Triangles vs Base Squares)
-            if (i < 4) { // Side Triangular Geometry Surfaces
-                // Linearly interpolate coordinates inside triangle barycentric frameworks
-                for (double u = 0; u <= 1.0; u += 0.02) {
-                    for (double v = 0; v <= 1.0 - u; v += 0.02) {
+            if (i < 4) { 
+                for (double u = 0; u <= 1.0; u += 0.015) {
+                    for (double v = 0; v <= 1.0 - u; v += 0.015) {
                         double w = 1.0 - u - v;
 
-                        // Calculate raw local structural coordinate placements
                         double x = u * v0[0] + v * v1[0] + w * v2[0];
                         double y = u * v0[1] + v * v1[1] + w * v2[1];
                         double z = u * v0[2] + v * v1[2] + w * v2[2];
 
-                        projectAndPlot(x, y, z, cosY, sinY, renderChar, outputBuffer, zBuffer);
+                        calculateLightingAndPlot(x, y, z, cosPyramid, sinPyramid, rNx, rNy, rNz, lightX, lightY, lightZ, lightR, lightG, lightB, outputBuffer, zBuffer);
                     }
                 }
-            } else { // Square Bottom Base Geometry Surface
-                for (double u = 0; u <= 1.0; u += 0.03) {
-                    for (double v = 0; v <= 1.0; v += 0.03) {
-                        // Bilinear interpolation strategy layout over base planes
+            } else { 
+                for (double u = 0; u <= 1.0; u += 0.025) {
+                    for (double v = 0; v <= 1.0; v += 0.025) {
                         double x = -1.0 + 2.0 * u;
-                        double y = -1.0;
+                        double y = 1.0;
                         double z = -1.0 + 2.0 * v;
 
-                        projectAndPlot(x, y, z, cosY, sinY, renderChar, outputBuffer, zBuffer);
+                        calculateLightingAndPlot(x, y, z, cosPyramid, sinPyramid, rNx, rNy, rNz, lightX, lightY, lightZ, lightR, lightG, lightB, outputBuffer, zBuffer);
                     }
                 }
             }
         }
-        angle += 0.05; // Spin increment rate step 
+
+        // Pacing updates
+        pyramidAngle += 0.008; 
+        lightAngleX += 0.018;  
+        lightAngleY += 0.023;  
+        
+        colorHue += 0.0014;
+        if (colorHue > 1.0) {
+            colorHue -= 1.0;
+        }
     }
 
-    // Handles 3D rotation matrix calculations, camera offsets, perspective projections, and screen placement loops.
-    private void projectAndPlot(double x, double y, double z, double cosY, double sinY, char renderChar, String[] outputBuffer, double[] zBuffer) {
-        // Apply Y-axis rotation matrix formulas to coordinate positions
+    private void calculateLightingAndPlot(double x, double y, double z, double cosY, double sinY, 
+                                           double rNx, double rNy, double rNz, 
+                                           double lightX, double lightY, double lightZ, 
+                                           int lightR, int lightG, int lightB,
+                                           String[] outputBuffer, double[] zBuffer) {
         double rx = x * cosY + z * sinY;
-        double ry = y;
-        double rz = -x * sinY + z * cosY;
+        double ry1 = y;
+        double rz1 = -x * sinY + z * cosY;
 
-        // Apply spatial focal perspective mapping properties
-        double distanceToCamera = 3.5;
+        double ry = ry1 * cosTilt - rz1 * sinTilt;
+        double rz = ry1 * sinTilt + rz1 * cosTilt;
+
+        double toLightX = lightX - rx;
+        double toLightY = lightY - ry;
+        double toLightZ = lightZ - rz;
+        double distToLight = Math.sqrt(toLightX*toLightX + toLightY*toLightY + toLightZ*toLightZ);
+        toLightX /= distToLight; toLightY /= distToLight; toLightZ /= distToLight;
+
+        double diffuse = rNx * toLightX + rNy * toLightY + rNz * toLightZ;
+        if (diffuse < 0) diffuse = 0;
+
+        double refZ = 2 * diffuse * rNz - toLightZ;
+        double specular = -refZ; 
+        if (specular < 0) specular = 0;
+        specular = Math.pow(specular, 8); 
+
+        double ambientWeight = 0.20;
+        double diffuseWeight = 0.40;
+        double specularWeight = 0.65; 
+
+        int r = (int) (BASE_R * ambientWeight + lightR * (diffuseWeight * diffuse + specularWeight * specular));
+        int g = (int) (BASE_G * ambientWeight + lightG * (diffuseWeight * diffuse + specularWeight * specular));
+        int b = (int) (BASE_B * ambientWeight + lightB * (diffuseWeight * diffuse + specularWeight * specular));
+
+        r = Math.max(0, Math.min(255, r));
+        g = Math.max(0, Math.min(255, g));
+        b = Math.max(0, Math.min(255, b));
+
+        double totalIntensity = 0.3 * diffuse + 0.7 * specular;
+        int shadeIndex = (int) (totalIntensity * 9.9);
+        shadeIndex = Math.max(0, Math.min(9, shadeIndex));
+        char renderChar = SHADE_CHARS[shadeIndex];
+
+        double distanceToCamera = 2.9;
         double ooz = 1.0 / (rz + distanceToCamera);
 
-        int xp = (int) (40 + 42 * ooz * rx);
-        int yp = (int) (11 + 20 * ooz * ry);
+        int xp = (int) (40 + 44 * ooz * rx);
+        int yp = (int) (9 + 22 * ooz * ry); 
 
         if (xp >= 0 && xp < 80 && yp >= 0 && yp < 22) {
             int index = xp + 80 * yp;
             if (ooz > zBuffer[index] + 0.0001) {
                 zBuffer[index] = ooz;
-                // Outputting pure monochrome text representation matches original donut engine principles
-                outputBuffer[index] = String.valueOf(renderChar);
+                String colorCode = String.format("\u001B[38;2;%d;%d;%dm", r, g, b);
+                outputBuffer[index] = colorCode + renderChar + RESET;
             }
+        }
+    }
+
+    private int[] hueToRGB(double hue) {
+        double h = hue * 6.0; 
+        int i = (int) Math.floor(h);
+        double f = h - i;
+        
+        int pv = 0;
+        int qv = (int) (255 * (1.0 - f));
+        int tv = (int) (255 * f);
+
+        switch (i % 6) {
+            case 0: return new int[]{ 255, tv, pv };  
+            case 1: return new int[]{ qv, 255, pv };  
+            case 2: return new int[]{ pv, 255, tv };  
+            case 3: return new int[]{ pv, qv, 255 };  
+            case 4: return new int[]{ tv, pv, 255 };  
+            case 5: return new int[]{ 255, pv, qv };  
+            default: return new int[]{ 255, 255, 255 };
         }
     }
 }
