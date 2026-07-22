@@ -112,7 +112,7 @@ public class DonutLoader extends Loader {
 
                 double N_double = 8 * ((sinPhi * sinA - sinTheta * cosPhi * cosA) * cosB - sinTheta * cosPhi * sinA - sinPhi * cosA - cosTheta * cosPhi * sinB);
 
-                if (22 > y && y > 0 && x > 0 && 80 > x && D > zBuffer[o]) {
+                if (22 > y && y > 0 && x > 0 && 80 > x && D > (zBuffer[o] + 0.0001)) {
                     zBuffer[o] = D;
                     int charIndex = (int) Math.round(N_double);
                     if (charIndex < 0) charIndex = 0;
