@@ -1,22 +1,66 @@
 public class CubeLoaderB extends Loader {
-    private static final StatusStage[] CUBE_STAGES = {
-        new StatusStage(25, "Calibrating aperture science:"),
-        new StatusStage(50, "Synthesizing companion hearts:"),
-        new StatusStage(75, "Scrambling Rubik matrices:"),
-        new StatusStage(100, "Testing Chamber Ready!")
-    };
-
-    private int blockVariant; // 1 = Grass, 2 = Companion Cube, 3 = Rubik's Cube
+    private int blockVariant = -1; // 1 = Grass, 2 = Companion Cube, 3 = Rubik's Cube
     private double angle = 0.0;
 
     public CubeLoaderB() {
+        int variant = (int) (Math.random() * 3) + 1;
+        StatusStage[] CUBE_STAGES;
+
+        switch (variant) {
+            case 1: // Minecraft Grass Block
+                CUBE_STAGES = new StatusStage[] {
+                        new StatusStage(10, "Generating Chunks:"),
+                        new StatusStage(20, "Growing Forests:"),
+                        new StatusStage(30, "Populating Villages:"),
+                        new StatusStage(40, "Scattering Ore Deposits:"),
+                        new StatusStage(50, "Heating up the Nether:"),
+                        new StatusStage(60, "Building Strongholds:"),
+                        new StatusStage(70, "Filling in Loot Chests:"),
+                        new StatusStage(80, "Determining World Spawn:"),
+                        new StatusStage(90, "Initializing Player:"),
+                        new StatusStage(99, "Removing Herobrine:"),
+                        new StatusStage(100, "World Generation Complete!")
+                };
+                break;
+            case 2: // Companion Cube
+                CUBE_STAGES = new StatusStage[] {
+                        new StatusStage(8, "Calibrating Scientific Intruments:"),
+                        new StatusStage(28, "Designing Test Chamber:"),
+                        new StatusStage(55, "Synthesizing Test Subjects:"),
+                        new StatusStage(75, "Activating Observation Deck:"),
+                        new StatusStage(96, "Calibrating Portal Devices:"),
+                        new StatusStage(98, "Rejecting Morality Upgrade:"),
+                        new StatusStage(100, "Test Chamber Ready!")
+                };
+                break;
+            case 3: // Rubik's Cube
+            default: // TODO: Auto default to this but come up with something later... maybe
+                     // introduce new variants??
+                CUBE_STAGES = new StatusStage[] {
+                        new StatusStage(12, "Scrambling:"),
+                        new StatusStage(24, "Rotating:"),
+                        new StatusStage(36, "Scrambling:"),
+                        new StatusStage(48, "Rotating:"),
+                        new StatusStage(60, "Scrambling:"),
+                        new StatusStage(72, "Rotating:"),
+                        new StatusStage(84, "Scrambling:"),
+                        new StatusStage(96, "Rotating:"),
+                        new StatusStage(100, "Scramble Solved!")
+                };
+                break;
+        }
         super(CUBE_STAGES);
+        blockVariant = variant;
     }
 
     @Override
     protected void initialize() {
-        // Randomly select between 1 (Grass), 2 (Companion Cube), and 3 (Rubik's Cube)
-        this.blockVariant = (int) (Math.random() * 3) + 1;
+        // We should have already determined which one 
+        // to use, but just in case we didn't yet:
+        if (this.blockVariant == -1) {
+            // Randomly select between 1 (Grass), 2 (Companion Cube), and 3 (Rubik's Cube)
+            this.blockVariant = (int) (Math.random() * 3) + 1;
+        }
     }
 
     @Override
@@ -30,7 +74,6 @@ public class CubeLoaderB extends Loader {
         double cosZ = Math.cos(rZ), sinZ = Math.sin(rZ);
 
         for (int face = 0; face < 6; face++) {
-            // ==================== BACK-FACE CULLING ====================
             double nx = 0, ny = 0, nz = 0;
             switch (face) {
                 case 0:
@@ -57,7 +100,6 @@ public class CubeLoaderB extends Loader {
             if (nz3 > 0) {
                 continue;
             }
-            // ===========================================================
 
             for (double u = 0; u <= 1.0; u += 0.02) {
                 for (double v = 0; v <= 1.0; v += 0.02) {
@@ -117,7 +159,7 @@ public class CubeLoaderB extends Loader {
                     double ooz = 1.0 / (z3 + distanceToCamera);
 
                     int xp = (int) (40 + 40 * ooz * x3);
-                    int yp = (int) (11 + 18 * ooz * y3);
+                    int yp = (int) (11 - 18 * ooz * y3);
 
                     if (xp >= 0 && xp < 80 && yp >= 0 && yp < 22) {
                         int index = xp + 80 * yp;
@@ -159,7 +201,7 @@ public class CubeLoaderB extends Loader {
                             texX = Math.max(0, Math.min(15, texX));
                             texY = Math.max(0, Math.min(15, texY));
 
-                            VoxelTexel texel = getIconicCubeTexel(blockVariant, face, texX, texY);
+                            VoxelTexel texel = getCubeTexel(blockVariant, face, texX, texY);
 
                             String colorCode = String.format("\u001B[38;2;%d;%d;%dm", texel.r, texel.g, texel.b);
                             outputBuffer[index] = colorCode + texel.character + RESET;
@@ -168,10 +210,10 @@ public class CubeLoaderB extends Loader {
                 }
             }
         }
-        angle += 0.04;
+        angle += 0.025;
     }
 
-    private VoxelTexel getIconicCubeTexel(int variant, int face, int x, int y) {
+    private VoxelTexel getCubeTexel(int variant, int face, int x, int y) {
         // High-frequency deterministic hash pattern accent noise
         int noise = (int) (Math.abs((x * 34211L + y * 12473L + face * 4567L) ^ 0x5DEECE66DL) % 3);
 
