@@ -1,11 +1,14 @@
 import java.util.Arrays;
 
 public abstract class Loader implements Runnable {
+    // These will track the current progress amount
     protected volatile boolean isRunning = true;
     protected volatile int progress = 0;
+
+    protected int goalRate = 10000000; // 10 milliseconds default
     
     private final StatusStage[] stages;
-    private final double[] zBuffer = new double[1760]; // Common buffer sizes can live here
+    private final double[] zBuffer = new double[1760];
     private final String[] outputBuffer = new String[1760];
 
     // Reset ANSI codes
@@ -79,12 +82,11 @@ public abstract class Loader implements Runnable {
 
             // --- REUSABLE FORMATTED UI PRINT ---
             String formattedStatus = String.format(" %18s", activeMessage);
-            System.out.print("\n\n" + WHITE + formattedStatus + "[" + GREEN + bar.toString() + WHITE + "] " + currentProgress + "%" + RESET);
+            System.out.print("\n\n" + WHITE + formattedStatus + "[" + GREEN + bar.toString() + WHITE + "] " + currentProgress + "%" + "\u001B[K" + RESET);
 
             // --- FRAME RATE REGULATOR ---
             try {
                 int elapsedTime = (int) (System.nanoTime() - startTime);
-                int goalRate = 10000000; // 10 milliseconds
                 int sleepTime = goalRate - elapsedTime;
                 if (sleepTime > 0) {
                     Thread.sleep(sleepTime / 1000000); // Convert from nanos to millis
