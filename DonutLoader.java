@@ -24,7 +24,7 @@ public class DonutLoader extends Loader {
     private String glazedIcing;
     private String donutCake;
     private String[] sprinkleColors;
-    
+
     private double A = 0;
     private double B = 0;
 
@@ -36,41 +36,73 @@ public class DonutLoader extends Loader {
     protected void initialize() {
         // Setup visual flavor styling
         switch ((int) (Math.random() * 6) + 1) {
-            case 1:
-                glazedIcing = "\u001B[38;5;94m"; 
-                donutCake = "\u001B[33m"; 
-                sprinkleColors = new String[] { "\u001B[38;5;214m", "\u001B[38;5;226m", "\u001B[38;5;255m" };
+
+            case 1: // --- 1. MAPLE GLAZED ON GOLDEN DOUGH ---
+                glazedIcing = "\u001B[38;5;94m"; // Deep Maple Amber
+                donutCake = "\u001B[33m"; // Golden-Fried Yellow
+                sprinkleColors = new String[] {
+                        "\u001B[38;5;214m", // Orange
+                        "\u001B[38;5;226m", // Bright Yellow
+                        "\u001B[38;5;255m" // Pure White
+                };
                 break;
-            case 2:
-                glazedIcing = "\u001B[38;5;130m"; 
-                donutCake = "\u001B[38;5;52m"; 
-                sprinkleColors = new String[] { "\u001B[38;5;117m", "\u001B[38;5;207m", "\u001B[38;5;255m" };
+
+            case 2: // --- 2. DOUBLE CHOCOLATE FUDGE ---
+                glazedIcing = "\u001B[38;5;130m"; // Milk Chocolate Gloss
+                donutCake = "\u001B[38;5;94m"; // Rich Dark Chocolate Dough
+                sprinkleColors = new String[] {
+                        "\u001B[38;5;117m", // Baby Blue
+                        "\u001B[38;5;207m", // Pastel Lavender/Pink
+                        "\u001B[38;5;255m" // Pure White
+                };
                 break;
-            case 3:
-                glazedIcing = "\u001B[38;5;255m"; 
-                donutCake = "\u001B[38;5;137m"; 
-                sprinkleColors = new String[] { "\u001B[38;5;196m", "\u001B[38;5;94m", "\u001B[38;5;208m" };
+
+            case 3: // --- 3. VANILLA GLAZE ON TRADITIONAL BROWN CAKE ---
+                glazedIcing = "\u001B[38;5;255m"; // Stark Vanilla White
+                donutCake = "\u001B[38;5;137m"; // Soft Baked Brown Dough
+                sprinkleColors = new String[] {
+                        "\u001B[38;5;196m", // Crimson Red
+                        "\u001B[38;5;94m", // Chocolate Brown
+                        "\u001B[38;5;208m" // Vivid Orange
+                };
                 break;
-            case 4:
-                glazedIcing = "\u001B[38;5;114m"; 
-                donutCake = "\u001B[38;5;52m"; 
-                sprinkleColors = new String[] { "\u001B[38;5;255m", "\u001B[38;5;206m", "\u001B[38;5;220m" };
+
+            case 4: // --- 4. MATCHA GREEN TEA ON CHOCOLATE ---
+                glazedIcing = "\u001B[38;5;114m"; // Vibrant Matcha Green
+                donutCake = "\u001B[38;5;130m"; // Rich Chocolate Dough
+                sprinkleColors = new String[] {
+                        "\u001B[38;5;255m", // White
+                        "\u001B[38;5;206m", // Pink
+                        "\u001B[38;5;220m" // Gold Yellow
+                };
                 break;
-            case 5:
-                glazedIcing = "\u001B[38;5;61m"; 
-                donutCake = "\u001B[38;5;229m"; 
-                sprinkleColors = new String[] { "\u001B[38;5;81m", "\u001B[38;5;46m", "\u001B[38;5;255m" };
+
+            case 5: // --- 5. BLUEBERRY BLAST ON BUTTERMILK CAKE ---
+                glazedIcing = "\u001B[38;5;61m"; // Deep Royal Blueberry Purple-Blue
+                donutCake = "\u001B[38;5;229m"; // Fluffy Yellow-White Buttermilk Cake
+                sprinkleColors = new String[] {
+                        "\u001B[38;5;81m", // Sky Blue
+                        "\u001B[38;5;46m", // Neon Lime Green
+                        "\u001B[38;5;255m" // Pure White
+                };
                 break;
+
             case 6:
-            default:
-                glazedIcing = "\u001B[38;5;205m"; 
-                donutCake = "\u001B[33m"; 
-                sprinkleColors = new String[] { "\u001B[36m", "\u001B[32m", "\u001B[37m" };
+            default: // --- 6. THE HOMER SIMPSON STRAWBERRY SPECIAL ---
+                glazedIcing = "\u001B[38;5;205m"; // Blazing Strawberry Bubblegum Pink
+                donutCake = "\u001B[33m"; // 16-color system (Standard Olive-Yellow)
+                sprinkleColors = new String[] {
+                        "\u001B[38;5;51m", // Electric Neon Cyan
+                        "\u001B[38;5;46m", // Pure Radioactive Green
+                        "\u001B[38;5;255m" // Bright Sugar White
+                };
                 break;
+
         }
 
         // Generate sprinkle map mapping logic
-        for (int[] row : sprinkleMap) Arrays.fill(row, -1);
+        for (int[] row : sprinkleMap)
+            Arrays.fill(row, -1);
         int tMapIndex = 0;
         for (double theta = 0; theta < 6.28; theta += 0.035) {
             int pMapIndex = 0;
@@ -78,7 +110,8 @@ public class DonutLoader extends Loader {
                 for (int i = 0; i < SPRINKLES.length; i++) {
                     double dTheta = Math.abs(theta - SPRINKLES[i][0]);
                     double dPhi = Math.abs(phi - SPRINKLES[i][1]);
-                    if (dTheta > 3.14) dTheta = 6.28 - dTheta;
+                    if (dTheta > 3.14)
+                        dTheta = 6.28 - dTheta;
 
                     if (dTheta < 0.15 && dPhi < 0.15) {
                         sprinkleMap[tMapIndex][pMapIndex] = (int) SPRINKLES[i][2];
@@ -110,17 +143,20 @@ public class DonutLoader extends Loader {
                 int y = (int) (12 + 21 * D * (cosTheta * h * sinB + t * cosB));
                 int o = x + 80 * y;
 
-                double N_double = 8 * ((sinPhi * sinA - sinTheta * cosPhi * cosA) * cosB - sinTheta * cosPhi * sinA - sinPhi * cosA - cosTheta * cosPhi * sinB);
+                double N_double = 8 * ((sinPhi * sinA - sinTheta * cosPhi * cosA) * cosB - sinTheta * cosPhi * sinA
+                        - sinPhi * cosA - cosTheta * cosPhi * sinB);
 
                 if (22 > y && y > 0 && x > 0 && 80 > x && D > (zBuffer[o] + 0.0001)) {
                     zBuffer[o] = D;
                     int charIndex = (int) Math.round(N_double);
-                    if (charIndex < 0) charIndex = 0;
+                    if (charIndex < 0)
+                        charIndex = 0;
 
                     String lString = ".,-~:;=!*#$@";
                     char asciiChar = lString.charAt(charIndex >= lString.length() ? lString.length() - 1 : charIndex);
 
-                    double dripThreshold = -0.15 + 0.15 * Math.sin(3 * theta) + 0.08 * Math.cos(7 * theta) + 0.04 * Math.sin(11 * theta);
+                    double dripThreshold = -0.15 + 0.15 * Math.sin(3 * theta) + 0.08 * Math.cos(7 * theta)
+                            + 0.04 * Math.sin(11 * theta);
                     boolean isFrosting = sinPhi > dripThreshold;
                     String chosenColor = isFrosting ? glazedIcing : donutCake;
 

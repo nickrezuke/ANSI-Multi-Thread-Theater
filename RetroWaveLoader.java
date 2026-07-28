@@ -1,117 +1,141 @@
 public class RetroWaveLoader extends Loader {
     private static final StatusStage[] STAGES = {
-        new StatusStage(25, "Booting synthesizer arrays:"),
-        new StatusStage(50, "Calibrating vector horizon:"),
-        new StatusStage(75, "Modulating neon frequencies:"),
-        new StatusStage(100, "Outrun Protocol Active!")
+            new StatusStage(25, "Booting synthesizer arrays:"),
+            new StatusStage(50, "Calibrating vector horizon:"),
+            new StatusStage(75, "Modulating neon frequencies:"),
+            new StatusStage(100, "Outrun Protocol Active!")
     };
 
     private double timeOffset = 0;
 
-    // Retrowave Aesthetic Color Palette
-    private static final String COLOR_GRID = "\u001B[38;5;201m";    // Hot Neon Pink
+    // High-Saturation 256-Color Retro Aesthetic Palette
+    private static final String COLOR_GRID = "\u001B[38;5;201m"; // Hot Neon Pink
     private static final String COLOR_HORIZON = "\u001B[38;5;51m"; // Electric Cyan
-    private static final String COLOR_SKY = "\u001B[38;5;55m";     // Deep Synth Purple
-    private static final String COLOR_SUN = "\u001B[38;5;214m";     // Outrun Orange/Yellow
-    private static final String COLOR_PALM = "\u001B[38;5;34m";     // Cyberpunk Green
-    private static final String COLOR_CAR = "\u001B[38;5;196m";     // Sports Car Red
-    private static final String COLOR_WHEEL = "\u001B[38;5;236m";   // Dark Gray Wheels
-    private static final String COLOR_WINDOW = "\u001B[38;5;81m";   // Cyan Glass Glow
+    private static final String COLOR_SKY = "\u001B[38;5;55m"; // Deep Synth Purple
+    private static final String COLOR_PINK_SKY = "\u001B[38;5;200m"; // Sunset Magenta
+    private static final String COLOR_SUN = "\u001B[38;5;214m"; // Outrun Yellow-Orange
+    private static final String COLOR_PALM = "\u001B[38;5;34m"; // Cyber Green
+    private static final String COLOR_CAR = "\u001B[38;5;196m"; // Neon Testarossa Red
+    private static final String COLOR_WHEEL = "\u001B[38;5;234m"; // Slate Black tires
+    private static final String COLOR_WINDOW = "\u001B[38;5;87m"; // High-Gloss Cyan Window
 
     public RetroWaveLoader() {
         super(STAGES);
     }
 
     @Override
-    protected void initialize() {}
+    protected void initialize() {
+    }
 
     @Override
     protected void renderGeometry(String[] outputBuffer, double[] zBuffer) {
         int width = 80;
         int height = 22;
-        int horizonY = 10; // Center division horizon split row
+        int horizonY = 10; // Splitting horizon row
 
-        // 1. Precompute exactly which rows should contain scrolling horizontal lines
+        // 1. Calculate dynamic car weaving offset (drifts left and right periodically
+        // every ~3.5 seconds)
+        int carOffset = (int) Math.round(Math.sin(System.currentTimeMillis() * 0.0018) * 2.0);
+
+        // 2. Precompute scrolling horizontal highway grids using logarithmic
+        // perspective
         boolean[] horizontalLines = new boolean[height];
-        for (int i = 0; i < 5; i++) {
-            double position = (timeOffset + i * 0.20) % 1.0;
-            double floorRowOffset = 1.0 + 10.0 * Math.pow(position, 1.6);
+        for (int i = 0; i < 6; i++) {
+            double position = (timeOffset + i * 0.18) % 1.0;
+            double floorRowOffset = 1.0 + 10.0 * Math.pow(position, 1.8);
             int matchingY = horizonY + (int) Math.round(floorRowOffset);
-            
             if (matchingY > horizonY && matchingY < height) {
                 horizontalLines[matchingY] = true;
             }
         }
 
-        // 2. Perform the main canvas rendering loop
+        // 3. Main Screen Buffering Loop
         for (int y = 0; y < height; y++) {
-            
+
             // ==================== SKY LAYER (Above Horizon) ====================
             if (y < horizonY) {
                 for (int x = 0; x < width; x++) {
                     int o = x + width * y;
-                    
-                    // Sun Math (Circle centered at X=40, Y=7 with a radius of 6)
-                    double dx = (x - 40) / 1.7; // Compensate for text character aspect ratio
+
+                    // A. STABLE PROGRESSIVE SYNTHWAVE SUN (Centered at X=40, Y=7, Radius=6)
+                    double dx = (x - 40) / 1.8; // Correct for narrow console pixel widths
                     double dy = y - 7;
                     double sunRadius = Math.sqrt(dx * dx + dy * dy);
 
                     if (sunRadius < 5.8) {
-                        // Create classic Synthwave horizontal slice gaps in the lower part of the sun
-                        boolean isSunSlice = (y == 7 && x % 4 == 0) || (y == 8 && x % 2 == 0) || (y == 9);
-                        
-                        if (!isSunSlice && 0.1 > zBuffer[o]) {
-                            zBuffer[o] = 0.1;
-                            outputBuffer[o] = COLOR_SUN + "O" + RESET;
+                        // Math Update: Removed timeOffset from the wave function to stop all
+                        // flickering/scrolling
+                        double sunYRatio = (y - 1.5) / 12.0;
+                        double wavePattern = Math.sin(sunYRatio * 28.0); // Completely static pattern track
+
+                        boolean isSunSliceGap = (y >= 6 && wavePattern < -0.2) || (y >= 8 && wavePattern < 0.2)
+                                || (y == 9);
+
+                        if (!isSunSliceGap && 0.15 > zBuffer[o]) {
+                            zBuffer[o] = 0.15;
+                            outputBuffer[o] = COLOR_SUN + "\u2588" + RESET; // █ Solid neon mass
                             continue;
                         }
                     }
 
-                    // Left and Right Palm Tree Silhouettes (Hardcoded coordinates for stability)
+                    // B. PROCEDURAL PALM TREE SILHOUETTES
                     boolean isPalm = false;
-                    // Left tree
-                    if (x == 12 && y >= 4) isPalm = true; // Trunk
-                    if (y == 4 && x >= 9 && x <= 15) isPalm = true; // Fronds
-                    if (y == 3 && (x == 10 || x == 11 || x == 13 || x == 14)) isPalm = true;
-                    // Right tree
-                    if (x == 68 && y >= 4) isPalm = true; // Trunk
-                    if (y == 4 && x >= 65 && x <= 71) isPalm = true; // Fronds
-                    if (y == 3 && (x == 66 || x == 67 || x == 69 || x == 70)) isPalm = true;
+                    int checkX = (x < 40) ? 13 : 67;
+                    int px = Math.abs(x - checkX);
 
-                    if (isPalm && 0.2 > zBuffer[o]) {
-                        zBuffer[o] = 0.2;
-                        outputBuffer[o] = COLOR_PALM + "Y" + RESET;
+                    if (x == checkX && y >= 4) {
+                        isPalm = true;
+                    } else if (y <= 5 && y >= 2) {
+                        if (y == 5 && px <= 4)
+                            isPalm = true;
+                        if (y == 4 && px <= 3)
+                            isPalm = true;
+                        if (y == 3 && px >= 2 && px <= 4)
+                            isPalm = true;
+                        if (y == 2 && px == 3)
+                            isPalm = true;
+                    }
+
+                    if (isPalm && sunRadius >= 5.8 && 0.3 > zBuffer[o]) {
+                        zBuffer[o] = 0.3;
+                        outputBuffer[o] = COLOR_PALM + "\u2593" + RESET; // ▓ Rich cyber-mesh palm leaves
                         continue;
                     }
 
-                    // Standard background sky fill
+                    // C. DITHERED SKY COLOR GRADIENT
                     if (0.01 > zBuffer[o]) {
                         zBuffer[o] = 0.01;
-                        char skyChar = (y > horizonY - 3) ? '-' : '.';
-                        outputBuffer[o] = COLOR_SKY + skyChar + RESET;
+                        if (y < 4) {
+                            outputBuffer[o] = COLOR_SKY + "\u2588" + RESET;
+                        } else if (y < 6) {
+                            outputBuffer[o] = COLOR_SKY + "\u2593" + RESET;
+                        } else if (y < 8) {
+                            outputBuffer[o] = COLOR_PINK_SKY + "\u2592" + RESET;
+                        } else {
+                            outputBuffer[o] = COLOR_PINK_SKY + "\u2591" + RESET;
+                        }
                     }
                 }
                 continue;
             }
 
-            // ==================== HORIZON LINE ====================
+            // ==================== NEON VECTOR HORIZON ====================
             if (y == horizonY) {
                 for (int x = 0; x < width; x++) {
                     int o = x + width * y;
                     if (0.99 > zBuffer[o]) {
                         zBuffer[o] = 0.99;
-                        outputBuffer[o] = COLOR_HORIZON + "~" + RESET;
+                        outputBuffer[o] = COLOR_HORIZON + "\u25AC" + RESET; // ▬ Laser horizon strip
                     }
                 }
                 continue;
             }
 
-            // ==================== FLOOR GRID & ROAD LAYER (Below Horizon) ====================
-            int dy = y - horizonY;
+            // ==================== FLOOR GRID & HIGHWAY SYSTEM ====================
+            int floorDistY = y - horizonY;
             boolean isHorizontal = horizontalLines[y];
-            double spacing = 3.5 + dy * 0.75;
-            
-            // Track radial line coordinates
+            double spacing = 3.5 + floorDistY * 0.78;
+
             boolean[] verticalLines = new boolean[width];
             for (int k = -12; k <= 12; k++) {
                 int lineX = (int) Math.round(40 + k * spacing);
@@ -122,71 +146,81 @@ public class RetroWaveLoader extends Loader {
 
             for (int x = 0; x < width; x++) {
                 int o = x + width * y;
-                
-                // --- VEHICLE LAYER COMPOSITING (Overlaying the bottom center rows 17-19) ---
-                boolean writtenCarPixel = false;
-                if (y >= 17 && y <= 19 && x >= 33 && x <= 47) {
-                    int carX = x - 33;
+
+                // A. MOVING VECTOR SPORTS CAR OVERLAY (Boundary shifts left/right dynamically
+                // using carOffset)
+                boolean isCarPixel = false;
+                int startX = 33 + carOffset;
+                int endX = 47 + carOffset;
+
+                if (y >= 17 && y <= 19 && x >= startX && x <= endX) {
+                    int carX = x - startX;
                     int carY = y - 17;
-                    String carPixel = " ";
-                    
-                    if (carY == 0) { // Top profile / Roof structure
-                        if (carX >= 4 && carX <= 10) carPixel = COLOR_CAR + "_";
-                        else if (carX == 3) carPixel = COLOR_CAR + "/";
-                        else if (carX == 11) carPixel = COLOR_CAR + "\\";
-                    } 
-                    else if (carY == 1) { // Mid body & windshield cabin glow
-                        if (carX >= 1 && carX <= 2) carPixel = COLOR_CAR + "/";
-                        else if (carX >= 3 && carX <= 4) carPixel = COLOR_WINDOW + "#"; // Left window
-                        else if (carX >= 5 && carX <= 9) carPixel = COLOR_CAR + "-";
-                        else if (carX >= 10 && carX <= 11) carPixel = COLOR_WINDOW + "#"; // Right window
-                        else if (carX >= 12 && carX <= 13) carPixel = COLOR_CAR + "\\";
-                    } 
-                    else if (carY == 2) { // Bottom chassis base layer & wheels
-                        if (carX == 0) carPixel = COLOR_CAR + "<";
-                        else if (carX == 2 || carX == 3 || carX == 11 || carX == 12) carPixel = COLOR_WHEEL + "O"; // Rear/front tire blocks
-                        else if (carX == 14) carPixel = COLOR_CAR + ">";
-                        else if (carX > 0 && carX < 14) carPixel = COLOR_CAR + "=";
+                    String blockSprite = " ";
+
+                    if (carY == 0) {
+                        if (carX >= 4 && carX <= 10)
+                            blockSprite = COLOR_CAR + "\u2580"; // ▀
+                        else if (carX == 3)
+                            blockSprite = COLOR_CAR + "\u2591"; // ░
+                        else if (carX == 11)
+                            blockSprite = COLOR_CAR + "\u2591"; // ░
+                    } else if (carY == 1) {
+                        if (carX >= 1 && carX <= 2)
+                            blockSprite = COLOR_CAR + "\u2584"; // ▄
+                        else if (carX >= 3 && carX <= 4)
+                            blockSprite = COLOR_WINDOW + "\u2588"; // █
+                        else if (carX >= 5 && carX <= 9)
+                            blockSprite = COLOR_CAR + "\u2588"; // █
+                        else if (carX >= 10 && carX <= 11)
+                            blockSprite = COLOR_WINDOW + "\u2588";// █
+                        else if (carX >= 12 && carX <= 13)
+                            blockSprite = COLOR_CAR + "\u2584"; // ▄
+                    } else if (carY == 2) {
+                        if (carX == 2 || carX == 3 || carX == 11 || carX == 12) {
+                            blockSprite = COLOR_WHEEL + "\u2588"; // █
+                        } else if (carX > 0 && carX < 14) {
+                            blockSprite = COLOR_CAR + "\u2584"; // ▄
+                        }
                     }
 
-                    if (!carPixel.equals(" ") && 0.95 > zBuffer[o]) {
-                        zBuffer[o] = 0.95;
-                        outputBuffer[o] = carPixel + RESET;
-                        writtenCarPixel = true;
+                    if (!blockSprite.equals(" ") && 0.96 > zBuffer[o]) {
+                        zBuffer[o] = 0.96;
+                        outputBuffer[o] = blockSprite + RESET;
+                        isCarPixel = true;
                     }
                 }
-                if (writtenCarPixel) continue; // Skip grid calculations if a piece of the car is right here
 
-                // --- TWO-LANE HIGHWAY SYSTEM ---
-                // Calculate the lane boundary markers extending out from the perspective point
-                int roadLeftEdge = (int) Math.round(40 - 2.2 * spacing);
-                int roadRightEdge = (int) Math.round(40 + 2.2 * spacing);
-                int roadCenterLine = 40;
+                if (isCarPixel)
+                    continue;
 
+                // B. INFRASTRUCTURE HIGHWAY TRACKS
+                int roadLeftEdge = (int) Math.round(40 - 2.3 * spacing);
+                int roadRightEdge = (int) Math.round(40 + 2.3 * spacing);
                 boolean isRoadEdge = (x == roadLeftEdge || x == roadRightEdge);
-                // Make the middle lane stripes dashed by tying their visibility directly to the scrolling lines
-                boolean isCenterDivider = (x == roadCenterLine && isHorizontal);
 
-                double pseudoDepth = (double) dy / (height - horizonY);
+                boolean isCenterDivider = (x == 40 && isHorizontal);
+                double pseudoDepth = (double) floorDistY / (height - horizonY);
 
                 if (pseudoDepth > zBuffer[o]) {
                     zBuffer[o] = pseudoDepth;
 
                     if (isRoadEdge) {
-                        outputBuffer[o] = COLOR_HORIZON + "|" + RESET; // Neon road shoulder limits
+                        outputBuffer[o] = COLOR_HORIZON + "\u2588" + RESET;
                     } else if (isCenterDivider) {
-                        outputBuffer[o] = COLOR_SUN + ":" + RESET;     // Glowing center strip dashes
+                        outputBuffer[o] = COLOR_SUN + "\u2584" + RESET;
                     } else if (x > roadLeftEdge && x < roadRightEdge) {
-                        outputBuffer[o] = " ";                         // Clear asphalt driving pavement lanes
+                        outputBuffer[o] = " ";
                     } else {
-                        // --- STANDARD FLOATING BACKGROUND GRID RENDER ---
+                        // C. DISTANT BACKGROUND SCANNING CYBER-GRID
                         boolean isVertical = verticalLines[x];
+
                         if (isHorizontal && isVertical) {
-                            outputBuffer[o] = COLOR_GRID + "+" + RESET;
+                            outputBuffer[o] = COLOR_GRID + "\u254B" + RESET; // ╬
                         } else if (isVertical) {
-                            outputBuffer[o] = COLOR_GRID + "|" + RESET;
+                            outputBuffer[o] = COLOR_GRID + "\u2551" + RESET; // ║
                         } else if (isHorizontal) {
-                            outputBuffer[o] = COLOR_GRID + "=" + RESET;
+                            outputBuffer[o] = COLOR_GRID + "\u2550" + RESET; // ═
                         } else {
                             outputBuffer[o] = " ";
                         }
@@ -194,8 +228,6 @@ public class RetroWaveLoader extends Loader {
                 }
             }
         }
-
-        // Advance timing frame index to animate structural highway mechanics forward
-        timeOffset += 0.025;
+        timeOffset += 0.035;
     }
 }

@@ -16,6 +16,10 @@ public abstract class Loader implements Runnable {
     protected static final String GREEN = "\u001B[32m";
     protected static final String WHITE = "\u001B[37m";
 
+    // Chars for the loading bar
+    protected static final String LOAD_BAR_EMPTY = "\u2661";
+    protected static final String LOAD_BAR_FULL = "\u2665";
+
     protected static class StatusStage {
         final int maxPercent;
         final String message;
@@ -77,7 +81,7 @@ public abstract class Loader implements Runnable {
             int filledBars = (int) ((currentProgress / 100.0) * totalBars);
             StringBuilder bar = new StringBuilder();
             for (int b = 0; b < totalBars; b++) {
-                bar.append(b < filledBars ? '\u2665' : '\u2661');
+                bar.append(b < filledBars ? LOAD_BAR_FULL : LOAD_BAR_EMPTY);
             }
 
             // --- REUSABLE FORMATTED UI PRINT ---

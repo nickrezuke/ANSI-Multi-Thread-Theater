@@ -1,5 +1,5 @@
 // This class acts as my heavy processing example application
-public class LoaderSpinners {
+public class ExampleTask {
     public static void main(String[] args) {
         Loader loader = null;
         // 1. Check if a preference was passed and try to match it
@@ -80,7 +80,7 @@ public class LoaderSpinners {
         try {
             for (int p = 0; p <= 100; p += 1) {
                 loader.setProgress(p); // Push progress values to the loader
-                Thread.sleep(200);          // Simulating 100ms of work time
+                Thread.sleep(100);          // Simulating 100ms of work time
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
