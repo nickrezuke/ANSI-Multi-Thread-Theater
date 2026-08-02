@@ -6,7 +6,7 @@ public class LoaderFactory {
             "LorenzAttractor", "RippleTank", "DoubleSlit", "TextFall", "Ring", "RockPaperScissors",
             "RainbowWhispSphere", "PacMan", "OctahedralMatrix", "RainbowWhispPyramid", "Tesseract", "4D Cube",
             "EyeOfProvidence", "Illuminati", "WireframeSphere", "Louvre", "FluidDynamics", "NavierStokes",
-            "PerlinNoise", "Unused", "Unused2"
+            "PerlinNoise", "EiffelTower", "Unused", "Unused2"
     };
 
     public static Loader createLoaderInstance(String requestedName) {
@@ -98,6 +98,8 @@ public class LoaderFactory {
                 return new FluidDynamicsLoader();
             case "PerlinNoise":
                 return new PerlinNoiseLoader();
+            case "EiffelTower":
+                return new EiffelTowerLoader();
             case "Unused":
                 return new UnusedInfiniteFractalLoader();
             case "Unused2":

@@ -124,6 +124,8 @@ public abstract class Loader implements Runnable {
                 }
             }
 
+            // TODO: Maybe make the loading text on top of the loading bar for width < height or something??
+
             // Build progress bar indicators
             int totalBars = 30;
             int filledBars = (int) ((currentProgress / 100.0) * totalBars);
