@@ -1,5 +1,3 @@
-import java.util.Arrays;
-
 public class RadarLoader extends Loader {
     private static final StatusStage[] STAGES = {
         new StatusStage(20, "Activating sonar grid:"),
@@ -28,8 +26,16 @@ public class RadarLoader extends Loader {
 
     @Override
     protected void initialize() {
-        for (double[] row : trailDensity) Arrays.fill(row, 0.0);
-        for (double[] row : targetLuminance) Arrays.fill(row, 0.0);
+        for (double[] row : trailDensity) {
+            for(int i = 0; i < row.length; i++) {
+                row[i] = 0.0;
+            }
+        }
+        for (double[] row : targetLuminance) {
+            for(int i = 0; i < row.length; i++) {
+                row[i] = 0.0;
+            }
+        }
     }
 
     @Override

@@ -1,0 +1,162 @@
+// TODO: Fix This Perlin Noise Loader It currently looks terrible.
+
+public class PerlinNoiseLoader extends Loader {
+    private static final StatusStage[] STAGES = {
+        new StatusStage(25, "Generating cohesive gradient vectors:"),
+        new StatusStage(55, "Interpolating multi-octave noise fields:"),
+        new StatusStage(85, "Smoothing coordinate texture coordinates:"),
+        new StatusStage(100, "Perlin Noise Matrix Stable!")
+    };
+
+    private static final char[] SHADE_RAMP = { ' ', '.', ',', '-', '~', ':', ';', '=', '!', '*', '#', '$', '@' };
+    
+    private static final int WIDTH = 80;
+    private static final int HEIGHT = 22;
+
+    // Standard Perlin Noise Permutation Table (Doubled for overflow wrapping)
+    private static final int[] P = new int[512];
+    static {
+        int[] sourcePermutation = {
+            151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
+            190, 6,148,247,120,234,75,0,26,56,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,
+            20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,
+            230,220,105,92,41,55,46,245,40,244,102,143,54, 65,25,63,161, 1,216,80,73,209,76,132,187,208, 89,
+            18,169,200,196,135,130,116,188,159,86,164,100,109,198,173,186, 3,64,52,217,226,250,124,123,5,202,
+            38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,183,170,213,119,248,152,
+            2,44,154,163, 70,221,153,101,155,167, 43,172,9,129,22,39,253, 19,98,108,110,79,113,224,232,178,185,
+            112,104,218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,241, 81,51,145,235,249,14,239,107,
+            49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254,138,236,205,93,222,114,
+            67,29,24,72,243,141,128,195,78,212,85,11,22,151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225
+        };
+        for (int i = 0; i < 256; i++) {
+            P[i] = sourcePermutation[i];
+            P[256 + i] = sourcePermutation[i];
+        }
+    }
+
+    private double timeZ = 0.0;
+
+    public PerlinNoiseLoader() {
+        super(STAGES);
+    }
+
+    @Override
+    protected void initialize() {
+        timeZ = 0.0;
+    }
+
+    @Override
+    protected void renderGeometry(String[] outputBuffer, double[] zBuffer) {
+        // Step forward in time along the Z-axis to evolve the noise morphology morph smoothly
+        timeZ += 0.035;
+
+        // Configuration scale factors for structural cloud sizing (Higher values mean tighter, smaller pockets)
+        double noiseScale = 0.08; 
+
+        for (int y = 0; y < HEIGHT; y++) {
+            // Apply a 2.1:1 horizontal character compression scalar to combat terminal rectangular fonts
+            double mappedY = y * noiseScale * 2.1;
+
+            for (int x = 0; x < WIDTH; x++) {
+                int index = x + WIDTH * y;
+                double mappedX = x * noiseScale;
+
+                // --- PASS 1: COMPUTE MULTI-OCTAVE FRACTAL BROWNIAN MOTION ---
+                // Layering noise at multiple frequencies results in realistic, detailed formations
+                double totalNoise = 0.0;
+                double frequency = 1.0;
+                double amplitude = 1.0;
+                double maxValue = 0.0; // Tracking normalization max boundaries
+
+                for (int octave = 0; octave < 3; octave++) {
+                    totalNoise += calculateImprovedNoise(mappedX * frequency, mappedY * frequency, timeZ * frequency) * amplitude;
+                    maxValue += amplitude;
+                    amplitude *= 0.5;
+                    frequency *= 2.0;
+                }
+
+                // Normalize raw output window safely between strict [0.0, 1.0] bounds
+                double normalizedValue = (totalNoise / maxValue + 1.0) * 0.5;
+
+                // --- PASS 2: CHROMATIC MAPPING ENGINE ---
+                // Map intensity smoothly down a warm magmatic spectrum: Black -> Indigo -> Crimson -> Gold
+                int r, g, b;
+                if (normalizedValue < 0.35) {
+                    // Deep void spaces (Dark Violet/Indigo)
+                    double ratio = normalizedValue / 0.35;
+                    r = (int) (25 * ratio);
+                    g = (int) (15 * ratio);
+                    b = (int) (70 + 40 * ratio);
+                } else if (normalizedValue < 0.65) {
+                    // Middle energy currents (Rich Crimson Red)
+                    double ratio = (normalizedValue - 0.35) / 0.30;
+                    r = (int) (25 + 185 * ratio);
+                    g = (int) (15 + 25 * ratio);
+                    b = (int) (110 - 70 * ratio);
+                } else {
+                    // Peak intensity fields (Bright Molten Incandescent Gold)
+                    double ratio = (normalizedValue - 0.65) / 0.35;
+                    r = (int) (210 + 45 * ratio);
+                    g = (int) (40 + 195 * ratio);
+                    b = (int) (40 + 110 * ratio);
+                }
+
+                // Select density character token based on intensity levels
+                int shadeIndex = (int) (normalizedValue * (SHADE_RAMP.length - 1));
+                if (shadeIndex < 0) shadeIndex = 0;
+                else if (shadeIndex > SHADE_RAMP.length - 1) shadeIndex = SHADE_RAMP.length - 1;
+
+                char renderChar = SHADE_RAMP[shadeIndex];
+                String colorCode = String.format("\u001B[38;2;252;%d;%d;%dm", r, g, b); // Injecting target formatting marker
+
+                outputBuffer[index] = colorCode + renderChar + RESET;
+            }
+        }
+    }
+
+    /**
+     * Ken Perlin's Improved Noise Formulation implementation for 3D coordinates.
+     */
+    private double calculateImprovedNoise(double x, double y, double z) {
+        // Find unit cube coordinates containing the point vector
+        int X = (int) Math.floor(x) & 255;
+        int Y = (int) Math.floor(y) & 255;
+        int Z = (int) Math.floor(z) & 255;
+
+        // Find relative coordinates inside the local cube block
+        x -= Math.floor(x);
+        y -= Math.floor(y);
+        z -= Math.floor(z);
+
+        // Compute fade curves to drive smooth Hermite s-curves ($3t^2 - 2t^3$)
+        double u = x * x * x * (x * (x * 6 - 15) + 10);
+        double v = y * y * y * (y * (y * 6 - 15) + 10);
+        double w = z * z * z * (z * (z * 6 - 15) + 10);
+
+        // Hash coordinates of the 8 cube corners
+        int A  = P[X] + Y;   int AA = P[A] + Z; int AB = P[A + 1] + Z;
+        int B  = P[X + 1] + Y; int BA = P[B] + Z; int BB = P[B + 1] + Z;
+
+        // Trilinear blend interpolation between corners using gradients
+        return lerp(w, lerp(v, lerp(u, grad(P[AA], x, y, z), 
+                                       grad(P[BA], x - 1, y, z)),
+                               lerp(u, grad(P[AB], x, y - 1, z), 
+                                       grad(P[BB], x - 1, y - 1, z))),
+                       lerp(v, lerp(u, grad(P[AA + 1], x, y, z - 1), 
+                                       grad(P[BA + 1], x - 1, y, z - 1)),
+                               lerp(u, grad(P[AB + 1], x, y - 1, z - 1), 
+                                       grad(P[BB + 1], x - 1, y - 1, z - 1))));
+    }
+
+    private double lerp(double t, double a, double b) {
+        return a + t * (b - a);
+    }
+
+    private double grad(int hash, double x, double y, double z) {
+        // Convert low 4 bits of hash code into 12 gradient directional vectors
+        int h = hash & 15;
+        double u = h < 8 ? x : y;
+        double v = h < 4 ? y : h == 12 || h == 14 ? x : z;
+        return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
+    }
+}

@@ -1,5 +1,3 @@
-import java.util.Arrays;
-
 public abstract class Loader implements Runnable {
     // These will track the current progress amount
     protected volatile boolean isRunning = true;
@@ -10,16 +8,20 @@ public abstract class Loader implements Runnable {
     private final StatusStage[] stages;
     // Define the window
     // Our "window" dimensions are 80x22, so 22 * 80 = 1760
-    private final double[] zBuffer = new double[1760];
-    private final String[] outputBuffer = new String[1760];
+    private final int window_width;
+    private final int window_height;
+    private final int totalSize;
+
+    private final double[] zBuffer;
+    private final String[] outputBuffer;
 
     // Define some ASCII Codes:
-    // Resets all colors, brightness, and text styling modifications back to default
-    // terminal settings
+    // Resets all colors, brightness, and text styling modifications
+    // back to default terminal settings
     protected static final String RESET = "\u001B[0m";
 
-    // Standard foreground text colors (affected by terminal profile contrast
-    // levels)
+    // Standard foreground text colors (affected by terminal
+    // profile contrast levels)
     // Green progress text/success theme
     protected static final String GREEN = "\u001B[32m";
     // White progress bar text block / light gray text
@@ -51,8 +53,19 @@ public abstract class Loader implements Runnable {
         }
     }
 
+    // Default constructor retains original 80x22 layout for your other loaders
     public Loader(StatusStage[] stages) {
+        this(stages, 80, 22);
+    }
+
+    // Overloaded constructor allowing custom dimensions
+    public Loader(StatusStage[] stages, int width, int height) {
         this.stages = stages;
+        this.window_width = width;
+        this.window_height = height;
+        this.totalSize = width * height;
+        this.zBuffer = new double[totalSize];
+        this.outputBuffer = new String[totalSize];
     }
 
     public void stopLoading() {
@@ -65,7 +78,8 @@ public abstract class Loader implements Runnable {
 
     @Override
     public void run() {
-        // Run any geometry or color configurations once before starting (defined per class)
+        // Run any geometry or color configurations once 
+        // before starting (defined per class)
         initialize();
 
         // Wipe Screen and Hide the Cursor
@@ -76,8 +90,12 @@ public abstract class Loader implements Runnable {
             long startTime = System.nanoTime();
 
             // Clear buffers for the new frame
-            Arrays.fill(outputBuffer, " ");
-            Arrays.fill(zBuffer, 0);
+            for (int i = 0; i < outputBuffer.length; i++) {
+                outputBuffer[i] = " ";
+            }
+            for (int i = 0; i < zBuffer.length; i++) {
+                zBuffer[i] = 0;
+            }
 
             // Let the class draw onto the buffer
             renderGeometry(outputBuffer, zBuffer);
@@ -89,14 +107,14 @@ public abstract class Loader implements Runnable {
             frameBuilder.append(CURSOR_HOME);
 
             // Append geometry data
-            for (int k = 0; k < 1760; k++) {
-                if (k % 80 == 0 && k > 0) {
+            for (int k = 0; k < totalSize; k++) {
+                if (k % window_width == 0 && k > 0) {
                     frameBuilder.append("\n");
                 }
                 frameBuilder.append(outputBuffer[k]);
             }
 
-            // Resolve progress text
+            // Get the specific in-progress text
             int currentProgress = this.progress;
             String activeMessage = "Loading..."; // Default
             for (StatusStage stage : stages) {

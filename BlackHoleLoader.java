@@ -1,5 +1,3 @@
-import java.util.Arrays;
-
 public class BlackHoleLoader extends Loader {
     private static final StatusStage[] STAGES = {
             new StatusStage(30, "Generating singularity core:"),
@@ -38,7 +36,9 @@ public class BlackHoleLoader extends Loader {
 
     @Override
     protected void renderGeometry(String[] outputBuffer, double[] zBuffer) {
-        Arrays.fill(zBuffer, 0.0);
+        for(int i = 0; i < zBuffer.length; i++) {
+            zBuffer[i] = 0.0;
+        }
 
         // 1. DYNAMIC CAMERA ORBIT: Gentle cinematic rotation around the gravity well
         cameraAngle += 0.020;

@@ -1,5 +1,3 @@
-import java.util.Arrays;
-
 public class RippleTankAutomatonLoader extends Loader {
     private static final StatusStage[] STAGES = {
         new StatusStage(25, "Filling hydrodynamic pressure basin:"),
@@ -34,10 +32,18 @@ public class RippleTankAutomatonLoader extends Loader {
     protected void initialize() {
         timeClock = 0.0;
         for (int y = 0; y < SIM_H; y++) {
-            Arrays.fill(currentHeight[y], 0.0);
-            Arrays.fill(previousHeight[y], 0.0);
-            Arrays.fill(waveIntensity[y], 0.0);
-            Arrays.fill(obstacles[y], false);
+            for(int i = 0; i < currentHeight[y].length; i++) {
+                currentHeight[y][i] = 0.0;
+            }
+            for(int i = 0; i < previousHeight[y].length; i++) {
+                previousHeight[y][i] = 0.0;
+            }
+            for(int i = 0; i < waveIntensity[y].length; i++) {
+                waveIntensity[y][i] = 0.0;
+            }
+            for(int i = 0; i < obstacles[y].length; i++) {
+                obstacles[y][i] = false;
+            }
         }
 
         // Build the central barrier wall at WALL_X scaled up to the 88-row physics grid.

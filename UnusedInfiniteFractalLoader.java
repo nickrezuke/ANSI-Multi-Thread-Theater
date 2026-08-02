@@ -1,4 +1,5 @@
-// TODO Finish this one.  Its not rendering properly
+// TODO Think of something to do with this fractal one.  Its not rendering properly
+
 public class UnusedInfiniteFractalLoader extends Loader {
     private static final StatusStage[] FRACTAL_STAGES = {
             new StatusStage(25, "Seeding recursive coordinate cells:"),

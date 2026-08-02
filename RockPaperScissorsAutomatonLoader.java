@@ -1,5 +1,3 @@
-import java.util.Arrays;
-
 public class RockPaperScissorsAutomatonLoader extends Loader {
     private static final StatusStage[] STAGES = {
             new StatusStage(25, "Seeding primordial ecosystem:"),
@@ -35,8 +33,12 @@ public class RockPaperScissorsAutomatonLoader extends Loader {
 
         // Clear grids
         for (int y = 0; y < HEIGHT; y++) {
-            Arrays.fill(currentGrid[y], 0);
-            Arrays.fill(nextGrid[y], 0);
+            for(int i = 0; i < currentGrid[y].length; i++) {
+                currentGrid[y][i] = 0;
+            }
+            for(int i = 0; i < nextGrid[y].length; i++) {
+                nextGrid[y][i] = 0;
+            }
         }
 
         switch (seedStrategy) {

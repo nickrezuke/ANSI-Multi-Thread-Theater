@@ -1,5 +1,3 @@
-import java.util.Arrays;
-
 public class TextFallLoader extends Loader {
     private static final StatusStage[] TEXTFALL_STAGES = {
         new StatusStage(15, "Initializing construct:"),
@@ -48,7 +46,9 @@ public class TextFallLoader extends Loader {
             resetColumn(i, -Math.random() * HEIGHT);
         }
         for (char[] row : gridGlyphs) {
-            Arrays.fill(row, ' ');
+            for(int i = 0; i < row.length; i++) {
+                row[i] = ' ';
+            }
         }
     }
 

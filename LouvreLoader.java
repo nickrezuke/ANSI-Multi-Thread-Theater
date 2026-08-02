@@ -1,6 +1,4 @@
-import java.util.Arrays;
-
-public class LouvrePyramidLoader extends Loader {
+public class LouvreLoader extends Loader {
     private static final StatusStage[] LOUVRE_STAGES = {
             new StatusStage(25, "Calibrating real-time solar clock:"),
             new StatusStage(50, "Assembling space-frame ironwork:"),
@@ -14,14 +12,21 @@ public class LouvrePyramidLoader extends Loader {
     private static final char CH_GLASS = '\u2591'; // ░ Translucent glass panels
     private static final char CH_WATER = '\u2058'; // ⁘ Courtyard plaza concrete / basin floor texture
 
-    // --- REAL-TIME SOLAR COLOR PALETTE MATRICES ---
-    private static final int[] DAY_STRUT = { 200, 210, 220 }; // Gleaming Silver
-    private static final int[] DAY_GLASS = { 180, 215, 240 }; // Sky Blue Crystalline Reflection
-    private static final int[] DAY_FLOOR = { 225, 215, 195 }; // Sun-Bleached Limestone Beige
+    // Some color choicess for the Day / Night cycle to fade between
+    // Gleaming, modern, brushed aluminum/stainless steel structures 
+    private static final int[] DAY_STRUT = { 210, 215, 218 }; 
+    // Transparent, highly reflective extra-clear glass (Saint-Gobain Diamond Glass) catching the Parisian sky
+    private static final int[] DAY_GLASS = { 165, 195, 210 }; 
+    // The famous historic Cour Napoléon sandy French limestone (Charentes/Oise stone)
+    private static final int[] DAY_FLOOR = { 230, 218, 198 }; 
 
-    private static final int[] NGT_STRUT = { 25, 25, 30 }; // Charcoal Silhouette Black
-    private static final int[] NGT_GLASS = { 255, 160, 30 }; // Radiant Museum Interior Amber Gold
-    private static final int[] NGT_FLOOR = { 10, 25, 45 }; // Nocturnal Shadow-Sapphire
+    // Deep dark obsidian gray/black silhouette against the internal museum illumination
+    private static final int[] NGT_STRUT = { 30, 32, 35 }; 
+    // The rich, intense halogen/LED warm candle golden-amber designed by lighting architect I.M. Pei
+    private static final int[] NGT_GLASS = { 255, 155, 20 }; 
+    // Dark Parisian cobblestone/wet basin stone reflecting deep indigo midnight shadows
+    private static final int[] NGT_FLOOR = { 12, 18, 28 }; 
+
 
     private double timeClock = 0.0;
     private double rotationY = 0.0;
@@ -29,7 +34,7 @@ public class LouvrePyramidLoader extends Loader {
     private static final double STATIC_TILT_X = 0.1;
     private static final double CAMERA_DISTANCE = 3.2;
 
-    public LouvrePyramidLoader() {
+    public LouvreLoader() {
         super(LOUVRE_STAGES);
     }
 
@@ -132,7 +137,21 @@ public class LouvrePyramidLoader extends Loader {
             sortedFaces[i] = new SortedFace(i, zSum / 3.0);
         }
 
-        Arrays.sort(sortedFaces, (a, b) -> Double.compare(b.avgZ, a.avgZ));
+        // Depth sort back-to-front so transparent mesh segments compile correctly over each other
+        // Bubble Sort is perfectly fine here since we have < 10 faces...
+        // Check out my other project for better sorting algorithm analysis
+        for (int i = 0; i < sortedFaces.length - 1; i++) {
+            for (int j = 0; j < sortedFaces.length - i - 1; j++) {
+                // Compare adjacent elements (b.avgZ vs a.avgZ for descending order)
+                if (sortedFaces[j].avgZ < sortedFaces[j + 1].avgZ) {
+                    // Swap the face elements
+                    var temp = sortedFaces[j];
+                    sortedFaces[j] = sortedFaces[j + 1];
+                    sortedFaces[j + 1] = temp;
+                }
+            }
+        }
+        
 
         // STEP 3: Render Sorted Crystalline Matrix Faces
         for (int f = 0; f < sortedFaces.length; f++) {

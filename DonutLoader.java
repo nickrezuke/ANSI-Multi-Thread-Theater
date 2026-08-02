@@ -1,5 +1,3 @@
-import java.util.Arrays;
-
 public class DonutLoader extends Loader {
 
     private static final StatusStage[] DONUT_STAGES = {
@@ -101,8 +99,11 @@ public class DonutLoader extends Loader {
         }
 
         // Generate sprinkle map mapping logic
-        for (int[] row : sprinkleMap)
-            Arrays.fill(row, -1);
+        for (int[] row : sprinkleMap) {
+            for(int i = 0; i < row.length; i++) {
+                row[i] = -1;
+            }
+        }
         int tMapIndex = 0;
         for (double theta = 0; theta < 6.28; theta += 0.035) {
             int pMapIndex = 0;
