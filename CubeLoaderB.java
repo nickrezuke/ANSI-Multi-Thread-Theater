@@ -5,13 +5,18 @@ public class CubeLoaderB extends Loader {
     private int blockVariant = -1;
     private double angle = 0.0;
 
+    private static int getRandomVariant() {
+        // Right now there are 15 variants
+        return (int) (Math.random() * 15) + 1;
+    }
+
     public CubeLoaderB() {
-        this((int) (Math.random() * 15) + 1);
+        this(getRandomVariant());
     }
 
     public CubeLoaderB(int variant) {
-        variant = 16; // just testing each specific one for now...
         StatusStage[] CUBE_STAGES;
+        variant = 8;
 
         switch (variant) {
             case 1: // Minecraft Grass Block
@@ -183,7 +188,7 @@ public class CubeLoaderB extends Loader {
                         new StatusStage(100,
                                 new Random().ints(new Random().nextInt(5) + 8, 0, 62).mapToObj(i -> String.valueOf(
                                         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".charAt(i)))
-                                        .collect(Collectors.joining()) + ":")
+                                        .collect(Collectors.joining()) + "!:")
                 };
                 break;
             case 15: // Warp Circle Cube
@@ -210,8 +215,8 @@ public class CubeLoaderB extends Loader {
         // We should have already determined which one
         // to use, but just in case we didn't yet:
         if (this.blockVariant == -1) {
-            // Randomly select between 1 (Grass), 2 (Companion Cube), and 3 (Rubik's Cube)
-            this.blockVariant = (int) (Math.random() * 3) + 1;
+            // Randomly select between
+            this.blockVariant = getRandomVariant();
         }
     }
 
