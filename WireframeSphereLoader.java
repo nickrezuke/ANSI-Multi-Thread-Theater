@@ -1,5 +1,5 @@
 public class WireframeSphereLoader extends Loader { 
-    private static final StatusStage[] REFLECTIVE_STAGES = { 
+    private static final StatusStage[] STAGES = { 
         new StatusStage(30, "Calibrating uniform angular mesh:"), 
         new StatusStage(60, "Balancing polar coordinate density:"), 
         new StatusStage(90, "Projecting seamless wireframe:"), 
@@ -17,7 +17,7 @@ public class WireframeSphereLoader extends Loader {
     private static final int COLOR_B = 150;
 
     public WireframeSphereLoader() { 
-        super(REFLECTIVE_STAGES); 
+        super(STAGES); 
     }
 
     @Override 

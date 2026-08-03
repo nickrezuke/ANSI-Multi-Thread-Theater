@@ -1,12 +1,16 @@
 public class LoaderFactory {
     // All the loaders currently being considered
     private static final String[] LOADER_NAMES = {
-            "ConwaysGameOfLife", "GameOfLife", "Donut", "CubeA", "CubeB", "CatHead", "Retrowave", "Synthwave",
+            "ConwaysGameOfLife", "GameOfLife", "Donut", "CubeA", "CubeB", "CatHead", "Vaporwave", "Synthwave",
             "GreyScottReactionDiffusion", "ReactionDiffusion", "Radar", "MandelbrotZoom", "DNA", "BlackHole", "Lorenz",
-            "LorenzAttractor", "RippleTank", "DoubleSlit", "TextFall", "Ring", "RockPaperScissors",
+            "LorenzAttractor", "RippleTank", "DoubleSlit", "TextFall", "Ring", "RockPaperScissors", "FrutigerAero",
             "RainbowWhispSphere", "PacMan", "OctahedralMatrix", "RainbowWhispPyramid", "Tesseract", "4D Cube",
-            "EyeOfProvidence", "Illuminati", "WireframeSphere", "Louvre", "FluidDynamics", "NavierStokes",
-            "PerlinNoise", "EiffelTower", "Unused", "Unused2"
+            "EyeOfProvidence", "Illuminati", "WireframeSphere", "Louvre", "FluidDynamics", "NavierStokes", "DJ",
+            "DJTurntable", "PerlinNoise", "SydneyOperaHouse", "EiffelTower", "TajMahal", "ChicagoBean", "CloudGate",
+            "BigBen", "NyanCat", "BouncingSpinner", "DancingBanana", "ThreeBody", "WireframeCube", "HyperSphere",
+            "4D Sphere", "HopfFibration", "Snake", "Pong", "BrickBreakout", "Breakout", "SpaceInvaders", "Chess",
+            "Checkers", "Tetris", "Asteroids", "Centepede", "Galaga", "LangtonsAnt", "Boids", "HerdingAndFlocking",
+            "BriansBrain", "Unused", "Unused2"
     };
 
     public static Loader createLoaderInstance(String requestedName) {
@@ -49,9 +53,10 @@ public class LoaderFactory {
                 return new CubeLoaderB();
             case "CatHead":
                 return new CatHeadLoader();
-            case "Retrowave":
             case "Synthwave":
-                return new RetroWaveLoader();
+                return new SynthWaveLoader();
+            case "Vaporwave":
+                return new VaporWaveLoader();
             case "GreyScottReactionDiffusion":
             case "ReactionDiffusion":
                 return new ReactionDiffusionLoader();
@@ -75,6 +80,8 @@ public class LoaderFactory {
                 return new RingLoader();
             case "RockPaperScissors":
                 return new RockPaperScissorsAutomatonLoader();
+            case "FrutigerAero":
+                return new FrutigerAeroLoader();
             case "RainbowWhispSphere":
                 return new RainbowWhispSphereLoader();
             case "PacMan":
@@ -96,10 +103,65 @@ public class LoaderFactory {
             case "FluidDynamics":
             case "NavierStokes":
                 return new FluidDynamicsLoader();
+            case "DJ":
+            case "DJTurntable":
+                return new DJTurntableLoader();
             case "PerlinNoise":
                 return new PerlinNoiseLoader();
+            case "SydneyOperaHouse":
+                return new SydneyOperaHouseLoader();
             case "EiffelTower":
                 return new EiffelTowerLoader();
+            case "TajMahal":
+                return new TajMahalLoader();
+            case "ChicagoBean":
+            case "CloudGate":
+                return new ChicagoBeanLoader();
+            case "BigBen":
+                return new BigBenLoader();
+            case "NyanCat":
+                return new NyanCatLoader();
+            case "BouncingSpinner":
+                return new BouncingSpinnerLoader();
+            case "DancingBanana":
+                return new DancingBananaLoader();
+            case "ThreeBody":
+                return new ThreeBodyLoader();
+            case "WireframeCube":
+                return new WireframeCubeLoader();
+            case "HyperSphere":
+            case "4D Sphere":
+                return new HypersphereLoader();
+            case "HopfFibration":
+                return new HopfFibrationLoader();
+            case "Snake":
+                return new SnakeLoader();
+            case "Pong":
+                return new PongLoader();
+            case "BrickBreakout":
+            case "Breakout":
+                return new BrickBreakoutLoader();
+            case "SpaceInvaders":
+                return new SpaceInvadersLoader();
+            case "Chess":
+                return new ChessLoader();
+            case "Checkers":
+                return new CheckersLoader();
+            case "Tetris":
+                return new TetrisLoader();
+            case "Asteroids":
+                return new AsteroidsLoader();
+            case "Centepede":
+                return new CentipedeLoader();
+            case "Galaga":
+                return new GalagaLoader();
+            case "LangtonsAnt":
+                return new LangtonsAntLoader();
+            case "Boids":
+            case "HerdingAndFlocking":
+                return new BoidsLoader();
+            case "BriansBrain":
+                return new BriansBrainLoader();
             case "Unused":
                 return new UnusedInfiniteFractalLoader();
             case "Unused2":
@@ -169,7 +231,6 @@ public class LoaderFactory {
                 bestMatch = option;
             }
         }
-
         return bestMatch;
     }
 }

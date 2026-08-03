@@ -124,24 +124,47 @@ public abstract class Loader implements Runnable {
                 }
             }
 
-            // TODO: Maybe make the loading text on top of the loading bar for width < height or something??
+            if(window_width * 2 < window_height || window_width <= 40) {
+                // Truncate message to avoid spilling over narrow canvas borders
+                String cleanMsg = activeMessage.trim();
+                if (cleanMsg.length() > window_width) {
+                    cleanMsg = cleanMsg.substring(0, Math.max(0, window_width - 3)) + "...";
+                }
 
-            // Build progress bar indicators
-            int totalBars = 30;
-            int filledBars = (int) ((currentProgress / 100.0) * totalBars);
-            StringBuilder bar = new StringBuilder();
-            for (int b = 0; b < totalBars; b++) {
-                bar.append(b < filledBars ? LOAD_BAR_FULL : LOAD_BAR_EMPTY);
+                // Dynamically calculate loading bar width relative to layout size constraints
+                int barWidth = window_width - 7; 
+                if (barWidth < 3) barWidth = 3; // Enforce safe minimum footprint layout
+
+                int filledBars = (int) ((currentProgress / 100.0) * barWidth);
+                StringBuilder bar = new StringBuilder();
+                for (int b = 0; b < barWidth; b++) {
+                    bar.append(b < filledBars ? LOAD_BAR_FULL : LOAD_BAR_EMPTY);
+                }
+
+                // Stack elements vertically on separate rows below the rendered geometry
+                frameBuilder.append("\n\n")
+                            .append(WHITE).append(cleanMsg).append(CLEAR_LINE).append("\n")
+                            .append(WHITE).append("[").append(GREEN).append(bar).append(WHITE).append("] ")
+                            .append(currentProgress).append("%")
+                            .append(CLEAR_LINE)
+                            .append(RESET);            } else {
+                // Build progress bar indicators
+                int totalBars = 30;
+                int filledBars = (int) ((currentProgress / 100.0) * totalBars);
+                StringBuilder bar = new StringBuilder();
+                for (int b = 0; b < totalBars; b++) {
+                    bar.append(b < filledBars ? LOAD_BAR_FULL : LOAD_BAR_EMPTY);
+                }
+    
+                // Format status line output
+                String formattedStatus = String.format(" %18s", activeMessage);
+                frameBuilder.append("\n\n")
+                        .append(WHITE).append(formattedStatus)
+                        .append("[").append(GREEN).append(bar).append(WHITE).append("] ")
+                        .append(currentProgress).append("%")
+                        .append(CLEAR_LINE) // Clear line to the right to handle text width shifts cleanly
+                        .append(RESET);
             }
-
-            // Format status line output
-            String formattedStatus = String.format(" %18s", activeMessage);
-            frameBuilder.append("\n\n")
-                    .append(WHITE).append(formattedStatus)
-                    .append("[").append(GREEN).append(bar).append(WHITE).append("] ")
-                    .append(currentProgress).append("%")
-                    .append(CLEAR_LINE) // Clear line to the right to handle text width shifts cleanly
-                    .append(RESET);
 
             // Push the entire frame to standard output in a single print statement
             System.out.print(frameBuilder.toString());

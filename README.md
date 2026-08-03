@@ -17,82 +17,97 @@ While the original concept proved that 3D geometries could be projected onto a f
 ---
 
 ## 📐 The Geometric Library
-<!-- TODO:THIS SECTION -->
+<!-- TODO: Elaborate on this section -->
 This Project comes packed with a suite of rendering targets, all derived from a common footprint:
 
 -> **Donut**: An expanded, color-customizable adaptation of Sloan's original code.  This was the first one I attempted, and after implementing I refined it with triginometric frosting, random variants, and a sprinkle map for extra style.
--> **Ring**: <!-- TODO:THIS SECTION -->
--> **CubeA**: <!-- TODO:THIS SECTION -->
--> **CubeB**: <!-- TODO:THIS SECTION -->
--> **CatHead**: <!-- TODO:THIS SECTION -->
+-> **Ring**: <!-- TODO: Elaborate on this section -->
+-> **CubeA**: <!-- TODO: Elaborate on this section -->
+-> **CubeB**: <!-- TODO: Elaborate on this section -->
+-> **CatHead**: <!-- TODO: Elaborate on this section -->
 -> **DNA**: After those, I attempted to make the classic offset DNA twist.
 
--> **OctahedralMatrix**: <!-- TODO:THIS SECTION -->
+-> **OctahedralMatrix**: <!-- TODO: Elaborate on this section -->
 
--> **EyeOfProvidence**: <!-- TODO:THIS SECTION -->
+-> **EyeOfProvidence**: <!-- TODO: Elaborate on this section -->
 
--> **PacMan**: <!-- TODO:THIS SECTION -->
+-> **PacMan**: <!-- TODO: Elaborate on this section -->
 
--> **RainbowWhispPyramid**: <!-- TODO:THIS SECTION -->
--> **RainbowWhispSphere**: <!-- TODO:THIS SECTION -->
+-> **RainbowWhispPyramid**: <!-- TODO: Elaborate on this section -->
+-> **RainbowWhispSphere**: <!-- TODO: Elaborate on this section -->
 
--> **WireframeSphere**: <!-- TODO:THIS SECTION -->
+-> **WireframeSphere**: <!-- TODO: Elaborate on this section -->
+-> **WireframeCube**: <!-- TODO: Elaborate on this section -->
 
--> **Tesseract**: <!-- TODO:THIS SECTION -->
+-> **Tesseract**: <!-- TODO: Elaborate on this section -->
+-> **Hypersphere**: <!-- TODO: Elaborate on this section -->
+-> **HopfFibration**: <!-- TODO: Elaborate on this section -->
 
--> **ConwaysGameOfLife**: <!-- TODO:THIS SECTION -->
--> **MandelbrotZoom**: <!-- TODO:THIS SECTION -->
--> **RockPaperScissors**: <!-- TODO:THIS SECTION -->
--> **PerlinNoise**: <!-- TODO:THIS SECTION -->
+-> **ConwaysGameOfLife**: <!-- TODO: Elaborate on this section -->
+-> **MandelbrotZoom**: <!-- TODO: Elaborate on this section -->
+-> **RockPaperScissors**: <!-- TODO: Elaborate on this section -->
+-> **PerlinNoise**: <!-- TODO: Elaborate on this section -->
+-> **LorenzAttractor**: <!-- TODO: Elaborate on this section -->
+-> **ThreeBody**: <!-- TODO: Elaborate on this section -->
+-> **BlackHole**: <!-- TODO: Elaborate on this section -->
+-> **NavierStokes**: <!-- TODO: Elaborate on this section -->
+-> **GreyScottReactionDiffusion**: <!-- TODO: Elaborate on this section -->
+-> **DoubleSlit**: <!-- TODO: Elaborate on this section -->
 
--> **LorenzAttractor**: <!-- TODO:THIS SECTION -->
--> **BlackHole**: <!-- TODO:THIS SECTION -->
--> **NavierStokes**: <!-- TODO:THIS SECTION -->
--> **GreyScottReactionDiffusion**: <!-- TODO:THIS SECTION -->
--> **DoubleSlit**: <!-- TODO:THIS SECTION -->
+-> **BigBen**: <!-- TODO: Elaborate on this section -->
+-> **TajMahal**: <!-- TODO: Elaborate on this section -->
+-> **Lourve**: <!-- TODO: Elaborate on this section -->
+-> **ChicagoBean**: <!-- TODO: Elaborate on this section -->
+-> **SydneyOperaHouse**: <!-- TODO: Elaborate on this section -->
+-> **EiffelTower**: <!-- TODO: Elaborate on this section -->
 
--> **Lourve**: <!-- TODO:THIS SECTION -->
+-> **BouncingSpinner**: <!-- TODO: Elaborate on this section -->
+-> **NyanCat**: <!-- TODO: Elaborate on this section -->
+-> **Radar**: <!-- TODO: Elaborate on this section -->
+-> **TextFall**: <!-- TODO: Elaborate on this section -->
+-> **VaporWave**: <!-- TODO: Elaborate on this section -->
+-> **SynthWave**: <!-- TODO: Elaborate on this section -->
+-> **FrudigerAero**: <!-- TODO: Elaborate on this section -->
+-> **DJTurntable**: <!-- TODO: Elaborate on this section -->
+-> **DancingBanana**: <!-- TODO: Elaborate on this section -->
 
--> **Radar**: <!-- TODO:THIS SECTION -->
--> **TextFall**: <!-- TODO:THIS SECTION -->
--> **RetroWave**: <!-- TODO:THIS SECTION -->
+-> **Pong**: <!-- TODO: Elaborate on this section -->
+-> **Asteroids**: <!-- TODO: Elaborate on this section -->
+-> **Tetris**: <!-- TODO: Elaborate on this section -->
+-> **Snake**: <!-- TODO: Elaborate on this section -->
+-> **Checkers**: <!-- TODO: Elaborate on this section -->
+-> **Chess**: <!-- TODO: Elaborate on this section -->
+-> **SpaceInvaders**: <!-- TODO: Elaborate on this section -->
+-> **Galaga**: <!-- TODO: Elaborate on this section -->
+-> **BrickBreakout**: <!-- TODO: Elaborate on this section -->
+
+spider web
+butterfly
+snake.io
+saturn
+moon phases
+leaves falling / autumn 2D landscape
+2D swing on a tree w/ strings, little yellow flower in the corner
+2D Umbrella Peopp;le walking in the rainy city a/ city night light recfection in the puddles
+Slot Machine
+Snow Globe
+Coveyer belt with Sushi & Ramen on it like at the resturaunts
+Rocket Ship with saturn??
+Campfire 
+Alphabet
+Regular Earth on a sphere
+Model the whole solar system, all the planets orbiting around the sun (Shinysphere?)
+Waterfall
+Tornado
 
 ---
 
 ## 🛠️ Architecture & Core Framework
 
-At the heart of the engine is an object-oriented rendering pipeline. All spinners utilize a uniform execution pattern managed via an abstract baseline class:
-
-
-### Thread Safe Inter-Process Synchronization
-
-Unlike single-threaded loop implementations, a `Loader` operates concurrently with whatever called it.  To use a loader, the calling method needs to pass down an active thread token, spin up the canvas lifecycle, and feed numeric ticks over thread pipelines as shown below:
-
-```java
-// First Instantiate your loader of choice
-Loader myLoader = new DonutLoader();
-
-// Fire up the visual thread context
-Thread loaderThread = new Thread(myLoader);
-loaderThread.start();
-
-try {
-    for (int i = 0; i <= 100; i += 5) {
-        // Perform your calculations/processing in here...
-        Thread.sleep(200); // Replace sleep with your code...
-        
-        // Asynchronously update the loader's internal state while your code is running
-        myLoader.updateProgress(i); // where i is an int between 0-100
-    }
-} finally {
-    // Gracefully spin-down rendering frames
-    myLoader.stop();
-}
-// continue with your program...
-```
+At the heart of the engine is an object-oriented rendering pipeline. All loaders utilize a uniform execution pattern managed via an abstract baseline class.
+<!-- TODO: Elaborate on this section -->
 
 ---
-
 
 ## 🚀 Getting Started
 
@@ -126,3 +141,34 @@ try {
    ```
 
 ---
+
+### Thread Safe Inter-Process Synchronization (for use in your own project)
+
+These `Loader`s operate concurrently with whatever called it.  To use a loader, the calling method needs to pass down an active thread token, spin up the canvas lifecycle, and feed numeric ticks over thread pipelines as shown below:
+
+```java
+//... insert this into your code:
+// First, instantiate your loader of choice
+Loader myLoader = new DonutLoader();
+
+// Next, Fire up a new thread and start it, passing in your loader
+Thread loaderThread = new Thread(myLoader);
+loaderThread.start();
+
+// Then, run the main loop of your program
+try {
+   // Perform your calculations/processing within this block here...
+   // I simulate this by looping sleep(), but you should place your own code/logic here
+    for (int i = 0; i <= 100; i += 1) {
+        Thread.sleep(100);
+        
+        // Asynchronously update the loader's internal state while your code is running with this
+        // updateProgress function.  Call it (repeatedly, or whenever you can) to update the loading bar in real-time
+        myLoader.updateProgress(i); // where i is an int between 0-100
+    }
+} finally {
+    // Gracefully stop the loader animation, and return to normal console state
+    myLoader.stop();
+}
+// after that, continue on with your program...
+```

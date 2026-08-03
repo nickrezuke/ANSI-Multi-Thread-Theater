@@ -1,4 +1,4 @@
-public class RetroWaveLoader extends Loader {
+public class SynthWaveLoader extends Loader {
     private static final StatusStage[] STAGES = {
             new StatusStage(25, "Booting synthesizer arrays:"),
             new StatusStage(50, "Calibrating vector horizon:"),
@@ -19,7 +19,7 @@ public class RetroWaveLoader extends Loader {
     private static final String COLOR_WHEEL = "\u001B[38;5;234m"; // Slate Black tires
     private static final String COLOR_WINDOW = "\u001B[38;5;87m"; // High-Gloss Cyan Window
 
-    public RetroWaveLoader() {
+    public SynthWaveLoader() {
         super(STAGES);
     }
 

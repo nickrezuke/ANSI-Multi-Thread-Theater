@@ -1,6 +1,6 @@
 // TODO: Fix This Perlin Noise Loader It currently looks terrible.
 
-public class PerlinNoiseLoader extends Loader {
+public class PerlinNoiseLoader2 extends Loader {
     private static final StatusStage[] STAGES = {
             new StatusStage(25, "Generating cohesive gradient vectors:"),
             new StatusStage(55, "Interpolating multi-octave noise fields:"),
@@ -45,7 +45,7 @@ public class PerlinNoiseLoader extends Loader {
 
     private double cameraX = 0.0;
 
-    public PerlinNoiseLoader() {
+    public PerlinNoiseLoader2() {
         super(STAGES);
     }
 
@@ -83,55 +83,61 @@ public class PerlinNoiseLoader extends Loader {
                 // normalizedValue = Math.pow(normalizedValue, 1.25); // Do one of these
                 normalizedValue = Math.sqrt(normalizedValue); // Do one of these
 
-                double edge = Math.min(
-                        Math.min(x / (double) WIDTH,
-                                (WIDTH - x) / (double) WIDTH),
-                        Math.min(y / (double) HEIGHT,
-                                (HEIGHT - y) / (double) HEIGHT));
+                
 
-                edge = Math.min(edge * 3.5, 1.0);
 
-                edge = Math.pow(edge, 0.0125);
-
+                double nx = (x - WIDTH / 2.0) / (WIDTH / 2.0);
+                double ny = (y - HEIGHT / 2.0) / (HEIGHT / 2.0);
+                
+                double edge = 1.0 - Math.sqrt(nx * nx + ny * ny);
+                
+                edge = Math.max(0.0, edge);
+                edge = Math.pow(edge, 0.35);    // tweak to taste
+                
+                normalizedValue *= edge;
                 normalizedValue *= edge;
 
                 double dx = calculateImprovedNoise(
-                        mappedX + cameraX + 0.03,
-                        mappedY,
-                        0.0);
-
+                    mappedX + cameraX + 0.03,
+                    mappedY,
+                    0.0);
+                
                 double dy = calculateImprovedNoise(
-                        mappedX + cameraX,
-                        mappedY + 0.03,
-                        0.0);
-
-                double light = (dx - value) * 0.8 +
-                        (dy - value) * 0.5;
-
+                    mappedX + cameraX,
+                    mappedY + 0.03,
+                    0.0);
+                
+                double light =
+                    (dx - value) * 0.8 +
+                    (dy - value) * 0.5;
+                
                 normalizedValue += light * 0.25;
                 normalizedValue = Math.max(0, Math.min(1, normalizedValue));
 
                 double t = normalizedValue;
 
-                // Deep blue
-                int r;
-                int g;
-                int b;
+// Deep blue
+int r = 10;
+int g = 20;
+int b = 70;
 
-                if (t < 0.5) {
-                    double u = t / 0.5;
+if (t > 0.35) {
+    double u = (t - 0.35) / 0.35;
+
+    r = (int)(10 + u * 40);
+    g = (int)(20 + u * 180);
+    b = (int)(70 + u * 170);
+}
+
+if (t > 0.75) {
+    double u = (t - 0.75) / 0.25;
+
+    r = (int)(50 + u * 205);
+    g = (int)(160 + u * 55);
+    b = (int)(140 + u * 15);
+}
+
                 
-                    r = (int)(10 + u * 25);
-                    g = (int)(20 + u * 70);
-                    b = (int)(70 + u * 100);
-                
-                } else {
-                    double u = (t - 0.5) / 0.5;
-                
-                    r = (int)(35 + u * 220);
-                    g = (int)(90 + u * 165);
-                    b = (int)(170 + u * 85);
-                }
 
                 // Select density character token based on intensity levels
                 int shadeIndex = Math.min(SHADE_RAMP.length - 1,

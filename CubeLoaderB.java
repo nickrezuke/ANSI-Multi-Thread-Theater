@@ -16,7 +16,6 @@ public class CubeLoaderB extends Loader {
 
     public CubeLoaderB(int variant) {
         StatusStage[] CUBE_STAGES;
-        variant = 8;
 
         switch (variant) {
             case 1: // Minecraft Grass Block
@@ -128,6 +127,7 @@ public class CubeLoaderB extends Loader {
                 };
                 break;
             case 10: // Hellraiser Lament Configuration (Puzzle Box)
+                // TODO: Finish deciding on Loading Statements
                 CUBE_STAGES = new StatusStage[] {
                         new StatusStage(20, "???:"),
                         new StatusStage(50, "???:"),
