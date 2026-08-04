@@ -5,12 +5,16 @@ public abstract class Loader implements Runnable {
 
     protected static int INTENDED_FRAMERATE = 10000000; // 10 milliseconds default
 
+    protected boolean isRawCanvas = false;
+
+    private final java.util.concurrent.atomic.AtomicBoolean isCleanedUp = new java.util.concurrent.atomic.AtomicBoolean(
+            false);
+
     private final StatusStage[] stages;
     // Define the window
-    // Our "window" dimensions are 80x22, so 22 * 80 = 1760
-    private final int window_width;
-    private final int window_height;
-    private final int totalSize;
+    protected final int window_width;
+    protected final int window_height;
+    protected final int totalSize;
 
     private final double[] zBuffer;
     private final String[] outputBuffer;
@@ -78,7 +82,12 @@ public abstract class Loader implements Runnable {
 
     @Override
     public void run() {
-        // Run any geometry or color configurations once 
+        // Ensure standard mode after previous runs
+        if (!this.isRawCanvas) {
+            TerminalConfig.restoreMode();
+        }
+
+        // Run any geometry or color configurations once
         // before starting (defined per class)
         initialize();
 
@@ -109,7 +118,7 @@ public abstract class Loader implements Runnable {
             // Append geometry data
             for (int k = 0; k < totalSize; k++) {
                 if (k % window_width == 0 && k > 0) {
-                    frameBuilder.append("\n");
+                    frameBuilder.append(isRawCanvas ? "\r\n" : "\n");
                 }
                 frameBuilder.append(outputBuffer[k]);
             }
@@ -124,7 +133,7 @@ public abstract class Loader implements Runnable {
                 }
             }
 
-            if(window_width * 2 < window_height || window_width <= 40) {
+            if (window_width * 2 < window_height || window_width <= 40) {
                 // Truncate message to avoid spilling over narrow canvas borders
                 String cleanMsg = activeMessage.trim();
                 if (cleanMsg.length() > window_width) {
@@ -132,8 +141,9 @@ public abstract class Loader implements Runnable {
                 }
 
                 // Dynamically calculate loading bar width relative to layout size constraints
-                int barWidth = window_width - 7; 
-                if (barWidth < 3) barWidth = 3; // Enforce safe minimum footprint layout
+                int barWidth = window_width - 7;
+                if (barWidth < 3)
+                    barWidth = 3; // Enforce safe minimum footprint layout
 
                 int filledBars = (int) ((currentProgress / 100.0) * barWidth);
                 StringBuilder bar = new StringBuilder();
@@ -142,12 +152,13 @@ public abstract class Loader implements Runnable {
                 }
 
                 // Stack elements vertically on separate rows below the rendered geometry
-                frameBuilder.append("\n\n")
-                            .append(WHITE).append(cleanMsg).append(CLEAR_LINE).append("\n")
-                            .append(WHITE).append("[").append(GREEN).append(bar).append(WHITE).append("] ")
-                            .append(currentProgress).append("%")
-                            .append(CLEAR_LINE)
-                            .append(RESET);            } else {
+                frameBuilder.append(isRawCanvas ? "\r\n\r\n" : "\n\n")
+                        .append(WHITE).append(cleanMsg).append(CLEAR_LINE).append(isRawCanvas ? "\r\n" : "\n")
+                        .append(WHITE).append("[").append(GREEN).append(bar).append(WHITE).append("] ")
+                        .append(currentProgress).append("%")
+                        .append(CLEAR_LINE)
+                        .append(RESET);
+            } else {
                 // Build progress bar indicators
                 int totalBars = 30;
                 int filledBars = (int) ((currentProgress / 100.0) * totalBars);
@@ -155,14 +166,14 @@ public abstract class Loader implements Runnable {
                 for (int b = 0; b < totalBars; b++) {
                     bar.append(b < filledBars ? LOAD_BAR_FULL : LOAD_BAR_EMPTY);
                 }
-    
+
                 // Format status line output
                 String formattedStatus = String.format(" %18s", activeMessage);
-                frameBuilder.append("\n\n")
+                frameBuilder.append(isRawCanvas ? "\r\n\r\n" : "\n\n")
                         .append(WHITE).append(formattedStatus)
                         .append("[").append(GREEN).append(bar).append(WHITE).append("] ")
                         .append(currentProgress).append("%")
-                        .append(CLEAR_LINE) // Clear line to the right to handle text width shifts cleanly
+                        .append(CLEAR_LINE)
                         .append(RESET);
             }
 
@@ -189,7 +200,31 @@ public abstract class Loader implements Runnable {
         System.out.flush();
     }
 
+    // Defined per Loader
     protected abstract void initialize();
 
+    // Defined per Loader
     protected abstract void renderGeometry(String[] outputBuffer, double[] zBuffer);
+
+    /**
+     * Forcibly shuts down the active execution canvas and ensures the native
+     * operating system terminal characteristics are cleanly restored.
+     * For example, what if we hit Ctrl-C
+     */
+    public final void forceTerminalCleanup() {
+        // If it has already been cleaned up by a thread, do nothing
+        if (!isCleanedUp.compareAndSet(false, true)) {
+            return;
+        }
+        
+        this.isRunning = false;
+
+        // Explicitly force the OS terminal out of raw mode right now
+        TerminalConfig.restoreMode();
+
+        // Wipe the canvas screen, reset coordinates, and reveal the hardware blinking
+        // cursor
+        System.out.print("\n" + CLEAR_SCREEN + CURSOR_HOME + SHOW_CURSOR);
+        System.out.flush();
+    }
 }

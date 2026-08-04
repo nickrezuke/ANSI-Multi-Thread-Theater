@@ -7,16 +7,22 @@ public class ExampleTask {
     
     public static void main(String[] args) {
 
-        // 1. Register a thread that fires exclusively when Control+C is hit.
-        // This clears down the screen after a force shutdown bc we all do that lol.
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.print(CLEAR_SCREEN+CURSOR_HOME+SHOW_CURSOR);
-            System.out.flush();
-        }));
-
-        // 2. Evaluate the desired loader and create it
+        // 1. Evaluate the desired loader and create it
         String userPreference = (args.length > 0) ? args[0] : null;
         Loader loader = LoaderFactory.createLoaderInstance(userPreference);
+
+        // 2. Register an advanced thread that fires exclusively when Control+C is hit.
+        // This acts as a bulletproof structural cleanup routine.
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (loader != null) {
+                // Forcibly drop out of raw terminal structures immediately before closing
+                loader.forceTerminalCleanup();
+            } else {
+                // Generic fallback if no loader was actively generated
+                System.out.print(CLEAR_SCREEN + CURSOR_HOME + SHOW_CURSOR);
+                System.out.flush();
+            }
+        }));
 
         // 3. Spin up the desired loader on a new thread, and start it
         Thread loadingThread = new Thread(loader);
@@ -52,7 +58,9 @@ public class ExampleTask {
 
         // 6. Fresh clear so our completion message prints cleanly
         // Clear Screen + Cursor Home + Show Cursor
+        loader.forceTerminalCleanup();
         System.out.print(CLEAR_SCREEN+CURSOR_HOME+SHOW_CURSOR);
+        System.out.flush();
     }
 
     

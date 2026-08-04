@@ -1,5 +1,5 @@
-public class CubeLoaderA extends Loader {
-    // This Cube Creates a Super Mario Bros. style "?" Block, with a question mark
+public class Mario64CubeLoader extends Loader {
+    // This creates a Super Mario 64 style Power Block, with a question mark
     // on the front faces and a checkerboard border around all faces.
     private static final StatusStage[] CUBE_STAGES = {
         new StatusStage(16, "Starting Level:"),
@@ -20,7 +20,7 @@ public class CubeLoaderA extends Loader {
     private int baseR, baseG, baseB;
     private double angle = 0.0;
 
-    public CubeLoaderA() {
+    public Mario64CubeLoader() {
         super(CUBE_STAGES);
     }
 

@@ -4,10 +4,10 @@ import java.util.Random;
 
 public class BoidsLoader extends Loader {
     private static final StatusStage[] FLOCK_STAGES = {
-        new StatusStage(25, "Seeding position vectors:"),
-        new StatusStage(50, "Injecting local neighbor radii:"),
-        new StatusStage(75, "Syncing multi-agent steering forces:"),
-        new StatusStage(100, "Boids Flocking Model Operational!")
+            new StatusStage(25, "Seeding position vectors:"),
+            new StatusStage(50, "Injecting local neighbor radii:"),
+            new StatusStage(75, "Syncing multi-agent steering forces:"),
+            new StatusStage(100, "Boids Flocking Model Operational!")
     };
 
     private static final int WIDTH = 80;
@@ -19,15 +19,21 @@ public class BoidsLoader extends Loader {
         double vx, vy;
 
         Boid(double x, double y, double vx, double vy) {
-            this.x = x; this.y = y;
-            this.vx = vx; this.vy = vy;
+            this.x = x;
+            this.y = y;
+            this.vx = vx;
+            this.vy = vy;
         }
 
         void wrap() {
-            if (x < 0) x += WIDTH;
-            if (x >= WIDTH) x -= WIDTH;
-            if (y < 0) y += HEIGHT;
-            if (y >= HEIGHT) y -= HEIGHT;
+            if (x < 0)
+                x += WIDTH;
+            if (x >= WIDTH)
+                x -= WIDTH;
+            if (y < 0)
+                y += HEIGHT;
+            if (y >= HEIGHT)
+                y -= HEIGHT;
         }
     }
 
@@ -49,11 +55,10 @@ public class BoidsLoader extends Loader {
         boids.clear();
         for (int i = 0; i < NUM_BOIDS; i++) {
             boids.add(new Boid(
-                rand.nextDouble() * WIDTH,
-                rand.nextDouble() * HEIGHT,
-                (rand.nextDouble() * 2.0 - 1.0) * 0.5,
-                (rand.nextDouble() * 2.0 - 1.0) * 0.25
-            ));
+                    rand.nextDouble() * WIDTH,
+                    rand.nextDouble() * HEIGHT,
+                    (rand.nextDouble() * 2.0 - 1.0) * 0.5,
+                    (rand.nextDouble() * 2.0 - 1.0) * 0.25));
         }
         lastTickTime = System.currentTimeMillis();
     }
@@ -88,16 +93,21 @@ public class BoidsLoader extends Loader {
             int neighborsCount = 0;
 
             for (Boid other : boids) {
-                if (boid == other) continue;
+                if (boid == other)
+                    continue;
 
                 // Handle toroidal distance tracking across wrapping boundaries
                 double dx = other.x - boid.x;
-                if (dx > WIDTH / 2.0) dx -= WIDTH;
-                else if (dx < -WIDTH / 2.0) dx += WIDTH;
+                if (dx > WIDTH / 2.0)
+                    dx -= WIDTH;
+                else if (dx < -WIDTH / 2.0)
+                    dx += WIDTH;
 
                 double dy = other.y - boid.y;
-                if (dy > HEIGHT / 2.0) dy -= HEIGHT;
-                else if (dy < -HEIGHT / 2.0) dy += HEIGHT;
+                if (dy > HEIGHT / 2.0)
+                    dy -= HEIGHT;
+                else if (dy < -HEIGHT / 2.0)
+                    dy += HEIGHT;
 
                 double distance = Math.sqrt(dx * dx + dy * dy);
 
@@ -157,7 +167,8 @@ public class BoidsLoader extends Loader {
             outputBuffer[i] = BACKGROUND_DOT;
         }
 
-        // Rasterize active boid agents mapping headings directly to text directional arrows
+        // Rasterize active boid agents mapping headings directly to text directional
+        // arrows
         for (Boid b : boids) {
             int bx = (int) Math.round(b.x);
             int by = (int) Math.round(b.y);
@@ -165,17 +176,26 @@ public class BoidsLoader extends Loader {
             // Safety guard clamp bounds matching matrix properties
             if (bx >= 0 && bx < WIDTH && by >= 0 && by < HEIGHT) {
                 double angle = Math.atan2(b.vy, b.vx) * 180.0 / Math.PI;
-                if (angle < 0) angle += 360.0;
+                if (angle < 0)
+                    angle += 360.0;
 
                 char glyph = '►'; // Default right heading pointer
-                if (angle >= 337.5 || angle < 22.5)    glyph = '►';
-                else if (angle >= 22.5 && angle < 67.5)   glyph = '◢';
-                else if (angle >= 67.5 && angle < 112.5)  glyph = '▼';
-                else if (angle >= 112.5 && angle < 157.5) glyph = '◣';
-                else if (angle >= 157.5 && angle < 202.5) glyph = '◄';
-                else if (angle >= 202.5 && angle < 247.5) glyph = '◤';
-                else if (angle >= 247.5 && angle < 292.5) glyph = '▲';
-                else if (angle >= 292.5 && angle < 337.5) glyph = '◥';
+                if (angle >= 337.5 || angle < 22.5)
+                    glyph = '►';
+                else if (angle >= 22.5 && angle < 67.5)
+                    glyph = '◢';
+                else if (angle >= 67.5 && angle < 112.5)
+                    glyph = '▼';
+                else if (angle >= 112.5 && angle < 157.5)
+                    glyph = '◣';
+                else if (angle >= 157.5 && angle < 202.5)
+                    glyph = '◄';
+                else if (angle >= 202.5 && angle < 247.5)
+                    glyph = '◤';
+                else if (angle >= 247.5 && angle < 292.5)
+                    glyph = '▲';
+                else if (angle >= 292.5 && angle < 337.5)
+                    glyph = '◥';
 
                 outputBuffer[bx + by * WIDTH] = COLOR_BOID + glyph + RESET;
             }

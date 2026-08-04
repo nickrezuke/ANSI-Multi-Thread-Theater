@@ -1,16 +1,23 @@
 public class LoaderFactory {
     // All the loaders currently being considered
     private static final String[] LOADER_NAMES = {
-            "ConwaysGameOfLife", "GameOfLife", "Donut", "CubeA", "CubeB", "CatHead", "Vaporwave", "Synthwave",
-            "GreyScottReactionDiffusion", "ReactionDiffusion", "Radar", "MandelbrotZoom", "DNA", "BlackHole", "Lorenz",
+            "ConwaysGameOfLife", "GameOfLife", "Donut", "Mario64Cube", "TexelCompanionCube", "TexelMinecraftGrassBlock",
+            "TexelBorgCube", "CatHead", "Vaporwave", "Synthwave", "GreyScottReactionDiffusion", "ReactionDiffusion",
+            "Radar", "MandelbrotZoom", "DNA", "BlackHole", "Lorenz", "KleinRing",
             "LorenzAttractor", "RippleTank", "DoubleSlit", "TextFall", "Ring", "RockPaperScissors", "FrutigerAero",
-            "RainbowWhispSphere", "PacMan", "OctahedralMatrix", "RainbowWhispPyramid", "Tesseract", "4D Cube",
+            "TexelMCUTesseract", "TexelHellraiserLamentConfiguration", "TexelGreyRubix", "TexelTriplePhase",
+            "TexelMarioBricks", "RainbowWhispSphere", "PacManSphere", "OctahedralMatrix", "RainbowWhispPyramid",
+            "Tesseract", "4D Cube", "SeifertSurface", "Pendulum",
             "EyeOfProvidence", "Illuminati", "WireframeSphere", "Louvre", "FluidDynamics", "NavierStokes", "DJ",
-            "DJTurntable", "PerlinNoise", "SydneyOperaHouse", "EiffelTower", "TajMahal", "ChicagoBean", "CloudGate",
+            "TexelRubixCube", "DJTurntable", "PerlinNoise", "SydneyOperaHouse", "EiffelTower", "TajMahal",
+            "ChicagoBean", "CloudGate",
             "BigBen", "NyanCat", "BouncingSpinner", "DancingBanana", "ThreeBody", "WireframeCube", "HyperSphere",
-            "4D Sphere", "HopfFibration", "Snake", "Pong", "BrickBreakout", "Breakout", "SpaceInvaders", "Chess",
-            "Checkers", "Tetris", "Asteroids", "Centepede", "Galaga", "LangtonsAnt", "Boids", "HerdingAndFlocking",
-            "BriansBrain", "Unused", "Unused2"
+            "TexelKevinCube", "4D Sphere", "HopfFibration", "Snake", "Pong", "BrickBreakout", "Breakout",
+            "SpaceInvaders", "Chess",
+            "TexelGlitch", "Checkers", "Tetris", "Asteroids", "Centepede", "Galaga", "LangtonsAnt", "Boids",
+            "HerdingAndFlocking",
+            "TexelAllspark", "TexelEmojiCube", "TexelPsychCube", "TexelFlatEarth", "QuantumWave",
+            "BriansBrain", "Gyroid", "MarioCoinBlock", "Unused", "Unused2"
     };
 
     public static Loader createLoaderInstance(String requestedName) {
@@ -47,10 +54,40 @@ public class LoaderFactory {
                 return new ConwaysGameOfLifeLoader();
             case "Donut":
                 return new DonutLoader();
-            case "CubeA":
-                return new CubeLoaderA();
-            case "CubeB":
-                return new CubeLoaderB();
+            case "QuantumWave":
+                return new QuantumWaveLoader();
+            case "Mario64Cube":
+                return new Mario64CubeLoader();
+            case "TexelCompanionCube":
+                return new TexelCompanionCubeLoader();
+            case "TexelMinecraftGrassBlock":
+                return new TexelMinecraftGrassBlockLoader();
+            case "TexelBorgCube":
+                return new TexelBorgCubeLoader();
+            case "TexelAllspark":
+                return new TexelAllsparkLoader();
+            case "TexelEmojiCube":
+                return new TexelEmojiCubeLoader();
+            case "TexelPsychCube":
+                return new TexelPsychCubeLoader();
+            case "TexelHellraiserLamentConfiguration":
+                return new TexelHellraiserLamentConfigurationLoader();
+            case "TexelFlatEarth":
+                return new TexelFlatEarthLoader();
+            case "TexelGlitch":
+                return new TexelGlitchLoader();
+            case "TexelRubixCube":
+                return new TexelRubixCubeLoader();
+            case "TexelGreyRubix":
+                return new TexelGreyRubixLoader();
+            case "TexelMCUTesseract":
+                return new TexelMCUTesseractLoader();
+            case "TriplePhaseCube":
+                return new TexelTriplePhaseCubeLoader();
+            case "MarioBricks":
+                return new TexelMarioBricksLoader();
+            case "MarioCoinBlock":
+                return new TexelMarioCoinBlockLoader();
             case "CatHead":
                 return new CatHeadLoader();
             case "Synthwave":
@@ -66,6 +103,8 @@ public class LoaderFactory {
                 return new MandelbrotZoomLoader();
             case "DNA":
                 return new DNALoader();
+            case "Pendulum":
+                return new PendulumLoader();
             case "BlackHole":
                 return new BlackHoleLoader();
             case "Lorenz":
@@ -74,18 +113,22 @@ public class LoaderFactory {
             case "RippleTank":
             case "DoubleSlit":
                 return new RippleTankAutomatonLoader();
+            case "SeifertSurface":
+                return new SeifertLoader();
             case "TextFall":
                 return new TextFallLoader();
             case "Ring":
                 return new RingLoader();
+            case "KleinRing":
+                return new KleinRingLoader();
             case "RockPaperScissors":
                 return new RockPaperScissorsAutomatonLoader();
             case "FrutigerAero":
                 return new FrutigerAeroLoader();
             case "RainbowWhispSphere":
                 return new RainbowWhispSphereLoader();
-            case "PacMan":
-                return new PacManLoader();
+            case "PacManSphere":
+                return new PacManSphereLoader();
             case "OctahedralMatrix":
                 return new OctahedralMatrixLoader();
             case "RainbowWhispPyramid":
@@ -119,6 +162,8 @@ public class LoaderFactory {
                 return new ChicagoBeanLoader();
             case "BigBen":
                 return new BigBenLoader();
+            case "TexelKevinCube":
+                return new TexelKevinCubeLoader();
             case "NyanCat":
                 return new NyanCatLoader();
             case "BouncingSpinner":
@@ -162,6 +207,8 @@ public class LoaderFactory {
                 return new BoidsLoader();
             case "BriansBrain":
                 return new BriansBrainLoader();
+            case "Gyroid":
+                return new GyroidLoader();
             case "Unused":
                 return new UnusedInfiniteFractalLoader();
             case "Unused2":

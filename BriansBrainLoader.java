@@ -1,9 +1,9 @@
 public class BriansBrainLoader extends Loader {
     private static final StatusStage[] BRAIN_STAGES = {
-        new StatusStage(25, "Allocating synaptic state arrays:"),
-        new StatusStage(50, "Calibrating cellular automata rules:"),
-        new StatusStage(75, "Seeding chaotic initial neural nodes:"),
-        new StatusStage(100, "Brian's Brain Simulator Operational!")
+            new StatusStage(25, "Allocating synaptic state arrays:"),
+            new StatusStage(50, "Calibrating cellular automata rules:"),
+            new StatusStage(75, "Seeding chaotic initial neural nodes:"),
+            new StatusStage(100, "Brian's Brain Simulator Operational!")
     };
 
     // 1. Structural Boundaries
@@ -24,8 +24,8 @@ public class BriansBrainLoader extends Loader {
     private static final long STEP_DELAY_MS = 40; // Balanced delay to comfortably watch glider wave cycles
 
     // 3. Graphic Color Profiles
-    private static final String COLOR_READY = "\u001B[38;5;234m·" + RESET;       // Dim background dots
-    private static final String COLOR_FIRING = "\u001B[38;5;81;1m█" + RESET;    // High-intensity Electric Cyan
+    private static final String COLOR_READY = "\u001B[38;5;234m·" + RESET; // Dim background dots
+    private static final String COLOR_FIRING = "\u001B[38;5;81;1m█" + RESET; // High-intensity Electric Cyan
     private static final String COLOR_REFRACTORY = "\u001B[38;5;162m░" + RESET; // Muted Magenta/Red decay shade
 
     public BriansBrainLoader() {
@@ -39,8 +39,9 @@ public class BriansBrainLoader extends Loader {
 
     private void resetSimulation() {
         java.util.Random rand = new java.util.Random();
-        
-        // Seed the canvas with a dense, chaotic mix of initial firing nodes (~30% density)
+
+        // Seed the canvas with a dense, chaotic mix of initial 
+        // firing nodes (~30% density)
         for (int i = 0; i < SIZE; i++) {
             int chance = rand.nextInt(100);
             if (chance < 20) {
@@ -93,14 +94,22 @@ public class BriansBrainLoader extends Loader {
                     int xNext = (x + 1) % WIDTH;
 
                     int firingNeighbors = 0;
-                    if (grid[xPrev + rowPrev] == FIRING) firingNeighbors++;
-                    if (grid[x     + rowPrev] == FIRING) firingNeighbors++;
-                    if (grid[xNext + rowPrev] == FIRING) firingNeighbors++;
-                    if (grid[xPrev + row]     == FIRING) firingNeighbors++;
-                    if (grid[xNext + row]     == FIRING) firingNeighbors++;
-                    if (grid[xPrev + rowNext] == FIRING) firingNeighbors++;
-                    if (grid[x     + rowNext] == FIRING) firingNeighbors++;
-                    if (grid[xNext + rowNext] == FIRING) firingNeighbors++;
+                    if (grid[xPrev + rowPrev] == FIRING)
+                        firingNeighbors++;
+                    if (grid[x + rowPrev] == FIRING)
+                        firingNeighbors++;
+                    if (grid[xNext + rowPrev] == FIRING)
+                        firingNeighbors++;
+                    if (grid[xPrev + row] == FIRING)
+                        firingNeighbors++;
+                    if (grid[xNext + row] == FIRING)
+                        firingNeighbors++;
+                    if (grid[xPrev + rowNext] == FIRING)
+                        firingNeighbors++;
+                    if (grid[x + rowNext] == FIRING)
+                        firingNeighbors++;
+                    if (grid[xNext + rowNext] == FIRING)
+                        firingNeighbors++;
 
                     if (firingNeighbors == 2) {
                         nextGrid[idx] = FIRING;

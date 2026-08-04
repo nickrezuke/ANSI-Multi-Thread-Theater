@@ -1,4 +1,4 @@
-public class PacManLoader extends Loader { 
+public class PacManSphereLoader extends Loader { 
     private static final StatusStage[] REFLECTIVE_STAGES = { 
         new StatusStage(20, "Munching Cherries:"), 
         new StatusStage(50, "Warping to the other side:"), 
@@ -15,7 +15,7 @@ public class PacManLoader extends Loader {
     private double mouthOpenFactor = 1.0; 
     private int mouthOpening = -1; 
 
-    public PacManLoader() { 
+    public PacManSphereLoader() { 
         super(REFLECTIVE_STAGES); 
     } 
 

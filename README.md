@@ -21,17 +21,34 @@ While the original concept proved that 3D geometries could be projected onto a f
 This Project comes packed with a suite of rendering targets, all derived from a common footprint:
 
 -> **Donut**: An expanded, color-customizable adaptation of Sloan's original code.  This was the first one I attempted, and after implementing I refined it with triginometric frosting, random variants, and a sprinkle map for extra style.
--> **Ring**: <!-- TODO: Elaborate on this section -->
--> **CubeA**: <!-- TODO: Elaborate on this section -->
--> **CubeB**: <!-- TODO: Elaborate on this section -->
 -> **CatHead**: <!-- TODO: Elaborate on this section -->
 -> **DNA**: After those, I attempted to make the classic offset DNA twist.
+-> **Ring**: <!-- TODO: Elaborate on this section -->
+
+-> **TexelCube**: <!-- TODO: Elaborate on this section -->
+-----> **TexelMinecraftGrassBlock**: <!-- TODO: Elaborate on this section -->
+-----> **TexelCompantionCube**: <!-- TODO: Elaborate on this section -->
+-----> **TexelKevinCube**: <!-- TODO: Elaborate on this section -->
+-----> **TexelBorgCube**: <!-- TODO: Elaborate on this section -->
+-----> **TexelAllspark**: <!-- TODO: Elaborate on this section -->
+-----> **TexelEmojiCube**: <!-- TODO: Elaborate on this section -->
+-----> **TexelPsychCube**: <!-- TODO: Elaborate on this section -->
+-----> **TexelHellraiserLamentConfiguration**: <!-- TODO: Elaborate on this section -->
+-----> **TexelFlatEarth**: <!-- TODO: Elaborate on this section -->
+-----> **TexelGlitch**: <!-- TODO: Elaborate on this section -->
+-----> **TexelRubixCube**: <!-- TODO: Elaborate on this section -->
+-----> **TexelGreyRubix**: <!-- TODO: Elaborate on this section -->
+-----> **TexelMCUTesseract**: <!-- TODO: Elaborate on this section -->
+-----> **TexelMarioBricks**: <!-- TODO: Elaborate on this section -->
+-----> **TexelMarioCoinBlock**: <!-- TODO: Elaborate on this section -->
+-----> **TexelTriplePhaseCubeBlock**: <!-- TODO: Elaborate on this section -->
 
 -> **OctahedralMatrix**: <!-- TODO: Elaborate on this section -->
 
 -> **EyeOfProvidence**: <!-- TODO: Elaborate on this section -->
 
--> **PacMan**: <!-- TODO: Elaborate on this section -->
+-> **Mario64Cube**: <!-- TODO: Elaborate on this section -->
+-> **PacManSphere**: <!-- TODO: Elaborate on this section -->
 
 -> **RainbowWhispPyramid**: <!-- TODO: Elaborate on this section -->
 -> **RainbowWhispSphere**: <!-- TODO: Elaborate on this section -->
@@ -44,15 +61,19 @@ This Project comes packed with a suite of rendering targets, all derived from a 
 -> **HopfFibration**: <!-- TODO: Elaborate on this section -->
 
 -> **ConwaysGameOfLife**: <!-- TODO: Elaborate on this section -->
+-> **BriansBrain**: <!-- TODO: Elaborate on this section -->
 -> **MandelbrotZoom**: <!-- TODO: Elaborate on this section -->
 -> **RockPaperScissors**: <!-- TODO: Elaborate on this section -->
 -> **PerlinNoise**: <!-- TODO: Elaborate on this section -->
 -> **LorenzAttractor**: <!-- TODO: Elaborate on this section -->
+-> **QuantumWave**: <!-- TODO: Elaborate on this section -->
 -> **ThreeBody**: <!-- TODO: Elaborate on this section -->
 -> **BlackHole**: <!-- TODO: Elaborate on this section -->
 -> **NavierStokes**: <!-- TODO: Elaborate on this section -->
 -> **GreyScottReactionDiffusion**: <!-- TODO: Elaborate on this section -->
 -> **DoubleSlit**: <!-- TODO: Elaborate on this section -->
+-> **Boids**: <!-- TODO: Elaborate on this section -->
+
 
 -> **BigBen**: <!-- TODO: Elaborate on this section -->
 -> **TajMahal**: <!-- TODO: Elaborate on this section -->
@@ -81,6 +102,14 @@ This Project comes packed with a suite of rendering targets, all derived from a 
 -> **Galaga**: <!-- TODO: Elaborate on this section -->
 -> **BrickBreakout**: <!-- TODO: Elaborate on this section -->
 
+I also have a sub subclass called InteractiveLoader which allows interactivity
+Some of these loaders extend this, and are also interactable by using the arrow keys:
+
+-> **KleinRing**: <!-- TODO: Elaborate on this section -->
+-> **SeifertSurface**: <!-- TODO: Elaborate on this section -->
+-> **KleinRing**: <!-- TODO: Elaborate on this section -->
+
+Note to self: Other ideas to consider:
 spider web
 butterfly
 snake.io
@@ -99,6 +128,7 @@ Regular Earth on a sphere
 Model the whole solar system, all the planets orbiting around the sun (Shinysphere?)
 Waterfall
 Tornado
+Quantum Wavefunction Interference
 
 ---
 
