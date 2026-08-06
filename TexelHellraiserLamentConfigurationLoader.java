@@ -1,10 +1,16 @@
 public class TexelHellraiserLamentConfigurationLoader extends TexelCubeLoader {
-    // TODO: Finish deciding on Loading Statements
     private static final StatusStage[] TEXEL_CUBE_STAGES = new StatusStage[] {
-            new StatusStage(20, "???:"),
-            new StatusStage(50, "???:"),
-            new StatusStage(80, "???:"),
-            new StatusStage(100, "???!")
+            new StatusStage(10, "Solving weird box..."),
+            new StatusStage(20, "Flipping panels..."),
+            new StatusStage(30, "Demons coding now..."),
+            new StatusStage(40, "Losing my fingers..."),
+            new StatusStage(50, "Drafting torment..."),
+            new StatusStage(60, "Summoning demons..."),
+            new StatusStage(70, "Legendary suffering"),
+            new StatusStage(80, "Turning brass gears"),
+            new StatusStage(90, "Oh look, chains..."),
+            new StatusStage(98, "Run away now!"),
+            new StatusStage(100, "Such sights to see!")
     };
 
     public TexelHellraiserLamentConfigurationLoader() {

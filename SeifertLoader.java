@@ -76,11 +76,11 @@ public class SeifertLoader extends InteractiveLoader {
 
         // 4. Render the 3D Trefoil Seifert Surface Geometry
         // Evaluates two variables: theta (the angle around the knot) and r (radial width of the surface ribbon)
-        for (int tIndex = 0; tIndex < 180; tIndex++) {
-            double theta = tIndex * (2.0 * Math.PI / 180.0);
-            for (int rIndex = 0; rIndex < 60; rIndex++) {
+        for (int tIndex = 0; tIndex < 360; tIndex++) {
+            double theta = tIndex * (Math.PI / 180.0);
+            for (int rIndex = 0; rIndex < 180; rIndex++) {
                 // Radial vector pushing outward from the core knot boundary lines
-                double rad = rIndex * (1.1 / 60.0); 
+                double rad = rIndex * (1.1 / 180.0); 
 
                 // Advanced trigonometric parametric mapping for a minimal topological Seifert Surface
                 double phase = 1.5 * theta;

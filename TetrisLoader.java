@@ -1,5 +1,5 @@
-// TODO: Fix the HUD table border edges being different colors from text
-// TODO: Maybe Shorten GameOver duration time before next reset begins
+// TODO: Sometimes the game making a TETRIS doesnt move the other pieces doen correctly, I've occasionally seen floating things / empty bars
+// TODO: Fast Drop doesnt really work when we're in a tight corridor and can't move to where we wanna go... maybe just make the regular speed that fast??
 
 import java.util.Random;
 
@@ -112,7 +112,7 @@ public class TetrisLoader extends Loader {
         long currentTime = System.currentTimeMillis();
 
         if (gameOver) {
-            if (currentTime - lastTickTime >= 4000) {
+            if (currentTime - lastTickTime >= 2500) {
                 resetGame();
             } else {
                 drawScene(outputBuffer);
@@ -372,7 +372,7 @@ public class TetrisLoader extends Loader {
             writeText(outputBuffer, textColumnX + 2, 4, String.format("%-38s", "STATUS: REAL-TIME CONTROLLER"),
                     "\u001B[38;5;82m");
         }
-        writeText(outputBuffer, textColumnX + 40, 4, "│", COLOR_BORDER);
+        writeText(outputBuffer, textColumnX + 41, 4, "│", COLOR_BORDER);
         writeText(outputBuffer, textColumnX, 5, "├────────────────────────────────────────┤", COLOR_BORDER);
         writeText(outputBuffer, textColumnX, 6, "│ MATCH SCORE:                           │", COLOR_BORDER);
         writeText(outputBuffer, textColumnX + 20, 6, String.format("%18d", score), COLOR_VALUE);
@@ -406,10 +406,24 @@ public class TetrisLoader extends Loader {
         }
         writeText(outputBuffer, textColumnX, 16, "├────────────────────────────────────────┤", COLOR_BORDER);
         writeText(outputBuffer, textColumnX, 17, "│ REAL-TIME CORE ARCHITECTURE METRICS:   │", COLOR_BORDER);
-        writeText(outputBuffer, textColumnX, 18,
-                String.format("│ > controller_input_delay:    %2dms      │", AI_ACTION_DELAY_MS), COLOR_TEXT);
-        writeText(outputBuffer, textColumnX, 19, "│ > intelligent_soft_drop:     ACTIVE    │", COLOR_VALUE);
-        writeText(outputBuffer, textColumnX, 20, "│ > gravity_step_interval:     350ms     │", COLOR_TEXT);
+        writeText(outputBuffer, textColumnX, 18, "│ ", COLOR_BORDER);
+        writeText(outputBuffer, textColumnX + 2, 18,
+                String.format("%-38s",
+                        String.format("> controller_input_delay:     %2dms", AI_ACTION_DELAY_MS)),
+                COLOR_TEXT);
+        writeText(outputBuffer, textColumnX + 41, 18, "│", COLOR_BORDER);
+        writeText(outputBuffer, textColumnX, 19, "│ ", COLOR_BORDER);
+        writeText(outputBuffer, textColumnX + 2, 19,
+                String.format("%-38s",
+                        String.format("> intelligent_soft_drop:     ACTIVE")),
+                COLOR_TEXT);
+        writeText(outputBuffer, textColumnX + 41, 19, "│", COLOR_BORDER);
+        writeText(outputBuffer, textColumnX, 20, "│ ", COLOR_BORDER);
+        writeText(outputBuffer, textColumnX + 2, 20,
+                String.format("%-38s",
+                        String.format("> gravity_step_interval:     %2dms", GRAVITY_NORMAL_MS)),
+                COLOR_TEXT);
+        writeText(outputBuffer, textColumnX + 41, 20, "│", COLOR_BORDER);
         writeText(outputBuffer, textColumnX, 21, "└────────────────────────────────────────┘", COLOR_BORDER);
     }
 

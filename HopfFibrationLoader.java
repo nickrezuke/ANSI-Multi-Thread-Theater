@@ -1,5 +1,3 @@
-// TODO: Check if z buffer is okay in 4D / 3D like is the yellow ring supposed to be in front?
-
 public class HopfFibrationLoader extends Loader {
     private static final StatusStage[] HOPF_STAGES = {
         new StatusStage(25, "Mapping hyperspherical Hopf fiber coordinates:"),
@@ -74,7 +72,7 @@ public class HopfFibrationLoader extends Loader {
                     double x2 = x1 * cosZ - y1 * sinZ;
                     double y2 = x1 * sinZ + y1 * cosZ;
 
-                    double distFactor = Math.cos(System.currentTimeMillis() / 1600.0) * 8.0;
+                    double distFactor = Math.cos(System.currentTimeMillis() / 1800.0) * 10.0;
 
                     // Orthographic 2D Projection with Character Aspect Ratio Adjustment (2.3x multiplier on X)
                     int xp = (int) (40 + (13 + distFactor) * 2.3 * x2);
@@ -139,14 +137,19 @@ public class HopfFibrationLoader extends Loader {
     private void drawPixel(String[] outputBuffer, double[] zBuffer, int x, int y, double depth, boolean isVertex, String colorCode) {
         if (x >= 0 && x < 80 && y >= 0 && y < 22) {
             int index = x + 80 * y;
-            // Depth bias injection guarantees intersection nodes punch through cleanly
-            double testingDepth = isVertex ? (depth + 100.0) : depth;
-
+    
+            // FIX 1: Strip away the massive +100.0 node bias. 
+            // It was forcing background loop corners to punch through foreground sheets.
+            // Instead, apply a tiny, subtle fraction bias (0.01) just to prevent overlapping flickering.
+            double testingDepth = isVertex ? (depth + 0.01) : depth;
+    
+            // FIX 2: Standard Cartesian depth tracking comparison.
+            // Greater values mean the coordinate is physically closer to the viewer.
             if (testingDepth > zBuffer[index]) {
-                zBuffer[index] = depth;
+                zBuffer[index] = depth; // Track true raw coordinate depth
                 char renderChar = isVertex ? CH_VERTEX : CH_EDGE;
                 outputBuffer[index] = colorCode + renderChar + RESET;
             }
         }
-    }
+    }    
 }

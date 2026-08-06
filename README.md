@@ -25,6 +25,9 @@ This Project comes packed with a suite of rendering targets, all derived from a 
 -> **DNA**: After those, I attempted to make the classic offset DNA twist.
 -> **Ring**: <!-- TODO: Elaborate on this section -->
 
+-> **UtahTeapot**: <!-- TODO: Elaborate on this section -->
+-> **StanfordBunny**: <!-- TODO: Elaborate on this section -->
+
 -> **TexelCube**: <!-- TODO: Elaborate on this section -->
 -----> **TexelMinecraftGrassBlock**: <!-- TODO: Elaborate on this section -->
 -----> **TexelCompantionCube**: <!-- TODO: Elaborate on this section -->
@@ -35,6 +38,7 @@ This Project comes packed with a suite of rendering targets, all derived from a 
 -----> **TexelPsychCube**: <!-- TODO: Elaborate on this section -->
 -----> **TexelHellraiserLamentConfiguration**: <!-- TODO: Elaborate on this section -->
 -----> **TexelFlatEarth**: <!-- TODO: Elaborate on this section -->
+-----> **TexelPlasma**: <!-- TODO: Elaborate on this section -->
 -----> **TexelGlitch**: <!-- TODO: Elaborate on this section -->
 -----> **TexelRubixCube**: <!-- TODO: Elaborate on this section -->
 -----> **TexelGreyRubix**: <!-- TODO: Elaborate on this section -->
@@ -56,6 +60,12 @@ This Project comes packed with a suite of rendering targets, all derived from a 
 -> **WireframeSphere**: <!-- TODO: Elaborate on this section -->
 -> **WireframeCube**: <!-- TODO: Elaborate on this section -->
 
+-> **Rocket**: <!-- TODO: Elaborate on this section -->
+
+-> **Earth**: <!-- TODO: Elaborate on this section -->
+-> **Moon**: <!-- TODO: Elaborate on this section -->
+-> **Saturn**: <!-- TODO: Elaborate on this section -->
+
 -> **Tesseract**: <!-- TODO: Elaborate on this section -->
 -> **Hypersphere**: <!-- TODO: Elaborate on this section -->
 -> **HopfFibration**: <!-- TODO: Elaborate on this section -->
@@ -63,9 +73,12 @@ This Project comes packed with a suite of rendering targets, all derived from a 
 -> **ConwaysGameOfLife**: <!-- TODO: Elaborate on this section -->
 -> **BriansBrain**: <!-- TODO: Elaborate on this section -->
 -> **MandelbrotZoom**: <!-- TODO: Elaborate on this section -->
+-> **BarnsleyFernZoom**: <!-- TODO: Elaborate on this section -->
 -> **RockPaperScissors**: <!-- TODO: Elaborate on this section -->
+-> **GaltonBoard**: <!-- TODO: Elaborate on this section -->
 -> **PerlinNoise**: <!-- TODO: Elaborate on this section -->
--> **LorenzAttractor**: <!-- TODO: Elaborate on this section -->
+-> **Aizawa**: <!-- TODO: Elaborate on this section -->
+-> **Lorenz**: <!-- TODO: Elaborate on this section -->
 -> **QuantumWave**: <!-- TODO: Elaborate on this section -->
 -> **ThreeBody**: <!-- TODO: Elaborate on this section -->
 -> **BlackHole**: <!-- TODO: Elaborate on this section -->
@@ -73,7 +86,8 @@ This Project comes packed with a suite of rendering targets, all derived from a 
 -> **GreyScottReactionDiffusion**: <!-- TODO: Elaborate on this section -->
 -> **DoubleSlit**: <!-- TODO: Elaborate on this section -->
 -> **Boids**: <!-- TODO: Elaborate on this section -->
-
+-> **Chladni**: <!-- TODO: Elaborate on this section -->
+-> **IkedaRibbon**: <!-- TODO: Elaborate on this section -->
 
 -> **BigBen**: <!-- TODO: Elaborate on this section -->
 -> **TajMahal**: <!-- TODO: Elaborate on this section -->
@@ -85,6 +99,7 @@ This Project comes packed with a suite of rendering targets, all derived from a 
 -> **BouncingSpinner**: <!-- TODO: Elaborate on this section -->
 -> **NyanCat**: <!-- TODO: Elaborate on this section -->
 -> **Radar**: <!-- TODO: Elaborate on this section -->
+-> **HillTree**: <!-- TODO: Elaborate on this section -->
 -> **TextFall**: <!-- TODO: Elaborate on this section -->
 -> **VaporWave**: <!-- TODO: Elaborate on this section -->
 -> **SynthWave**: <!-- TODO: Elaborate on this section -->
@@ -101,6 +116,7 @@ This Project comes packed with a suite of rendering targets, all derived from a 
 -> **SpaceInvaders**: <!-- TODO: Elaborate on this section -->
 -> **Galaga**: <!-- TODO: Elaborate on this section -->
 -> **BrickBreakout**: <!-- TODO: Elaborate on this section -->
+-> **Slitherio**: <!-- TODO: Elaborate on this section -->
 
 I also have a sub subclass called InteractiveLoader which allows interactivity
 Some of these loaders extend this, and are also interactable by using the arrow keys:
@@ -109,23 +125,17 @@ Some of these loaders extend this, and are also interactable by using the arrow 
 -> **SeifertSurface**: <!-- TODO: Elaborate on this section -->
 -> **KleinRing**: <!-- TODO: Elaborate on this section -->
 
+-> **Labyrinth3D**: <!-- TODO: Elaborate on this section -->
+
 Note to self: Other ideas to consider:
 spider web
 butterfly
-snake.io
-saturn
-moon phases
-leaves falling / autumn 2D landscape
-2D swing on a tree w/ strings, little yellow flower in the corner
-2D Umbrella Peopp;le walking in the rainy city a/ city night light recfection in the puddles
+2D Umbrella People walking in the rainy city and city night light recfection in the puddles
 Slot Machine
 Snow Globe
 Coveyer belt with Sushi & Ramen on it like at the resturaunts
-Rocket Ship with saturn??
 Campfire 
 Alphabet
-Regular Earth on a sphere
-Model the whole solar system, all the planets orbiting around the sun (Shinysphere?)
 Waterfall
 Tornado
 Quantum Wavefunction Interference
@@ -174,31 +184,4 @@ At the heart of the engine is an object-oriented rendering pipeline. All loaders
 
 ### Thread Safe Inter-Process Synchronization (for use in your own project)
 
-These `Loader`s operate concurrently with whatever called it.  To use a loader, the calling method needs to pass down an active thread token, spin up the canvas lifecycle, and feed numeric ticks over thread pipelines as shown below:
-
-```java
-//... insert this into your code:
-// First, instantiate your loader of choice
-Loader myLoader = new DonutLoader();
-
-// Next, Fire up a new thread and start it, passing in your loader
-Thread loaderThread = new Thread(myLoader);
-loaderThread.start();
-
-// Then, run the main loop of your program
-try {
-   // Perform your calculations/processing within this block here...
-   // I simulate this by looping sleep(), but you should place your own code/logic here
-    for (int i = 0; i <= 100; i += 1) {
-        Thread.sleep(100);
-        
-        // Asynchronously update the loader's internal state while your code is running with this
-        // updateProgress function.  Call it (repeatedly, or whenever you can) to update the loading bar in real-time
-        myLoader.updateProgress(i); // where i is an int between 0-100
-    }
-} finally {
-    // Gracefully stop the loader animation, and return to normal console state
-    myLoader.stop();
-}
-// after that, continue on with your program...
-```
+These `Loader`s operate concurrently with whatever called it.  To use a loader, the calling method needs to pass down an active thread token, spin up the canvas lifecycle, and feed numeric ticks over thread pipelines.  An example of this is shown in the ExampleTask.java file (what we've been calling).  

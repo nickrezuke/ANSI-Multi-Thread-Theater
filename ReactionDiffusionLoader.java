@@ -8,8 +8,8 @@ public class ReactionDiffusionLoader extends Loader {
         new StatusStage(100, "Animal Morphology Pattern Stable!")
     };
 
-    private static final int WIDTH = 80;
-    private static final int HEIGHT = 22;
+    private static final int WIDTH = 140;
+    private static final int HEIGHT = 42;
 
     // Dual-buffered fields (U = Feedstock source, V = Catalyst)
     private double[][] gridU = new double[HEIGHT][WIDTH];
@@ -26,7 +26,7 @@ public class ReactionDiffusionLoader extends Loader {
     private int variant;
 
     public ReactionDiffusionLoader() {
-        super(REFLECTIVE_STAGES);
+        super(REFLECTIVE_STAGES, WIDTH, HEIGHT);
     }
 
     @Override

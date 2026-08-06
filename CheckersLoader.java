@@ -1,6 +1,3 @@
-// TODO: Investigate if the game is too deterministic and if the same game plays out each time
-// TODO: Test what happens when game is played for very very very long times
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -24,7 +21,7 @@ public class CheckersLoader extends Loader {
     private int totalMovesPlayed = 0;
 
     private long lastMoveTime = 0;
-    private static final long MOVE_DELAY_MS = 1200;
+    private static final long MOVE_DELAY_MS = 800;
     private boolean gameOver = false;
     private String gameResultText = "";
 
@@ -37,7 +34,7 @@ public class CheckersLoader extends Loader {
     private static final String COLOR_OVER = "\u001B[38;5;196m";
 
     private static final String[] PIECE_SYMBOLS = {
-            " ", "●", "★", "●", "★" // ● Pawn, ★ King
+            " ", "\u26C2", "\u26C3", "\u26C2", "\u26C3" // ⛂ Pawn, ⛃ King
     };
 
     // Encourages pieces to step out of back-rows and march down fields securely
@@ -124,7 +121,22 @@ public class CheckersLoader extends Loader {
     }
 
     private void executeAIMove() {
-        Move bestMove = minimax(4, isRedTurn, -100000, 100000);
+        Move bestMove = null;
+
+        // Roll a die. (chance to "make a mistake")
+        if (Math.random() * 2.0 < 1.0) { // Made the chance 1/2, its hard to mess up checkers tbh
+            // Generate the exact same legal moves minimax would look at
+            List<Move> legalMoves = generateAllLegalMoves(isRedTurn ? RED_SIDE : BLACK_SIDE);
+            if (!legalMoves.isEmpty()) {
+                // Pick a completely random legal move from the list
+                bestMove = legalMoves.get((int) (Math.random() * legalMoves.size()));
+            }
+        }
+
+        // Did not make a mistake, use Minimax
+        else {
+            bestMove = minimax(4, isRedTurn, -100000, 100000);
+        }
 
         if (bestMove == null || bestMove.from == bestMove.to) {
             gameOver = true;
@@ -137,26 +149,24 @@ public class CheckersLoader extends Loader {
         String tag = (board[bestMove.from] == RED_KING || board[bestMove.from] == BLACK_KING) ? "K" : sideStr;
         String notation = tag + " " + indexToNotation(bestMove.from) + (bestMove.isJump ? " transition ⚔ " : "→")
                 + indexToNotation(bestMove.to);
-
         moveHistory.add(notation);
         totalMovesPlayed++;
         if (moveHistory.size() > 12) {
             moveHistory.remove(0);
         }
-
         // Apply piece move assignments
         board[bestMove.to] = board[bestMove.from];
         board[bestMove.from] = EMPTY;
-
         // Process capture deletion if step triggered a leap jump
         if (bestMove.isJump && bestMove.capturedIdx != -1) {
             board[bestMove.capturedIdx] = EMPTY;
         }
-
-        // Handle King promotions at back ranks
-        if (board[bestMove.to] == RED_PAWN && (bestMove.to / 8 == 0)) {
-            board[bestMove.to] = RED_KING | RED_SIDE;
-        } else if (board[bestMove.to] == BLACK_PAWN && (bestMove.to / 8 == 7)) {
+        // Handle King promotions at back ranks using your exact constants
+        // Strip the side flags (RED_SIDE/BLACK_SIDE) to look at just the piece type
+        int plainPieceType = board[bestMove.to] & 7;
+        if (plainPieceType == RED_PAWN && (bestMove.to / 8 == 0)) {
+            board[bestMove.to] = RED_KING | RED_SIDE; // Keeps the side flag intact
+        } else if (plainPieceType == BLACK_PAWN && (bestMove.to / 8 == 7)) {
             board[bestMove.to] = BLACK_KING | BLACK_SIDE;
         }
 
@@ -304,7 +314,7 @@ public class CheckersLoader extends Loader {
 
     private void drawScene(String[] outputBuffer) {
         for (int row = 0; row < 8; row++) {
-            int bufferRowOffset = (3 + row) * 80 + 4;
+            int bufferRowOffset = (8 + row) * 80 + 4;
             for (int col = 0; col < 8; col++) {
                 int boardIdx = col + row * 8;
                 int piece = board[boardIdx];
@@ -329,7 +339,7 @@ public class CheckersLoader extends Loader {
             writeText(outputBuffer, textColumnX + 2, 5, gameMsg, COLOR_OVER);
         } else {
             String turnMsg = String.format("%-38s",
-            (isRedTurn ? "  " : " ") + "  ACTIVE MATCH TURN: " + (isRedTurn ? " RED PLAYER" : " BLACK PLAYER"));
+                    (isRedTurn ? "  " : " ") + "  ACTIVE MATCH TURN: " + (isRedTurn ? " RED PLAYER" : " BLACK PLAYER"));
             writeText(outputBuffer, textColumnX + 2, 5, turnMsg, COLOR_TURN);
         }
         writeText(outputBuffer, textColumnX + 41, 5, "│", COLOR_TEXT);
@@ -340,7 +350,7 @@ public class CheckersLoader extends Loader {
             String historyLine = "│                                        │";
             if (i < moveHistory.size()) {
                 int trueMoveDisplayNum = startingMoveNumber + i + 1;
-                historyLine = String.format("│  %2d. %-32s  │", trueMoveDisplayNum, moveHistory.get(i));
+                historyLine = String.format("│  %3d. %-32s │", trueMoveDisplayNum, moveHistory.get(i));
             }
             writeText(outputBuffer, textColumnX, 8 + i, historyLine, COLOR_TEXT);
         }

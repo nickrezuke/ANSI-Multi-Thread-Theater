@@ -1,5 +1,3 @@
-// TODO: Stop the player from shooting the bunkers lmao
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -177,7 +175,20 @@ public class SpaceInvadersLoader extends Loader {
             if (playerX > target.x && playerX > 2)
                 playerX -= 1.0;
 
-            if (Math.abs(playerX - target.x) <= 2 && playerLasers.size() < 2 && rand.nextInt(10) > 7) {
+            boolean clearShot = true;
+            int px = (int) Math.round(playerX);
+
+            for (int y = PLAYER_Y - 1; y >= 0; y--) {
+                if (shields[y][px] > 0) {
+                    clearShot = false;
+                    break;
+                }
+            }
+
+            if (clearShot
+                    && Math.abs(playerX - target.x) <= 2
+                    && playerLasers.size() < 2
+                    && rand.nextInt(10) > 7) {
                 playerLasers.add(new Entity(playerX, PLAYER_Y - 1));
             }
         }
@@ -203,7 +214,7 @@ public class SpaceInvadersLoader extends Loader {
             }
 
             for (Invader inv : invaders) {
-                if (Math.abs(laser.x - inv.x) <= 1.5 && Math.round(laser.y) == Math.round(inv.y)) {
+                if (Math.abs(laser.x - inv.x) <= 2.0 && Math.abs(laser.y - inv.y) <= 0.8) {
                     inv.active = false;
                     laser.active = false;
                     score += (inv.type == 0) ? 30 : (inv.type == 1) ? 20 : 10;

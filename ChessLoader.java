@@ -1,5 +1,5 @@
-// TODO: Investigate if the game is too deterministic and if the same game plays out each time
-// TODO: Test what happens when game is played for very very very long times
+// TODO: Investigate if the game is too deterministic and if the same game plays out each time... does OpeningMoves function need to be bigger?
+// TODO: Test what happens when game is played for very very very long times... Do players "shuffle" and should stalemate after repeated boards??
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -36,8 +36,8 @@ public class ChessLoader extends Loader {
     private static final String COLOR_OVER = "\u001B[38;5;196m";
 
     private static final String[] PIECE_SYMBOLS = {
-            " ", "♙", "♘", "♗", "♖", "♕", "♔", " ",
-            " ", "♟", "♞", "♝", "♜", "♛", "♚", " "
+        " ", "\u265F", "\u265E", "\u265D", "\u265C", "\u265B", "\u265A", " ",
+            " ", "\u265F", "\u265E", "\u265D", "\u265C", "\u265B", "\u265A", " "
     };
 
     private static final int[] PAWN_TABLE = {
@@ -137,8 +137,15 @@ public class ChessLoader extends Loader {
     }
 
     private void executeAIMove() {
-        Move bestMove = minimax(4, isWhiteTurn, -100000, 100000);
+        // Open a couple of different ways
+        Move bestMove = getOpeningBookMove();
 
+        // Otherwise, think using Minimax
+        if (bestMove == null) {
+            bestMove = minimax(4, isWhiteTurn, -100000, 100000);
+        }
+
+        // The game has ended
         if (bestMove == null || bestMove.from == bestMove.to) {
             gameOver = true;
             gameResultText = isWhiteTurn ? "BLACK WINS BY MATING!" : "WHITE WINS BY MATING!";
@@ -388,7 +395,7 @@ public class ChessLoader extends Loader {
                 // Calculate the changing dynamic move number by adding index offsets to the
                 // starting baseline
                 int trueMoveDisplayNum = startingMoveNumber + i + 1;
-                historyLine = String.format("│  %2d. %-32s  │", trueMoveDisplayNum, moveHistory.get(i));
+                historyLine = String.format("│  %3d. %-32s │", trueMoveDisplayNum, moveHistory.get(i));
             }
             writeText(outputBuffer, textColumnX, 8 + i, historyLine, COLOR_TEXT);
         }
@@ -429,4 +436,57 @@ public class ChessLoader extends Loader {
         int rank = 8 - (index / 8);
         return "" + (char) ('a' + file) + rank;
     }
+
+    private Move getOpeningBookMove() {
+        java.util.Random rand = new java.util.Random();
+
+        // --- TURN 1: WHITE ---
+        if (totalMovesPlayed == 0) {
+            int choice = rand.nextInt(3);
+            if (choice == 0)
+                return new Move(52, 36); // 1. e4 (King's Pawn Opening)
+            if (choice == 1)
+                return new Move(51, 35); // 1. d4 (Queen's Pawn Opening)
+            return new Move(62, 45); // 1. Nf3 (Réti Opening)
+        }
+
+        // --- TURN 1: BLACK ---
+        if (totalMovesPlayed == 1) {
+            // If White played 1. e4
+            if (board[36] == (PAWN | WHITE_PIECE) && board[52] == EMPTY) {
+                int choice = rand.nextInt(3);
+                if (choice == 0)
+                    return new Move(12, 28); // 1... e5 (Open Game)
+                if (choice == 1)
+                    return new Move(10, 26); // 1... c5 (Sicilian Defense)
+                return new Move(11, 27); // 1... d5 (Scandinavian Defense)
+            }
+            // If White played 1. d4
+            if (board[35] == (PAWN | WHITE_PIECE) && board[51] == EMPTY) {
+                int choice = rand.nextInt(2);
+                if (choice == 0)
+                    return new Move(11, 27); // 1... d5 (Closed Game)
+                return new Move(6, 21); // 1... Nf6 (Indian Defense)
+            }
+        }
+
+        // --- TURN 2: WHITE (After 1.e4 e5) ---
+        if (totalMovesPlayed == 2 && board[36] == (PAWN | WHITE_PIECE) && board[28] == (PAWN | BLACK_PIECE)) {
+            int choice = rand.nextInt(2);
+            if (choice == 0)
+                return new Move(62, 45); // 2. Nf3 (Main Line)
+            return new Move(50, 34); // 2. d4 (Center Game)
+        }
+
+        // --- TURN 2: BLACK (After 1.e4 e5 2.Nf3) ---
+        if (totalMovesPlayed == 3 && board[45] == (KNIGHT | WHITE_PIECE) && board[28] == (PAWN | BLACK_PIECE)) {
+            int choice = rand.nextInt(2);
+            if (choice == 0)
+                return new Move(1, 18); // 2... Nc6 (Defending e5)
+            return new Move(6, 21); // 2... Nf6 (Petrov's Defense)
+        }
+
+        return null; // Return null if out of book or position unrecognized
+    }
+
 }
