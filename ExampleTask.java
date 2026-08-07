@@ -33,7 +33,7 @@ public class ExampleTask {
 
             // In theory, you would be running your code block right in
             // this try block right here:_____ and if you're able to
-            // meaningfully calculate/ evaluate your progress with
+            // meaningfully calculate/evaluate your progress with
             // some int p ranged [0,100], you can pass that through to update the loading
             // bar progress
 

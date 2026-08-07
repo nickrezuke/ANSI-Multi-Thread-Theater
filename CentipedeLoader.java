@@ -12,8 +12,8 @@ public class CentipedeLoader extends Loader {
     };
 
     // FIX: Dimensions flipped to standard vertical arcade aspect ratios
-    private static final int WIDTH = 40;
-    private static final int HEIGHT = 36;
+    private static final int WIDTH = 45;
+    private static final int HEIGHT = 30;
     private static final int SIZE = WIDTH * HEIGHT;
 
     private static class Segment {
@@ -46,7 +46,7 @@ public class CentipedeLoader extends Loader {
     private long lastTickTime = 0;
     private long lastMoveTime = 0;
     
-    private static final long REFRESH_RATE_MS = 15;     
+    private static final long REFRESH_RATE_MS = 10;     
     private static final long CENTIPEDE_MOVE_MS = 50;   // Adjusted step delay for narrow tracking lanes
     private long deathTimestamp = 0;
     private final Random rand = new Random();

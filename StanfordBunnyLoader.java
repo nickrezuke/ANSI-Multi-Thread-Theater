@@ -1,3 +1,5 @@
+// TODO: Make this higher fidelity and only rotate along one axis
+
 public class StanfordBunnyLoader extends Loader {
     private static final StatusStage[] STAGES = {
         new StatusStage(15, "Synthesizing parametric surface coordinates..."),

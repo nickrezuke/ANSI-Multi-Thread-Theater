@@ -133,7 +133,7 @@ public abstract class Loader implements Runnable {
                 }
             }
 
-            if (window_width * 2 < window_height || window_width <= 40) {
+            if (window_width * 2 < window_height || window_width <= 60) {
                 // Truncate message to avoid spilling over narrow canvas borders
                 String cleanMsg = activeMessage.trim();
                 if (cleanMsg.length() > window_width) {

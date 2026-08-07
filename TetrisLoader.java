@@ -1,6 +1,3 @@
-// TODO: Sometimes the game making a TETRIS doesnt move the other pieces doen correctly, I've occasionally seen floating things / empty bars
-// TODO: Fast Drop doesnt really work when we're in a tight corridor and can't move to where we wanna go... maybe just make the regular speed that fast??
-
 import java.util.Random;
 
 public class TetrisLoader extends Loader {
@@ -54,8 +51,8 @@ public class TetrisLoader extends Loader {
     private long lastTickTime = 0;
     private long lastAIActionTime = 0;
 
-    private static final long GRAVITY_NORMAL_MS = 350; // Snappier baseline normal gravity
-    private static final long GRAVITY_SOFT_DROP_MS = 20; // Turbo drop speed when aligned
+    private static final long GRAVITY_NORMAL_MS = 30; // Snappier baseline normal gravity
+    private static final long GRAVITY_SOFT_DROP_MS = 25; // Turbo drop speed when aligned
     private static final long AI_ACTION_DELAY_MS = 50;
 
     private final Random rand = new Random();
@@ -120,18 +117,18 @@ public class TetrisLoader extends Loader {
             }
         }
 
-        // 1. Process CPU Controller Actions
-        if (currentTime - lastAIActionTime >= AI_ACTION_DELAY_MS) {
+        // 1. Process CPU Actions smoothly without choking in tight corridors
+        boolean targetReached = (currentRotation == targetRotation && pieceX == targetX);
+        long dynamicAiDelay = targetReached ? AI_ACTION_DELAY_MS : 0; // Move instantly if misaligned
+
+        if (currentTime - lastAIActionTime >= dynamicAiDelay) {
             if (processRealTimeAIAction()) {
                 lastAIActionTime = currentTime;
             }
         }
 
         // 2. Dynamic Adaptive Gravity System
-        // If alignment targets match perfectly, engage turbo drop interval speed
-        boolean targetReached = (currentRotation == targetRotation && pieceX == targetX);
         long activeDropDelay = targetReached ? GRAVITY_SOFT_DROP_MS : GRAVITY_NORMAL_MS;
-
         if (currentTime - lastTickTime >= activeDropDelay) {
             lastTickTime = currentTime;
             advanceFallingPiece();
@@ -287,13 +284,17 @@ public class TetrisLoader extends Loader {
             if (rowIsFull) {
                 continuousLinesThisFrame++;
                 linesCleared++;
+                // Shift rows down
                 for (int ty = y; ty > 0; ty--) {
                     System.arraycopy(grid[ty - 1], 0, grid[ty], 0, FIELD_W);
                 }
+                // Only clear the top row since it has no row above it
                 for (int x = 0; x < FIELD_W; x++)
-                    grid[y][x] = 0;
-                y++;
+                    grid[0][x] = 0;
+
+                y++; // Re-check this index since a new row dropped down
             }
+
         }
 
         if (continuousLinesThisFrame == 1)
@@ -391,7 +392,7 @@ public class TetrisLoader extends Loader {
         writeText(outputBuffer, textColumnX, 15, "│        └──────────┘                    │", COLOR_BORDER);
         int[][] nextShape = SHAPES[nextType];
         String nextColor = SHAPE_COLORS[nextType];
-        int nextBoxStartX = textColumnX + 10 + (4 - nextShape[0].length);
+        int nextBoxStartX = textColumnX + 10 + ((4 - nextShape[0].length) / 2);
         int nextBoxStartY = 13 + (2 - nextShape.length) / 2;
         for (int r = 0; r < nextShape.length; r++) {
             for (int c = 0; c < nextShape[r].length; c++) {

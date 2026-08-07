@@ -79,7 +79,8 @@ This Project comes packed with a suite of rendering targets, all derived from a 
 -> **PerlinNoise**: <!-- TODO: Elaborate on this section -->
 -> **Aizawa**: <!-- TODO: Elaborate on this section -->
 -> **Lorenz**: <!-- TODO: Elaborate on this section -->
--> **QuantumWave**: <!-- TODO: Elaborate on this section -->
+-> **QuantumOrbit**: <!-- TODO: Elaborate on this section -->
+-> **QuantumSpectrograph**: <!-- TODO: Elaborate on this section -->
 -> **ThreeBody**: <!-- TODO: Elaborate on this section -->
 -> **BlackHole**: <!-- TODO: Elaborate on this section -->
 -> **NavierStokes**: <!-- TODO: Elaborate on this section -->
@@ -110,9 +111,11 @@ This Project comes packed with a suite of rendering targets, all derived from a 
 -> **Pong**: <!-- TODO: Elaborate on this section -->
 -> **Asteroids**: <!-- TODO: Elaborate on this section -->
 -> **Tetris**: <!-- TODO: Elaborate on this section -->
+-> **LunarLander**: <!-- TODO: Elaborate on this section -->
 -> **Snake**: <!-- TODO: Elaborate on this section -->
 -> **Checkers**: <!-- TODO: Elaborate on this section -->
 -> **Chess**: <!-- TODO: Elaborate on this section -->
+-> **Tron**: <!-- TODO: Elaborate on this section -->
 -> **SpaceInvaders**: <!-- TODO: Elaborate on this section -->
 -> **Galaga**: <!-- TODO: Elaborate on this section -->
 -> **BrickBreakout**: <!-- TODO: Elaborate on this section -->
@@ -122,16 +125,19 @@ I also have a sub subclass called InteractiveLoader which allows interactivity
 Some of these loaders extend this, and are also interactable by using the arrow keys:
 
 -> **KleinRing**: <!-- TODO: Elaborate on this section -->
+-> **Labyrinth3D**: <!-- TODO: Elaborate on this section -->
 -> **SeifertSurface**: <!-- TODO: Elaborate on this section -->
 -> **KleinRing**: <!-- TODO: Elaborate on this section -->
-
--> **Labyrinth3D**: <!-- TODO: Elaborate on this section -->
+-> **FlappyBird**: <!-- TODO: Elaborate on this section -->
+-> **MotorcycleRacer**: <!-- TODO: Elaborate on this section -->
+-> **Pinball**: <!-- TODO: Elaborate on this section -->
+-> **SlotMachine**: <!-- TODO: Elaborate on this section -->
+-> **Pendulum**: <!-- TODO: Elaborate on this section -->
 
 Note to self: Other ideas to consider:
 spider web
 butterfly
 2D Umbrella People walking in the rainy city and city night light recfection in the puddles
-Slot Machine
 Snow Globe
 Coveyer belt with Sushi & Ramen on it like at the resturaunts
 Campfire 

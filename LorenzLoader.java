@@ -106,26 +106,26 @@ public class LorenzLoader extends Loader {
         String green = "\u001B[38;5;112m";
         String white = "\u001B[38;5;255m";
         
-        drawDashboardLine(outputBuffer, 0,  "┌──────────────────────┐", white, white);
-        drawDashboardLine(outputBuffer, 1,  "│ LORENZ ATTRACTOR     │", white, white);
-        drawDashboardLine(outputBuffer, 2,  "├──────────────────────┤", white, white);
-        drawDashboardLine(outputBuffer, 3,  String.format("│ %sSIGMA: %s%6.2f        │", gray, green, SIGMA), gray, white);
-        drawDashboardLine(outputBuffer, 4,  String.format("│ %sRHO:   %s%6.2f        │", gray, green, RHO), gray, white);
-        drawDashboardLine(outputBuffer, 5,  String.format("│ %sBETA:  %s1/3 * %4.1f    │", gray, green, BETA * 3.0), gray, white);
-        drawDashboardLine(outputBuffer, 6,  "├──────────────────────┤", white, white);
-        drawDashboardLine(outputBuffer, 7,  "│ STATE VARIABLES      │", white, white);
-        drawDashboardLine(outputBuffer, 8,  String.format("│  %sX:  %s%6.2f          │", gray, green, lx), gray, white);
-        drawDashboardLine(outputBuffer, 9,  String.format("│  %sY:  %s%6.2f          │", gray, green, ly), gray, white);
-        drawDashboardLine(outputBuffer, 10, String.format("│  %sZ:  %s%6.2f          │", gray, green, lz), gray, white);
-        drawDashboardLine(outputBuffer, 11, "├──────────────────────┤", white, white);
-        drawDashboardLine(outputBuffer, 12, "│ INSTANT VELOCITY     │", white, white);
-        drawDashboardLine(outputBuffer, 13, String.format("│ %sdX: %s%+7.1f          │", gray, green, vX), gray, white);
-        drawDashboardLine(outputBuffer, 14, String.format("│ %sdY: %s%+7.1f          │", gray, green, vY), gray, white);
-        drawDashboardLine(outputBuffer, 15, String.format("│ %sdZ: %s%+7.1f          │", gray, green, vZ), gray, white);
-        drawDashboardLine(outputBuffer, 16, "└──────────────────────┘", white, white);
+        drawDashboardLine(outputBuffer, 3,  "┌──────────────────────┐", white, white);
+        drawDashboardLine(outputBuffer, 4,  "│   LORENZ ATTRACTOR   │", white, white);
+        drawDashboardLine(outputBuffer, 5,  "├──────────────────────┤", white, white);
+        drawDashboardLine(outputBuffer, 6,  String.format("│   %sSIGMA: %s%6.2f      │", gray, green, SIGMA), gray, white);
+        drawDashboardLine(outputBuffer, 7,  String.format("│   %sRHO:   %s%6.2f      │", gray, green, RHO), gray, white);
+        drawDashboardLine(outputBuffer, 8,  String.format("│   %sBETA:  %s1/3 * %4.1f  │", gray, green, BETA * 3.0), gray, white);
+        drawDashboardLine(outputBuffer, 9,  "├──────────────────────┤", white, white);
+        drawDashboardLine(outputBuffer, 10,  "│ STATE VARIABLES      │", white, white);
+        drawDashboardLine(outputBuffer, 11,  String.format("│    %sX:  %s%7.2f       │", gray, green, lx), gray, white);
+        drawDashboardLine(outputBuffer, 12,  String.format("│    %sY:  %s%7.2f       │", gray, green, ly), gray, white);
+        drawDashboardLine(outputBuffer, 13, String.format("│    %sZ:  %s%7.2f       │", gray, green, lz), gray, white);
+        drawDashboardLine(outputBuffer, 14, "├──────────────────────┤", white, white);
+        drawDashboardLine(outputBuffer, 15, "│ INSTANT VELOCITY     │", white, white);
+        drawDashboardLine(outputBuffer, 16, String.format("│   %sdX:  %s%+7.2f       │", gray, green, vX), gray, white);
+        drawDashboardLine(outputBuffer, 17, String.format("│   %sdY:  %s%+7.2f       │", gray, green, vY), gray, white);
+        drawDashboardLine(outputBuffer, 18, String.format("│   %sdZ:  %s%+7.2f       │", gray, green, vZ), gray, white);
+        drawDashboardLine(outputBuffer, 19, "└──────────────────────┘", white, white);
 
         // Wipe remaining lower canvas margins to prevent 3D overflow artifacts
-        for (int row = 17; row < 22; row++) {
+        for (int row = 20; row < 22; row++) {
             drawDashboardLine(outputBuffer, row, "                        ", RESET, RESET);
         }
 

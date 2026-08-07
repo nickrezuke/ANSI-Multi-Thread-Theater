@@ -1,310 +1,191 @@
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.function.Supplier;
+
 public class LoaderFactory {
-    // All the loaders currently being considered
-    private static final String[] LOADER_NAMES = {
-            "ConwaysGameOfLife", "GameOfLife", "Donut", "Mario64Cube", "TexelCompanionCube", "TexelMinecraftGrassBlock",
-            "TexelBorgCube", "CatHead", "Vaporwave", "Synthwave", "GreyScottReactionDiffusion", "ReactionDiffusion",
-            "Radar", "MandelbrotZoom", "DNA", "BlackHole", "Lorenz", "KleinRing", "Earth", "Jupiter", "HillTree", "DJ",
-            "LorenzAttractor", "RippleTank", "DoubleSlit", "TextFall", "Ring", "RockPaperScissors", "FrutigerAero",
-            "TexelMCUTesseract", "TexelHellraiserLamentConfiguration", "TexelGreyRubix", "TexelTriplePhase", "Boids",
-            "TexelMarioBricks", "RainbowWhispSphere", "PacManSphere", "OctahedralMatrix", "RainbowWhispPyramid",
-            "Tesseract", "4D Cube", "SeifertSurface", "Pendulum", "Saturn", "Rocket", "BarnsleyFernZoom", "Moon",
-            "EyeOfProvidence", "Illuminati", "WireframeSphere", "Louvre", "FluidDynamics", "NavierStokes", "Snake",
-            "TexelRubixCube", "DJTurntable", "PerlinNoise", "SydneyOperaHouse", "EiffelTower", "AizawaAttractor",
-            "ChicagoBean", "CloudGate", "StanfordBunny", "BriansBrain", "Gyroid", "Chladni", "IkedaRibbon", "Aizawa",
-            "BigBen", "NyanCat", "BouncingSpinner", "DancingBanana", "ThreeBody", "WireframeCube", "HyperSphere",
-            "TexelKevinCube", "4D Sphere", "HopfFibration", "BrickBreakout", "Breakout", "GaltonBoard", "TajMahal",
-            "SpaceInvaders", "Chess", "Slitherio", "HerdingAndFlocking", "UtahTeapot", "MarioCoinBlock", "Pong",
-            "TexelGlitch", "Checkers", "Tetris", "Asteroids", "Centepede", "Galaga", "LangtonsAnt", "Labyrinth3D",
-            "TexelAllspark", "TexelEmojiCube", "TexelPsychCube", "TexelFlatEarth", "QuantumWave", "TexelPlasmaCube",
-            "Unused", "Unused2"
-    };
 
-    public static Loader createLoaderInstance(String requestedName) {
-        String finalName = null;
+    // Central Single-Source-of-Truth Registry
+    private static final Map<String, Supplier<Loader>> REGISTRY = new HashMap<>();
+    private static final List<String> LOADER_NAMES;
 
-        // 1. Scan for a valid case-insensitive match against the registry
-        if (requestedName != null) {
-            for (int i = 0; i < LOADER_NAMES.length; i++) {
-                if (LOADER_NAMES[i].equalsIgnoreCase(requestedName)) {
-                    finalName = LOADER_NAMES[i];
-                    break;
-                }
-            }
-        }
+    static {
+        // Difine all loaders here.... (and lists with multiple possible names)
+        register("Chladni", ChladniLoader::new);
+        register("Donut", DonutLoader::new);
+        register("QuantumOrbital", QuantumOrbitalLoader::new);
+        register("QuantumSpectrograph",QuantumSpectrographLoader::new);
+        register("Mario64Cube", Mario64CubeLoader::new);
+        register("SlotMachine", SlotMachineLoader::new);
+        register("Pinball", PinballLoader::new);
+        register("TexelCompanionCube", TexelCompanionCubeLoader::new);
+        register("GaltonBoard", GaltonBoardLoader::new);
+        register("TexelMinecraftGrassBlock", TexelMinecraftGrassBlockLoader::new);
+        register("TexelBorgCube", TexelBorgCubeLoader::new);
+        register("TexelAllspark", TexelAllsparkLoader::new);
+        register("TexelEmojiCube", TexelEmojiCubeLoader::new);
+        register(List.of("ConwaysGameOfLife", "GameOfLife"), ConwaysGameOfLifeLoader::new);
+        register("TexelPlasmaCube", TexelPlasmaCubeLoader::new);
+        register("TexelPsychCube", TexelPsychCubeLoader::new);
+        register("TexelHellraiserLamentConfiguration", TexelHellraiserLamentConfigurationLoader::new);
+        register("TexelFlatEarth", TexelFlatEarthLoader::new);
+        register("TexelGlitch", TexelGlitchLoader::new);
+        register(List.of("Aizawa", "AizawaAttractor"), AizawaLoader::new);
+        register("TexelRubixCube", TexelRubixCubeLoader::new);
+        register("TexelGreyRubix", TexelGreyRubixLoader::new);
+        register("TexelMCUTesseract", TexelMCUTesseractLoader::new);
+        register("TexelTriplePhaseCube", TexelTriplePhaseCubeLoader::new);
+        register("TexelMarioBricks", TexelMarioBricksLoader::new);
+        register("MarioCoinBlock", TexelMarioCoinBlockLoader::new);
+        register("CatHead", CatHeadLoader::new);
+        register("IkedaRibbon", IkedaRibbonLoader::new);
+        register("Synthwave", SynthWaveLoader::new);
+        register("BarnsleyFernZoom", BarnsleyFernZoomLoader::new);
+        register("Vaporwave", VaporWaveLoader::new);
+        register("LunarLander", LunarLanderLoader::new);
+        register("Jupiter", JupiterLoader::new);
+        register(List.of("GreyScottReactionDiffusion", "ReactionDiffusion"), ReactionDiffusionLoader::new);
+        register("MotorcycleRacer", MotorcycleRacerLoader::new);
+        register("Radar", RadarLoader::new);
+        register("Rocket", RocketLoader::new);
+        register("HillTree", HillTreeLoader::new);
+        register("StanfordBunny", StanfordBunnyLoader::new);
+        register("MandelbrotZoom", MandelbrotZoomLoader::new);
+        register("DNA", DNALoader::new);
+        register("Pendulum", PendulumLoader::new);
+        register("Saturn", SaturnLoader::new);
+        register("BlackHole", BlackHoleLoader::new);
+        register("Earth", EarthLoader::new);
+        register(List.of("Lorenz", "LorenzAttractor"), LorenzLoader::new);
+        register(List.of("RippleTank", "DoubleSlit"), RippleTankAutomatonLoader::new);
+        register("SeifertSurface", SeifertLoader::new);
+        register("TextFall", TextFallLoader::new);
+        register("Ring", RingLoader::new);
+        register("KleinRing", KleinRingLoader::new);
+        register("RockPaperScissors", RockPaperScissorsAutomatonLoader::new);
+        register("FrutigerAero", FrutigerAeroLoader::new);
+        register("Labyrinth3D", Labyrinth3DLoader::new);
+        register("RainbowWhispSphere", RainbowWhispSphereLoader::new);
+        register("PacManSphere", PacManSphereLoader::new);
+        register("OctahedralMatrix", OctahedralMatrixLoader::new);
+        register("RainbowWhispPyramid", RainbowWhispPyramidLoader::new);
+        register(List.of("Tesseract", "4D Cube"), TesseractLoader::new);
+        register(List.of("EyeOfProvidence", "Illuminati"), EyeOfProvidenceLoader::new);
+        register("WireframeSphere", WireframeSphereLoader::new);
+        register("Louvre", LouvreLoader::new);
+        register(List.of("FluidDynamics", "NavierStokes"), FluidDynamicsLoader::new);
+        register(List.of("DJ", "DJTurntable"), DJTurntableLoader::new);
+        register("Moon", MoonLoader::new);
+        register("PerlinNoise", PerlinNoiseLoader::new);
+        register("SydneyOperaHouse", SydneyOperaHouseLoader::new);
+        register("EiffelTower", EiffelTowerLoader::new);
+        register("TajMahal", TajMahalLoader::new);
+        register("Slitherio", SlitherioLoader::new);
+        register(List.of("ChicagoBean", "CloudGate"), ChicagoBeanLoader::new);
+        register("BigBen", BigBenLoader::new);
+        register("TexelKevinCube", TexelKevinCubeLoader::new);
+        register("NyanCat", NyanCatLoader::new);
+        register("BouncingSpinner", BouncingSpinnerLoader::new);
+        register("DancingBanana", DancingBananaLoader::new);
+        register("ThreeBody", ThreeBodyLoader::new);
+        register("WireframeCube", WireframeCubeLoader::new);
+        register(List.of("HyperSphere", "4D Sphere"), HypersphereLoader::new);
+        register("HopfFibration", HopfFibrationLoader::new);
+        register("Snake", SnakeLoader::new);
+        register("Pong", PongLoader::new);
+        register(List.of("BrickBreakout", "Breakout"), BrickBreakoutLoader::new);
+        register("SpaceInvaders", SpaceInvadersLoader::new);
+        register("Chess", ChessLoader::new);
+        register("Checkers", CheckersLoader::new);
+        register("Tetris", TetrisLoader::new);
+        register("Asteroids", AsteroidsLoader::new);
+        register("Centepede", CentipedeLoader::new);
+        register("Galaga", GalagaLoader::new);
+        register("LangtonsAnt", LangtonsAntLoader::new);
+        register("UtahTeapot", UtahTeapotLoader::new);
+        register(List.of("Boids", "HerdingAndFlocking"), BoidsLoader::new);
+        register("BriansBrain", BriansBrainLoader::new);
+        register("Gyroid", GyroidLoader::new);
+        register("Tron", TronLoader::new);
+        register("FlappyBird", FlappyBirdLoader::new);
+        register("Unused", UnusedInfiniteFractalLoader::new); 
+        register("Unused2", UnusedInfiniteFractalLoader2::new);
 
-        // 2. Attempt Best Match...
-        if (finalName == null && requestedName != null) {
-            // We entered something but no match...
-            finalName = findClosestMatch(requestedName, LOADER_NAMES);
-        }
+        // Derive names list automatically from unique registered keys
+        LOADER_NAMES = new ArrayList<>(REGISTRY.keySet());
+    }
 
-        // 3. Fallback: If truly no match was found,
-        // resolve to a random variant name
-        if (finalName == null) {
-            int randomIndex = (int) (Math.random() * LOADER_NAMES.length);
-            finalName = LOADER_NAMES[randomIndex];
-        }
+    // Single-key helper registration
+    private static void register(String name, Supplier<Loader> constructor) {
+        REGISTRY.put(name.toLowerCase(), constructor);
+    }
 
-        // 4. Centralized Construction Switch (Strings in switch are
-        // exact/case-sensitive)
-        switch (finalName) {
-            case "ConwaysGameOfLife":
-            case "GameOfLife":
-                return new ConwaysGameOfLifeLoader();
-            case "Chladni":
-                return new ChladniLoader();
-            case "Donut":
-                return new DonutLoader();
-            case "QuantumWave":
-                return new QuantumWaveLoader();
-            case "Mario64Cube":
-                return new Mario64CubeLoader();
-            case "TexelCompanionCube":
-                return new TexelCompanionCubeLoader();
-            case "GaltonBoard":
-                return new GaltonBoardLoader();
-            case "TexelMinecraftGrassBlock":
-                return new TexelMinecraftGrassBlockLoader();
-            case "TexelBorgCube":
-                return new TexelBorgCubeLoader();
-            case "TexelAllspark":
-                return new TexelAllsparkLoader();
-            case "TexelEmojiCube":
-                return new TexelEmojiCubeLoader();
-            case "TexelPlasmaCube":
-                return new TexelPlasmaCubeLoader();
-            case "TexelPsychCube":
-                return new TexelPsychCubeLoader();
-            case "TexelHellraiserLamentConfiguration":
-                return new TexelHellraiserLamentConfigurationLoader();
-            case "TexelFlatEarth":
-                return new TexelFlatEarthLoader();
-            case "TexelGlitch":
-                return new TexelGlitchLoader();
-            case "Aizawa":
-            case "AizawaAttractor":
-                return new AizawaLoader();
-            case "TexelRubixCube":
-                return new TexelRubixCubeLoader();
-            case "TexelGreyRubix":
-                return new TexelGreyRubixLoader();
-            case "TexelMCUTesseract":
-                return new TexelMCUTesseractLoader();
-            case "TexelTriplePhaseCube":
-                return new TexelTriplePhaseCubeLoader();
-            case "TexelMarioBricks":
-                return new TexelMarioBricksLoader();
-            case "MarioCoinBlock":
-                return new TexelMarioCoinBlockLoader();
-            case "CatHead":
-                return new CatHeadLoader();
-            case "IkedaRibbon":
-                return new IkedaRibbonLoader();
-            case "Synthwave":
-                return new SynthWaveLoader();
-            case "BarnsleyFernZoom":
-                return new BarnsleyFernZoomLoader();
-            case "Vaporwave":
-                return new VaporWaveLoader();
-            case "Jupiter":
-                return new JupiterLoader();
-            case "GreyScottReactionDiffusion":
-            case "ReactionDiffusion":
-                return new ReactionDiffusionLoader();
-            case "Radar":
-                return new RadarLoader();
-            case "Rocket":
-                return new RocketLoader();
-            case "HillTree":
-                return new HillTreeLoader();
-            case "StanfordBunny":
-                return new StanfordBunnyLoader();
-            case "MandelbrotZoom":
-                return new MandelbrotZoomLoader();
-            case "DNA":
-                return new DNALoader();
-            case "Pendulum":
-                return new PendulumLoader();
-            case "Saturn":
-                return new SaturnLoader();
-            case "BlackHole":
-                return new BlackHoleLoader();
-            case "Earth":
-                return new EarthLoader();
-            case "Lorenz":
-            case "LorenzAttractor":
-                return new LorenzLoader();
-            case "RippleTank":
-            case "DoubleSlit":
-                return new RippleTankAutomatonLoader();
-            case "SeifertSurface":
-                return new SeifertLoader();
-            case "TextFall":
-                return new TextFallLoader();
-            case "Ring":
-                return new RingLoader();
-            case "KleinRing":
-                return new KleinRingLoader();
-            case "RockPaperScissors":
-                return new RockPaperScissorsAutomatonLoader();
-            case "FrutigerAero":
-                return new FrutigerAeroLoader();
-            case "Labyrinth3D":
-                return new Labyrinth3DLoader();
-            case "RainbowWhispSphere":
-                return new RainbowWhispSphereLoader();
-            case "PacManSphere":
-                return new PacManSphereLoader();
-            case "OctahedralMatrix":
-                return new OctahedralMatrixLoader();
-            case "RainbowWhispPyramid":
-                return new RainbowWhispPyramidLoader();
-            case "Tesseract":
-            case "4D Cube":
-                return new TesseractLoader();
-            case "EyeOfProvidence":
-            case "Illuminati":
-                return new EyeOfProvidenceLoader();
-            case "WireframeSphere":
-                return new WireframeSphereLoader();
-            case "Louvre":
-                return new LouvreLoader();
-            case "FluidDynamics":
-            case "NavierStokes":
-                return new FluidDynamicsLoader();
-            case "DJ":
-            case "DJTurntable":
-                return new DJTurntableLoader();
-            case "Moon":
-                return new MoonLoader();
-            case "PerlinNoise":
-                return new PerlinNoiseLoader();
-            case "SydneyOperaHouse":
-                return new SydneyOperaHouseLoader();
-            case "EiffelTower":
-                return new EiffelTowerLoader();
-            case "TajMahal":
-                return new TajMahalLoader();
-            case "Slitherio":
-                return new SlitherioLoader();
-            case "ChicagoBean":
-            case "CloudGate":
-                return new ChicagoBeanLoader();
-            case "BigBen":
-                return new BigBenLoader();
-            case "TexelKevinCube":
-                return new TexelKevinCubeLoader();
-            case "NyanCat":
-                return new NyanCatLoader();
-            case "BouncingSpinner":
-                return new BouncingSpinnerLoader();
-            case "DancingBanana":
-                return new DancingBananaLoader();
-            case "ThreeBody":
-                return new ThreeBodyLoader();
-            case "WireframeCube":
-                return new WireframeCubeLoader();
-            case "HyperSphere":
-            case "4D Sphere":
-                return new HypersphereLoader();
-            case "HopfFibration":
-                return new HopfFibrationLoader();
-            case "Snake":
-                return new SnakeLoader();
-            case "Pong":
-                return new PongLoader();
-            case "BrickBreakout":
-            case "Breakout":
-                return new BrickBreakoutLoader();
-            case "SpaceInvaders":
-                return new SpaceInvadersLoader();
-            case "Chess":
-                return new ChessLoader();
-            case "Checkers":
-                return new CheckersLoader();
-            case "Tetris":
-                return new TetrisLoader();
-            case "Asteroids":
-                return new AsteroidsLoader();
-            case "Centepede":
-                return new CentipedeLoader();
-            case "Galaga":
-                return new GalagaLoader();
-            case "LangtonsAnt":
-                return new LangtonsAntLoader();
-            case "UtahTeapot":
-                return new UtahTeapotLoader();
-            case "Boids":
-            case "HerdingAndFlocking":
-                return new BoidsLoader();
-            case "BriansBrain":
-                return new BriansBrainLoader();
-            case "Gyroid":
-                return new GyroidLoader();
-            case "Unused":
-                return new UnusedInfiniteFractalLoader();
-            case "Unused2":
-                return new UnusedInfiniteFractalLoader2();
-            default:
-                return new UnusedInfiniteFractalLoader(); // We should never get here
+    // Multi-key/Alias helper registration
+    private static void register(List<String> names, Supplier<Loader> constructor) {
+        for (String name : names) {
+            REGISTRY.put(name.toLowerCase(), constructor);
         }
     }
 
-    // Just a helper method to help match strings...
-    private static String findClosestMatch(String input, String[] possibilities) {
-        if (input == null || input.isEmpty() || possibilities == null || possibilities.length == 0) {
-            return null;
+    public static Loader createLoaderInstance(String requestedName) {
+        if (requestedName == null) {
+            return fallbackRandomInstance();
         }
 
-        String inputLower = input.toLowerCase();
+        String targetKey = requestedName.toLowerCase();
+
+        // 1. Direct case-insensitive O(1) Dictionary Lookup
+        if (REGISTRY.containsKey(targetKey)) {
+            return REGISTRY.get(targetKey).get();
+        }
+
+        // 2. Spell-checking Matcher
+        String closestMatch = findClosestMatch(targetKey, LOADER_NAMES);
+        if (closestMatch != null && REGISTRY.containsKey(closestMatch)) {
+            return REGISTRY.get(closestMatch).get();
+        }
+
+        // 3. Absolute Fallback State
+        return fallbackRandomInstance();
+    }
+
+    private static Loader fallbackRandomInstance() {
+        int randomIndex = new Random().nextInt(LOADER_NAMES.size());
+        String selectedKey = LOADER_NAMES.get(randomIndex);
+        return REGISTRY.get(selectedKey).get();
+    }
+
+    private static String findClosestMatch(String inputLower, List<String> possibilities) {
+        if (inputLower == null || inputLower.isEmpty() || possibilities == null || possibilities.isEmpty()) {
+            return null;
+        }
         String bestMatch = null;
         int minDistance = Integer.MAX_VALUE;
 
         for (String option : possibilities) {
-            String optionLower = option.toLowerCase();
-
-            // Levenshtein Matrix Construction
             int m = inputLower.length();
-            int n = optionLower.length();
+            int n = option.length();
             int[][] dp = new int[m + 1][n + 1];
 
-            // Initialize baseline empty-string mapping costs
             for (int i = 0; i <= m; i++)
                 dp[i][0] = i;
             for (int j = 0; j <= n; j++)
                 dp[0][j] = j;
 
-            // Fill edit distance matrix
             for (int i = 1; i <= m; i++) {
                 for (int j = 1; j <= n; j++) {
-                    if (inputLower.charAt(i - 1) == optionLower.charAt(j - 1)) {
-                        dp[i][j] = dp[i - 1][j - 1]; // Character match costs 0 operations
+                    if (inputLower.charAt(i - 1) == option.charAt(j - 1)) {
+                        dp[i][j] = dp[i - 1][j - 1];
                     } else {
-                        // Find minimum between: Deletion, Insertion, or Substitution operations
-                        int deleteCost = dp[i - 1][j];
-                        int insertCost = dp[i][j - 1];
-                        int substituteCost = dp[i - 1][j - 1];
-
-                        int minOp = deleteCost;
-                        if (insertCost < minOp)
-                            minOp = insertCost;
-                        if (substituteCost < minOp)
-                            minOp = substituteCost;
-
-                        dp[i][j] = 1 + minOp;
+                        dp[i][j] = 1 + Math.min(dp[i - 1][j - 1], Math.min(dp[i - 1][j], dp[i][j - 1]));
                     }
                 }
             }
 
             int finalDistance = dp[m][n];
-
-            // Quality Threshold Gate: A valid typo match should
-            // realistically have an edit distance that doesn't exceed
-            // half the length of the targeted target name.
-            // This prevents unrelated keys from matching aggressively
-            // Like "xpmqsudhqjdigkudr" with "ConwaysGameOfLife".
             int structuralThreshold = Math.max(4, option.length() / 2);
-
             if (finalDistance < minDistance && finalDistance <= structuralThreshold) {
                 minDistance = finalDistance;
                 bestMatch = option;

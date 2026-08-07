@@ -99,7 +99,7 @@ public class AizawaLoader extends Loader {
                     if (ageFactor > 0.94) {
                         colorCode = "\u001B[38;5;255m";  trailChar = '@';
                     } else if (ageFactor > 0.75) {
-                        colorCode = "\u001B[38;5;34m";   trailChar = '*';
+                        colorCode = "\u001B[38;5;41m";   trailChar = '*';
                     } else if (ageFactor > 0.45) {
                         colorCode = "\u001B[38;5;28m";  trailChar = '+';
                     } else if (ageFactor > 0.15) {
@@ -124,14 +124,14 @@ public class AizawaLoader extends Loader {
         drawDashboardLine(outputBuffer, 7, String.format("│  %sSLOPE-C: %s%+6.1f     │", gray, green, C), gray, white);
         drawDashboardLine(outputBuffer, 8, "├──────────────────────┤", white, white);
         drawDashboardLine(outputBuffer, 9, "│ COCCULT MATH NO_DES  │", white, white);
-        drawDashboardLine(outputBuffer, 10, String.format("│      %sX: %s%+7.1f      │", gray, green, lx), gray, white);
-        drawDashboardLine(outputBuffer, 11, String.format("│      %sY: %s%+7.1f      │", gray, green, ly), gray, white);
-        drawDashboardLine(outputBuffer, 12, String.format("│      %sZ: %s%+7.1f      │", gray, green, lz), gray, white);
+        drawDashboardLine(outputBuffer, 10, String.format("│      %sX:  %s%+7.1f     │", gray, green, lx), gray, white);
+        drawDashboardLine(outputBuffer, 11, String.format("│      %sY:  %s%+7.1f     │", gray, green, ly), gray, white);
+        drawDashboardLine(outputBuffer, 12, String.format("│      %sZ:  %s%+7.1f     │", gray, green, lz), gray, white);
         drawDashboardLine(outputBuffer, 13, "├──────────────────────┤", white, white);
         drawDashboardLine(outputBuffer, 14, "│ TORMENT FLOW VECTOR  │", white, white);
-        drawDashboardLine(outputBuffer, 15, String.format("│     %sdX: %s%+7.1f      │", gray, green, vX), gray, white);
-        drawDashboardLine(outputBuffer, 16, String.format("│     %sdY: %s%+7.1f      │", gray, green, vY), gray, white);
-        drawDashboardLine(outputBuffer, 17, String.format("│     %sdZ: %s%+7.1f      │", gray, green, vZ), gray, white);
+        drawDashboardLine(outputBuffer, 15, String.format("│     %sdX:  %s%+7.1f     │", gray, green, vX), gray, white);
+        drawDashboardLine(outputBuffer, 16, String.format("│     %sdY:  %s%+7.1f     │", gray, green, vY), gray, white);
+        drawDashboardLine(outputBuffer, 17, String.format("│     %sdZ:  %s%+7.1f     │", gray, green, vZ), gray, white);
         drawDashboardLine(outputBuffer, 18, "└──────────────────────┘", white, white);
 
         for (int row = 19; row < 22; row++) {

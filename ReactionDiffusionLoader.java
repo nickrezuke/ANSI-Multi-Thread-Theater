@@ -1,6 +1,9 @@
-// TODO Finish this Grey-Scott Diffusion Reaction Model.  Its not rendering properly / visually cool enough
+// TODO: Improve the accuracy of these reactions to look more like the animal prints they represent
+
+import java.util.Random;
 
 public class ReactionDiffusionLoader extends Loader {
+
     private static final StatusStage[] REFLECTIVE_STAGES = {
         new StatusStage(25, "Seeding biological DNA markers:"),
         new StatusStage(55, "Synthesizing skin tissue matrix:"),
@@ -8,76 +11,82 @@ public class ReactionDiffusionLoader extends Loader {
         new StatusStage(100, "Animal Morphology Pattern Stable!")
     };
 
-    private static final int WIDTH = 140;
-    private static final int HEIGHT = 42;
+    // TERMINAL VIEW RES
+    private static final int DISPLAY_W = 140;
+    private static final int DISPLAY_H = 42;
 
-    // Dual-buffered fields (U = Feedstock source, V = Catalyst)
-    private double[][] gridU = new double[HEIGHT][WIDTH];
-    private double[][] gridV = new double[HEIGHT][WIDTH];
-    private double[][] nextU = new double[HEIGHT][WIDTH];
-    private double[][] nextV = new double[HEIGHT][WIDTH];
+    // HIGH-RES MATH RESOLUTION (Exactly 2x terminal size to prevent overcrowding artifacts)
+    private static final int MATH_W = DISPLAY_W * 2; 
+    private static final int MATH_H = DISPLAY_H * 2; 
 
-    // Standard baseline diffusion rates scaled for stable numerical time-stepping
-    private static final double Du = 1.000;
-    private static final double Dv = 0.500;
+    private double[][] gridU = new double[MATH_H][MATH_W];
+    private double[][] gridV = new double[MATH_H][MATH_W];
+    private double[][] nextU = new double[MATH_H][MATH_W];
+    private double[][] nextV = new double[MATH_H][MATH_W];
+
+    private static final double Du = 1.000; 
+    private static final double DV_DEFAULT = 0.500;
+    private static final double DV_LEOPARD = 0.400;
+
+    // Re-balanced isotropic weights for high-res mesh grid tracking
+    private static final double LAP_EW = 10.0 / 29.0; 
+    private static final double LAP_NS = 5.0 / 58.0;  
+    private static final double LAP_DIAG = 1.0 / 29.0;
+    private static final double LAP_CENTER = -(2 * LAP_EW + 2 * LAP_NS + 4 * LAP_DIAG);
 
     private double activeFeed;
     private double activeKill;
+    private double activeDv;
     private int variant;
 
     public ReactionDiffusionLoader() {
-        super(REFLECTIVE_STAGES, WIDTH, HEIGHT);
+        super(REFLECTIVE_STAGES, DISPLAY_W, DISPLAY_H);
     }
 
     @Override
     protected void initialize() {
         variant = (int) (Math.random() * 4);
-        variant = 3;
+        activeDv = DV_DEFAULT;
         switch (variant) {
-            case 0: // ZEBRA STRIPES (Labyrinthine Turing Waves)
-                activeFeed = 0.035; 
-                activeKill = 0.060;
+            case 0: // ZEBRA STRIPES
+                activeFeed = 0.035; activeKill = 0.060;
                 break;
-            case 1: // LEOPARD ROSETTES (Interlocking Ring Formations)
-                activeFeed = 0.029; 
-                activeKill = 0.057;
+            case 1: // LEOPARD ROSETTES 
+                activeFeed = 0.010; activeKill = 0.048; activeDv = DV_LEOPARD;
                 break;
-            case 2: // CHEETAH SPOTS (Stable, Isolated Circular Points)
-                activeFeed = 0.022; 
-                activeKill = 0.055;
+            case 2: // CHEETAH SPOTS
+                activeFeed = 0.014; activeKill = 0.050;
                 break;
-            case 3: // GIRAFFE VEINS (Polygonal Networks)
-                activeFeed = 0.0545; 
-                activeKill = 0.062;
+            case 3: // GIRAFFE VEINS
+                activeFeed = 0.0545; activeKill = 0.062;
                 break;
         }
 
-        // Set baseline chemical environment (U completely full, V completely empty)
-        for (int y = 0; y < HEIGHT; y++) {
-            for(int i = 0; i < gridU[y].length; i++) {
-                gridU[y][i] = 1.0;
-            }
-            for(int i = 0; i < gridV[y].length; i++) {
-                gridV[y][i] = 0.0;
-            }
-            for(int i = 0; i < nextU[y].length; i++) {
-                nextU[y][i] = 1.0;
-            }
-            for(int i = 0; i < nextV[y].length; i++) {
-                nextV[y][i] = 0.0;
+        for (int y = 0; y < MATH_H; y++) {
+            for (int x = 0; x < MATH_W; x++) {
+                gridU[y][x] = 1.0; gridV[y][x] = 0.0;
             }
         }
 
-        // Seed dense squares of catalyst V to trigger chemical reaction fronts
-        int totalDrops = (variant == 2) ? 6 : 12;
-        for (int i = 0; i < totalDrops; i++) {
-            int seedY = (int) (Math.random() * (HEIGHT - 8)) + 4;
-            int seedX = (int) (Math.random() * (WIDTH - 16)) + 8;
-            
-            for (int dy = -2; dy <= 2; dy++) {
-                for (int dx = -3; dx <= 3; dx++) {
-                    gridU[seedY + dy][seedX + dx] = 0.50;
-                    gridV[seedY + dy][seedX + dx] = 0.25;
+        // Seeds scaled out to match high-resolution layout requirements
+        Random rand = new Random();
+        int totalDrops = (variant == 0) ? 1 : (variant == 1) ? 24 : (variant == 2) ? 65 : 40;
+
+        if (variant == 0) { // Zebra wave trigger lines
+            for (int y = MATH_H/2 - 5; y < MATH_H/2 + 5; y++) {
+                for (int x = MATH_W/2 - 40; x < MATH_W/2 + 40; x++) {
+                    gridU[y][x] = 0.50; gridV[y][x] = 0.25 + rand.nextDouble() * 0.15;
+                }
+            }
+        } else { // Point-clump initial drops
+            for (int i = 0; i < totalDrops; i++) {
+                int sy = 6 + rand.nextInt(MATH_H - 12);
+                int sx = 12 + rand.nextInt(MATH_W - 24);
+                int size = (variant == 1) ? 4 : 2; 
+                for (int dy = -size; dy <= size; dy++) {
+                    for (int dx = -size; dx <= size; dx++) {
+                        gridU[sy+dy][sx+dx] = 0.50; gridV[sy+dy][sx+dx] = 0.25;
+                    }
                 }
             }
         }
@@ -85,123 +94,91 @@ public class ReactionDiffusionLoader extends Loader {
 
     @Override
     protected void renderGeometry(String[] outputBuffer, double[] zBuffer) {
-        // Run 10 math cycles per frame to give the reaction visible evolution speed
-        int simulationSubSteps = 10; 
-        
+        // FAST FORWARD STEP: Process 40 math computation steps sequentially before redrawing once
+        int simulationSubSteps = 40; 
         for (int step = 0; step < simulationSubSteps; step++) {
-            for (int y = 0; y < HEIGHT; y++) {
-                for (int x = 0; x < WIDTH; x++) {
-                    double u = gridU[y][x];
-                    double v = gridV[y][x];
-                    
-                    // --- FIXED DISCRETE LAPLACIAN RADIAL STENCIL ---
-                    // Weights sum to exactly 0.0, completely preventing the math from leaking or blanking out.
-                    // Compensates for standard 2:1 vertical terminal text aspect ratios.
-                    double lapU = 0.0;
-                    double lapV = 0.0;
-
-                    // North/South neighbors (Vertical weight = 0.20)
-                    int yN = (y - 1 + HEIGHT) % HEIGHT;
-                    int yS = (y + 1 + HEIGHT) % HEIGHT;
-                    lapU += (gridU[yN][x] + gridU[yS][x]) * 0.20;
-                    lapV += (gridV[yN][x] + gridV[yS][x]) * 0.20;
-
-                    // East/West neighbors (Horizontal weight = 0.25)
-                    int xW = (x - 1 + WIDTH) % WIDTH;
-                    int xE = (x + 1 + WIDTH) % WIDTH;
-                    lapU += (gridU[y][xW] + gridU[y][xE]) * 0.25;
-                    lapV += (gridV[y][xW] + gridV[y][xE]) * 0.25;
-
-                    // Diagonal corner neighbors (Corner weight = 0.05)
-                    lapU += (gridU[yN][xW] + gridU[yN][xE] + gridU[yS][xW] + gridU[yS][xE]) * 0.05;
-                    lapV += (gridV[yN][xW] + gridV[yN][xE] + gridV[yS][xW] + gridV[yS][xE]) * 0.05;
-
-                    // Self correction center point (Center weight = -1.10)
-                    lapU += u * -1.10;
-                    lapV += v * -1.10;
-
-                    // Gray-Scott Evolution Math equations
-                    double reaction = u * v * v;
-                    double du = (Du * lapU) - reaction + (activeFeed * (1.0 - u));
-                    double dv = (Dv * lapV) + reaction - ((activeFeed + activeKill) * v);
-
-                    // Clamp numerical artifacts safely between operational [0.0, 1.0] margins
-                    double nextUVal = u + du;
-                    double nextVVal = v + dv;
-                    
-                    if (nextUVal < 0.0) nextUVal = 0.0; else if (nextUVal > 1.0) nextUVal = 1.0;
-                    if (nextVVal < 0.0) nextVVal = 0.0; else if (nextVVal > 1.0) nextVVal = 1.0;
-
-                    nextU[y][x] = nextUVal;
-                    nextV[y][x] = nextVVal;
-                }
-            }
-
-            // Clean, instantaneous double-buffer reference updates
-            double[][] tempU = gridU; gridU = nextU; nextU = tempU;
-            double[][] tempV = gridV; gridV = nextV; nextV = tempV;
+            runReactionDiffusionStep();
         }
 
-        // --- RENDER SPECIES PHENOTYPE STYLING TO CANVAS BUFFER ---
-        for (int y = 0; y < HEIGHT; y++) {
-            for (int x = 0; x < WIDTH; x++) {
-                int offset = x + WIDTH * y;
-                double vVal = gridV[y][x];
+        // --- SUB-SAMPLED 2x2 BLOCK RENDERING PASS ---
+        // Down-samples the 280x84 math array onto your 140x42 console canvas
+        for (int displayY = 0; displayY < DISPLAY_H; displayY++) {
+            for (int displayX = 0; displayX < DISPLAY_W; displayX++) {
+                
+                // Map display point to the 2x2 quadrant core coordinates in math space
+                int mx = displayX * 2;
+                int my = displayY * 2;
+
+                // Average the catalyst intensity values across the block quad
+                double vVal = (gridV[my][mx] + gridV[my][mx+1] + gridV[my+1][mx] + gridV[my+1][mx+1]) / 4.0;
+
+                int offset = displayX + DISPLAY_W * displayY;
                 String colorCode;
                 char glyph;
 
                 switch (variant) {
-                    case 0: // ZEBRA (Stark monochromatic layout)
-                        if (vVal > 0.25) {
-                            colorCode = "\u001B[38;5;232m"; // Midnight Black stripes
-                            glyph = '█';
-                        } else {
-                            colorCode = "\u001B[38;5;255m"; // Crisp clean White background hide
-                            glyph = '█';
-                        }
+                    case 0: // ZEBRA STRIPES
+                        if (vVal > 0.22) { colorCode = "\u001B[38;5;232m"; glyph = '█'; }
+                        else { colorCode = "\u001B[38;5;255m"; glyph = '█'; }
                         break;
-
-                    case 1: // LEOPARD ROSETTES (Dark rings containing golden cores over sand)
-                        if (vVal > 0.35) {
-                            colorCode = "\u001B[38;5;235m"; // Dark charcoal outer rosettes rings
-                            glyph = '█';
-                        } else if (vVal > 0.15) {
-                            colorCode = "\u001B[38;5;172m"; // Rich gold inner centers
-                            glyph = '▓';
-                        } else {
-                            colorCode = "\u001B[38;5;223m"; // Light sandy desert tan backing
-                            glyph = '▒';
-                        }
+                    case 1: // PERFECT MULTI-RING LEOPARD ROSETTES
+                        if (vVal > 0.34) { colorCode = "\u001B[38;5;234m"; glyph = '█'; }      // Dark outer wall
+                        else if (vVal > 0.12) { colorCode = "\u001B[38;5;172m"; glyph = '▓'; } // Rich gold interior centers
+                        else { colorCode = "\u001B[38;5;223m"; glyph = '▒'; }                  // Sandy base coat
                         break;
-
-                    case 2: // CHEETAH SPOTS (Solid circular points over deep amber hide fields)
-                        if (vVal > 0.22) {
-                            colorCode = "\u001B[38;5;16m";  // Pure opaque black dot points
-                            glyph = '█';
-                        } else {
-                            colorCode = "\u001B[38;5;214m"; // Saturated deep amber skin fields
-                            glyph = '▒';
-                        }
+                    case 2: // CHEETAH SPOTS
+                        if (vVal > 0.20) { colorCode = "\u001B[38;5;16m"; glyph = '█'; }
+                        else { colorCode = "\u001B[38;5;214m"; glyph = '▒'; }
                         break;
-
-                    case 3: // GIRAFFE VEINS (Broad chestnut polygons separated by thin pale veins)
-                        if (vVal > 0.20) {
-                            colorCode = "\u001B[38;5;94m";  // Massive chestnut brown plates
-                            glyph = '█';
-                        } else {
-                            colorCode = "\u001B[38;5;230m"; // Ivory/cream interstitial network veins
-                            glyph = '░';
-                        }
+                    case 3: // GIRAFFE VEINS
+                        if (vVal > 0.22) { colorCode = "\u001B[38;5;230m"; glyph = '░'; }
+                        else { colorCode = "\u001B[38;5;94m"; glyph = '█'; }
                         break;
-
                     default:
-                        colorCode = "";
-                        glyph = ' ';
+                        colorCode = ""; glyph = ' ';
                         break;
                 }
-
                 outputBuffer[offset] = colorCode + glyph + RESET;
             }
         }
+    }
+
+    private void runReactionDiffusionStep() {
+        for (int y = 0; y < MATH_H; y++) {
+            // Precompute wrapped vertical indices to enforce repeating boundary structures safely
+            int yN = (y - 1 + MATH_H) % MATH_H; 
+            int yS = (y + 1 + MATH_H) % MATH_H;
+
+            for (int x = 0; x < MATH_W; x++) {
+                double u = gridU[y][x];
+                double v = gridV[y][x];
+
+                int xW = (x - 1 + MATH_W) % MATH_W; 
+                int xE = (x + 1 + MATH_W) % MATH_W;
+
+                double lapU = (gridU[yN][x] + gridU[yS][x]) * LAP_NS
+                            + (gridU[y][xW] + gridU[y][xE]) * LAP_EW
+                            + (gridU[yN][xW] + gridU[yN][xE] + gridU[yS][xW] + gridU[yS][xE]) * LAP_DIAG
+                            + u * LAP_CENTER;
+
+                double lapV = (gridV[yN][x] + gridV[yS][x]) * LAP_NS
+                            + (gridV[y][xW] + gridV[y][xE]) * LAP_EW
+                            + (gridV[yN][xW] + gridV[yN][xE] + gridV[yS][xW] + gridV[yS][xE]) * LAP_DIAG
+                            + v * LAP_CENTER;
+
+                double reaction = u * v * v;
+                double du = (Du * lapU) - reaction + (activeFeed * (1.0 - u));
+                double dv = (activeDv * lapV) + reaction - ((activeFeed + activeKill) * v);
+
+                double nextUVal = u + du; double nextVVal = v + dv;
+                if (nextUVal < 0.0) nextUVal = 0.0; else if (nextUVal > 1.0) nextUVal = 1.0;
+                if (nextVVal < 0.0) nextVVal = 0.0; else if (nextVVal > 1.0) nextVVal = 1.0;
+
+                nextU[y][x] = nextUVal; nextV[y][x] = nextVVal;
+            }
+        }
+
+        double[][] tempU = gridU; gridU = nextU; nextU = tempU;
+        double[][] tempV = gridV; gridV = nextV; nextV = tempV;
     }
 }
