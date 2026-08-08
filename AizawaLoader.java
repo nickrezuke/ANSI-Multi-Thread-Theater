@@ -24,7 +24,8 @@ public class AizawaLoader extends Loader {
     private double angle = 0.0;
 
     public AizawaLoader() {
-        super(STAGES);
+        // This uses 80x22 specifically
+        super(STAGES, 80, 22);
     }
 
     @Override

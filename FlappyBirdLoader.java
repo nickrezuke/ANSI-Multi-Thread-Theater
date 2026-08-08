@@ -219,7 +219,7 @@ public class FlappyBirdLoader extends InteractiveLoader {
         // 5. OVERLAP HUD HEADS UP TEXT DASHBOARD (Score Counters)
         String scoreMessage = "SCORE: " + score + "   |   BEST: " + highScore;
         if (gameState == 1) {
-            scoreMessage = "💥 CRASH! ACCELERATION HALTED... RESTARS SOON 💥";
+            scoreMessage = "  CRASH! ACCELERATION HALTED... RESTART SOON  ";
         }
 
         int targetX = (WIDTH - scoreMessage.length()) / 2;

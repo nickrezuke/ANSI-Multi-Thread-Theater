@@ -22,13 +22,13 @@ This Project comes packed with a suite of rendering targets, all derived from a 
 
 -> **Donut**: An expanded, color-customizable adaptation of Sloan's original code.  This was the first one I attempted, and after implementing I refined it with triginometric frosting, random variants, and a sprinkle map for extra style.
 -> **CatHead**: <!-- TODO: Elaborate on this section -->
--> **DNA**: After those, I attempted to make the classic offset DNA twist.
+-> **DNA**: <!-- TODO: Elaborate on this section -->
 -> **Ring**: <!-- TODO: Elaborate on this section -->
 
 -> **UtahTeapot**: <!-- TODO: Elaborate on this section -->
 -> **StanfordBunny**: <!-- TODO: Elaborate on this section -->
 
--> **TexelCube**: <!-- TODO: Elaborate on this section -->
+-> **TexelCube**: I made a cube that can have custom textures applied by texels
 -----> **TexelMinecraftGrassBlock**: <!-- TODO: Elaborate on this section -->
 -----> **TexelCompantionCube**: <!-- TODO: Elaborate on this section -->
 -----> **TexelKevinCube**: <!-- TODO: Elaborate on this section -->
@@ -44,8 +44,13 @@ This Project comes packed with a suite of rendering targets, all derived from a 
 -----> **TexelGreyRubix**: <!-- TODO: Elaborate on this section -->
 -----> **TexelMCUTesseract**: <!-- TODO: Elaborate on this section -->
 -----> **TexelMarioBricks**: <!-- TODO: Elaborate on this section -->
+-----> **TexelMarioCapBlock**: <!-- TODO: Elaborate on this section -->
 -----> **TexelMarioCoinBlock**: <!-- TODO: Elaborate on this section -->
 -----> **TexelTriplePhaseCubeBlock**: <!-- TODO: Elaborate on this section -->
+-----> **TexelEldritchAetherCube**: <!-- TODO: Elaborate on this section -->
+-----> **TexelHyperspaceVoid**: <!-- TODO: Elaborate on this section -->
+-----> **TexelHyperchromaticKaleidoscope**: <!-- TODO: Elaborate on this section -->
+-----> **TexelJVMMemoryLoader**: <!-- TODO: Elaborate on this section -->
 
 -> **OctahedralMatrix**: <!-- TODO: Elaborate on this section -->
 
@@ -159,7 +164,7 @@ At the heart of the engine is an object-oriented rendering pipeline. All loaders
 
 ### Prerequisites
 * **Java Development Kit (JDK)**: 17 or higher recommended.
-* **Terminal Emulator**: A terminal emulator supporting **ANSI Escape Codes** and **TrueColor (24-bit RGB) characters**.
+* **Terminal Emulator**: A terminal emulator supporting **ANSI Escape Codes** and **TrueColor (24-bit RGB) characters**.  Most Loaders require a minimum of 80(w)x22(h) when viewing the terminal window, (although some do occasionally ask for different dimensions).  Base terminal reccomended, but this should also work with built in IDE terminal windows such as Eclipse or VS Code but please let me know if you find an instance of something not working as intended.
 
 ### Running the Project
 ->1. Clone the repository to your local machine:
@@ -190,4 +195,4 @@ At the heart of the engine is an object-oriented rendering pipeline. All loaders
 
 ### Thread Safe Inter-Process Synchronization (for use in your own project)
 
-These `Loader`s operate concurrently with whatever called it.  To use a loader, the calling method needs to pass down an active thread token, spin up the canvas lifecycle, and feed numeric ticks over thread pipelines.  An example of this is shown in the ExampleTask.java file (what we've been calling).  
+These `Loader`s operate concurrently with whatever called it.  To use a loader, the calling method needs to pass down an active thread token, spin up the canvas lifecycle, and feed numeric ticks over thread pipelines.  An example of this is shown in the ExampleTask.java file.  

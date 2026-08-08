@@ -14,10 +14,11 @@ public class TexelMinecraftGrassBlockLoader extends TexelCubeLoader {
     };
 
     public TexelMinecraftGrassBlockLoader() {
-        super(TEXEL_CUBE_STAGES);
+        // This uses 80x22 specifically
+        super(TEXEL_CUBE_STAGES, 80, 22);
     }
 
-    protected VoxelTexel getCubeTexel(int variant, int face, int x, int y) {
+    protected VoxelTexel getCubeTexel(int face, int x, int y) {
         // 1. Map higher-grain 4-level voxel noise
         int noise = (int) (Math.abs((x * 2693L + y * 7919L + face * 4567L) ^ 0x5DEECE66DL) % 4);
 

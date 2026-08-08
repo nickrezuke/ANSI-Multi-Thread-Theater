@@ -62,7 +62,8 @@ public class TetrisLoader extends Loader {
     private static final String COLOR_VALUE = "\u001B[38;5;82m";
 
     public TetrisLoader() {
-        super(TETRIS_STAGES);
+        // This uses 80x22 specifically
+        super(TETRIS_STAGES, 80, 22);
     }
 
     @Override

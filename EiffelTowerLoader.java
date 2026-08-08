@@ -27,7 +27,8 @@ public class EiffelTowerLoader extends Loader {
     private static final double CAMERA_DISTANCE = 4.5;
 
     public EiffelTowerLoader() {
-        super(EIFFEL_STAGES);
+        // This uses 80x22 specifically
+        super(EIFFEL_STAGES, 80, 22);
     }
 
     @Override

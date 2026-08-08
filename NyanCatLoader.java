@@ -34,7 +34,8 @@ public class NyanCatLoader extends Loader {
     private static final char CH_STAR  = '\u2605'; // ★ Cosmic background star points
 
     public NyanCatLoader() {
-        super(NYAN_STAGES);
+        // This uses 80x22 specifically
+        super(NYAN_STAGES, 80, 22);
     }
 
     @Override

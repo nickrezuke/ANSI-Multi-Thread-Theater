@@ -25,7 +25,8 @@ public class DNALoader extends Loader {
     private static final String COLOR_G = "\u001B[38;5;21m";       // Guanine (Blue)
 
     public DNALoader() {
-        super(STAGES);
+        // This uses 80x22 specifically
+        super(STAGES, 80, 22);
     }
 
     @Override

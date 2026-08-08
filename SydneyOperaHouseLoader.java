@@ -58,7 +58,8 @@ public class SydneyOperaHouseLoader extends Loader {
     private static final double Y_SCREEN_OFFSET = -17.8;
 
     public SydneyOperaHouseLoader() {
-        super(OPERA_HOUSE_STAGES);
+        // This uses 80x22 specifically
+        super(OPERA_HOUSE_STAGES, 80, 22);
     }
 
     @Override

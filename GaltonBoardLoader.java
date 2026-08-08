@@ -10,7 +10,7 @@ public class GaltonBoardLoader extends Loader {
         new StatusStage(100, "Hyper-Resolution Gaussian Curve Stable!")
     };
 
-    // Framework dimension boundaries [1]
+    // Framework dimension boundaries
     private final int width;
     private final int height;
 
@@ -42,12 +42,12 @@ public class GaltonBoardLoader extends Loader {
     private static final String COLOR_BIN      = "\u001B[38;2;50;80;110m";   
     private static final String COLOR_PILE     = "\u001B[38;2;240;160;30m";  
 
-    // Primary Default Config Constructor [1]
+    // Primary Default Config Constructor
     public GaltonBoardLoader() {
         this(GALTON_STAGES, 150, 38);
     }
 
-    // Dynamic Layout Boundary Evaluation Constructor [1]
+    // Dynamic Layout Boundary Evaluation Constructor
     public GaltonBoardLoader(StatusStage[] stages, int width, int height) {
         super(stages, width, height);
         this.width = width;
@@ -61,14 +61,14 @@ public class GaltonBoardLoader extends Loader {
         // Ensure the bin quantity is an odd integer to preserve a central alignment column anchor [1]
         int rawBinCapacity = (int) Math.floor(width * 0.20); // Scale horizontal span to 20% of width
         if (rawBinCapacity % 2 == 0) {
-            rawBinCapacity--; // Subtract 1 to force odd parity [1]
+            rawBinCapacity--; // Subtract 1 to force odd parity
         }
-        this.numBins = Math.max(3, rawBinCapacity); // Clamp to a minimum threshold of 3 bins [1]
+        this.numBins = Math.max(3, rawBinCapacity); // Clamp to a minimum threshold of 3 bins
         
         // 3. ALLOCATE THE GRAPH ARRAYS NATIVELY
         this.binPixelHeights = new int[this.numBins];
         
-        // Center the bin group horizontally on the screen matrix [1]
+        // Center the bin group horizontally on the screen matrix
         int centerH = width / 2;
         this.startChannelColumn = centerH - (this.numBins / 2);
     }
@@ -91,7 +91,7 @@ public class GaltonBoardLoader extends Loader {
         long currentTime = System.currentTimeMillis();
         int centerH = width / 2;
 
-        // Dynamic floor receptacle row boundary markers based on total canvas height limits [1]
+        // Dynamic floor receptacle row boundary markers based on total canvas height limits
         int binTopY = 3 + pegRows + 2; // Leave a 2-row gap below the pegs
         int binBottomY = height - 1;   // Anchor directly to the bottom frame ceiling row
         int maxCellHeightsCount = binBottomY - binTopY + 1;
@@ -141,7 +141,7 @@ public class GaltonBoardLoader extends Loader {
             }
         }
 
-        // 3. DRAW STRUCTURAL CEILING HOPPER FUNNEL (Rows 1-2) [1]
+        // 3. DRAW STRUCTURAL CEILING HOPPER FUNNEL (Rows 1-2)
         for (int x = centerH - 12; x <= centerH + 12; x++) {
             if (Math.abs(x - centerH) >= 5) {
                 outputBuffer[x + width * 1] = COLOR_BIN + "▬" + RESET;
@@ -151,7 +151,7 @@ public class GaltonBoardLoader extends Loader {
             }
         }
 
-        // 4. DRAW EQUILATERAL PEG FIELD MATRIX GRID (Rows 3 to 3+pegRows) [1]
+        // 4. DRAW EQUILATERAL PEG FIELD MATRIX GRID (Rows 3 to 3+pegRows)
         double pegSpacingX = 2.0;
         for (int r = 0; r < pegRows; r++) {
             int y = 3 + r;
@@ -165,7 +165,7 @@ public class GaltonBoardLoader extends Loader {
             }
         }
 
-        // 5. DRAW STORAGE RECEPTACLES & HYPER-RESOLUTION BRAILLE PILES [1]
+        // 5. DRAW STORAGE RECEPTACLES & HYPER-RESOLUTION BRAILLE PILES
         outputBuffer[(startChannelColumn - 1) + width * binTopY] = COLOR_BIN + "│" + RESET;
         outputBuffer[(startChannelColumn + numBins) + width * binTopY] = COLOR_BIN + "│" + RESET;
 
@@ -204,7 +204,7 @@ public class GaltonBoardLoader extends Loader {
             }
         }
 
-        // 6. OVERLAY PROCEDURAL INTERPOLATED MOVING BEADS [1]
+        // 6. OVERLAY PROCEDURAL INTERPOLATED MOVING BEADS
         for (Bead b : activeBeads) {
             double currentFirstX = centerH - (b.row * pegSpacingX * 0.5);
             double currentX = currentFirstX + b.pegIndex * pegSpacingX;

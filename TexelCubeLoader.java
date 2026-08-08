@@ -1,55 +1,18 @@
 abstract public class TexelCubeLoader extends Loader {
-    private int blockVariant = -1;
     private double angle = 0.0;
 
-    private static int getRandomVariant() {
-        // Right now there are 15 variants
-        return (int) (Math.random() * 15) + 1;
-    }
-
-    public TexelCubeLoader() {
-        this(getRandomVariant());
-    }
-
     public TexelCubeLoader(StatusStage[] stages) {
-        super(stages);
+        // These typically use 80x22 if none else was specified
+        super(stages, 80, 22);
     }
 
-    public TexelCubeLoader(int variant) {
-        StatusStage[] TEXEL_CUBE_STAGES;
-
-        switch (variant) {
-            case 7: // Mario Block Cases
-                TEXEL_CUBE_STAGES = new StatusStage[] {
-                        new StatusStage(16, "Starting Level:"),
-                        new StatusStage(30, "Stomping Enemies:"),
-                        new StatusStage(42, "Kicking Shells:"),
-                        new StatusStage(65, "Collecting Coins:"),
-                        new StatusStage(85, "Utilizing Power-Ups:"),
-                        new StatusStage(96, "Sliding Down Flagpole:"),
-                        new StatusStage(100, "Level Complete!:")
-                };
-                break;
-
-            default: // default (should not happen)
-                TEXEL_CUBE_STAGES = new StatusStage[] {
-                        new StatusStage(98, "Loading:"),
-                        new StatusStage(100, "Loading Complete!:")
-                };
-                break;
-        }
-        super(TEXEL_CUBE_STAGES);
-        blockVariant = variant;
+    public TexelCubeLoader(StatusStage[] stages, int width, int height) {
+        super(stages, width, height);
     }
 
     @Override
     protected void initialize() {
-        // We should have already determined which one
-        // to use, but just in case we didn't yet:
-        if (this.blockVariant == -1) {
-            // Randomly select between
-            this.blockVariant = getRandomVariant();
-        }
+        // Do nothing for now, but this can be overridden if needed
     }
 
     @Override
@@ -190,7 +153,7 @@ abstract public class TexelCubeLoader extends Loader {
                             texX = Math.max(0, Math.min(15, texX));
                             texY = Math.max(0, Math.min(15, texY));
 
-                            VoxelTexel texel = getCubeTexel(blockVariant, face, texX, texY);
+                            VoxelTexel texel = getCubeTexel(face, texX, texY);
 
                             String colorCode = String.format("\u001B[38;2;%d;%d;%dm", texel.r, texel.g, texel.b);
                             outputBuffer[index] = colorCode + texel.character + RESET;
@@ -202,7 +165,10 @@ abstract public class TexelCubeLoader extends Loader {
         angle += 0.025;
     }
 
-    protected abstract VoxelTexel getCubeTexel(int variant, int face, int x, int y);
+    // This is where the fun happens.... Define this in your own class!!
+    // Look at the code for TexelMinecraftGrassBlock.java, notice how this
+    // method is the only thing needed to define to create your own custom cube...
+    protected abstract VoxelTexel getCubeTexel(int face, int x, int y);
 
     // The actual Texels we deal with
     protected static class VoxelTexel {

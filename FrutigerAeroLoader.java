@@ -22,7 +22,8 @@ public class FrutigerAeroLoader extends Loader {
     private static final String COLOR_HILL_FRNT = "\u001B[38;5;40m";  // Vivid Eco Grass Green
 
     public FrutigerAeroLoader() {
-        super(AERO_STAGES);
+        // This uses 80x22 specifically
+        super(AERO_STAGES, 80, 22);
     }
 
     @Override

@@ -32,7 +32,8 @@ public class TesseractLoader extends Loader {
     private double angleYZ = 0; 
 
     public TesseractLoader() {
-        super(TESSERACT_STAGES);
+        // This uses 80x22 specifically
+        super(TESSERACT_STAGES, 80, 22);
     }
 
     @Override

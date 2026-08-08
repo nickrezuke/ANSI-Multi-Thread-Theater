@@ -68,7 +68,8 @@ public class SlitherioLoader extends Loader {
     private static final String FOOD_COLOR = "\u001B[38;2;255;220;50m";
 
     public SlitherioLoader() {
-        super(IO_STAGES);
+        // This uses 80x22 specifically
+        super(IO_STAGES, 80, 22);
     }
 
     @Override

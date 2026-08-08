@@ -58,7 +58,6 @@ public class CentipedeLoader extends Loader {
     private static final String COLOR_LASER = "\u001B[38;5;81m";    
 
     public CentipedeLoader() {
-        // Explicitly pass vertical parameters to custom overloaded base constructor
         super(GAME_STAGES, WIDTH, HEIGHT);
     }
 

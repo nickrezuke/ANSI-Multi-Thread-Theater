@@ -21,8 +21,9 @@ public class LorenzLoader extends Loader {
     private double angle = 0.0; 
 
     public LorenzLoader() { 
-        super(STAGES); 
-    } 
+        // This uses 80x22 specifically
+        super(STAGES, 80, 22);
+    }
 
     @Override 
     protected void initialize() { 
@@ -111,7 +112,7 @@ public class LorenzLoader extends Loader {
         drawDashboardLine(outputBuffer, 5,  "├──────────────────────┤", white, white);
         drawDashboardLine(outputBuffer, 6,  String.format("│   %sSIGMA: %s%6.2f      │", gray, green, SIGMA), gray, white);
         drawDashboardLine(outputBuffer, 7,  String.format("│   %sRHO:   %s%6.2f      │", gray, green, RHO), gray, white);
-        drawDashboardLine(outputBuffer, 8,  String.format("│   %sBETA:  %s1/3 * %4.1f  │", gray, green, BETA * 3.0), gray, white);
+        drawDashboardLine(outputBuffer, 8,  String.format("│   %sBETA:  %s1/3 *%4.1f   │", gray, green, BETA * 3.0), gray, white);
         drawDashboardLine(outputBuffer, 9,  "├──────────────────────┤", white, white);
         drawDashboardLine(outputBuffer, 10,  "│ STATE VARIABLES      │", white, white);
         drawDashboardLine(outputBuffer, 11,  String.format("│    %sX:  %s%7.2f       │", gray, green, lx), gray, white);

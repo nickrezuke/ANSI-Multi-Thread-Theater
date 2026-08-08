@@ -17,7 +17,8 @@ public class WireframeSphereLoader extends Loader {
     private static final int COLOR_B = 150;
 
     public WireframeSphereLoader() { 
-        super(STAGES); 
+        // This uses 80x22 specifically
+        super(STAGES, 80, 22); 
     }
 
     @Override 

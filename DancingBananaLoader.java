@@ -39,7 +39,8 @@ public class DancingBananaLoader extends Loader {
     }
 
     public DancingBananaLoader() {
-        super(BANANA_STAGES);
+        // This uses 80x22 specifically
+        super(BANANA_STAGES, 80, 22);
     }
 
     @Override

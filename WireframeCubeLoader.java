@@ -47,7 +47,8 @@ public class WireframeCubeLoader extends Loader {
     private static final double NEST_RATIO = 0.5;  
 
     public WireframeCubeLoader() {
-        super(NESTED_STAGES);
+        // This uses 80x22 specifically
+        super(NESTED_STAGES, 80, 22);
     }
 
     @Override

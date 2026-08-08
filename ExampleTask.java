@@ -42,8 +42,8 @@ public class ExampleTask {
             // some int p ranged [0,100], you can pass that through to update the loading
             // bar progress
 
-            // I simulate this "long intense process" by just looping and running 
-            // sleep() for a bit before updating the progress variable in increments 
+            // I simulate this "long intense process" by just looping and running
+            // sleep() for a bit before updating the progress variable in increments
             // from 0% to 100% over a few seconds
             for (int p = 0; p <= 100; p += 1) {
                 loader.setProgress(p); // Push progress values to the loader to update it

@@ -73,7 +73,8 @@ public class TronLoader extends Loader {
     private static final String PURP_WALL = "\u001B[38;2;140;40;180m";
 
     public TronLoader() {
-        super(TRON_STAGES);
+        // This uses 80x22 specifically
+        super(TRON_STAGES, TERMINAL_W, GAME_GRID_H);
     }
 
     @Override

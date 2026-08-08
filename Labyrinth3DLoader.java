@@ -40,7 +40,8 @@ public class Labyrinth3DLoader extends InteractiveLoader {
     private static final String COLOR_WALL_X = "\u001B[38;2;130;95;30m";
 
     public Labyrinth3DLoader() {
-        super(MAZE_STAGES);
+        // This uses 80x22 specifically
+        super(MAZE_STAGES, 80, 22);
     }
 
     @Override

@@ -46,7 +46,6 @@ public class PinballLoader extends InteractiveLoader {
 
     private final List<Bumper> bumpers = new ArrayList<>();
 
-
     // Aesthetic Palette Strings
     private static final String COLOR_CHASSIS = "\u001B[38;2;60;65;80m"; // Steel Blue Machine
     private static final String COLOR_BUMPER = "\u001B[38;2;255;45;140m"; // Neon Pink Bumpers
@@ -94,7 +93,8 @@ public class PinballLoader extends InteractiveLoader {
                 rightFlipperActive = true;
                 rightFlipperTimer = 4;
                 break;
-            case 'A': case 'B': // Arrow UP&DOWN -> Actuate Both
+            case 'A':
+            case 'B': // Arrow UP&DOWN -> Actuate Both
                 leftFlipperActive = true;
                 leftFlipperTimer = 4; // Keep raised for 4 frames
                 rightFlipperActive = true;

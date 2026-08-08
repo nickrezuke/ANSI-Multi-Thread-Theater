@@ -15,7 +15,8 @@ public class CatHeadLoader extends Loader {
     private double A = 0;
 
     public CatHeadLoader() {
-        super(CAT_STAGES);
+        // This uses 80x22 specifically
+        super(CAT_STAGES, 80, 22);
     }
 
     @Override

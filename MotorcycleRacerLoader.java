@@ -75,7 +75,8 @@ public class MotorcycleRacerLoader extends InteractiveLoader {
     private static final String STROBE_COLOR_B = "\u001B[38;2;255;255;0m";
 
     public MotorcycleRacerLoader() {
-        super(RACER_STAGES);
+        // This uses 80x22 specifically
+        super(RACER_STAGES, 80, 22);
         this.HEIGHT = this.window_height;
         this.WIDTH = this.window_width;
     }

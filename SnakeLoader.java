@@ -44,7 +44,8 @@ public class SnakeLoader extends Loader {
     private static final String COLOR_DEAD = "\u001B[31m";        // Dark Red
 
     public SnakeLoader() {
-        super(SNAKE_STAGES);
+        // This uses 80x22 specifically
+        super(SNAKE_STAGES, TERMINAL_W, GAME_GRID_W);
     }
 
     @Override

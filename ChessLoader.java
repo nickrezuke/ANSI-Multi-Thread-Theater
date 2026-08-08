@@ -1,5 +1,4 @@
-// TODO: Investigate if the game is too deterministic and if the same game plays out each time... does OpeningMoves function need to be bigger??
-// TODO: Players move back and forth when game is played for very very very long times...  should avoid stalemate after repeated boards??
+// TODO: Check if players move back and forth when game is played for very very very long times...  should avoid stalemate after repeated boards??
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -119,7 +118,8 @@ public class ChessLoader extends Loader {
     }
 
     public ChessLoader() {
-        super(CHESS_STAGES);
+        // This uses 80x22 specifically
+        super(CHESS_STAGES, 80, 22);
     }
 
     @Override

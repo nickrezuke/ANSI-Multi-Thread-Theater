@@ -1,4 +1,5 @@
-// TODO: Make this look more like a rocket ship / the shuttle
+import java.util.Arrays;
+import java.util.Random;
 
 public class RocketLoader extends Loader {
 
@@ -10,37 +11,22 @@ public class RocketLoader extends Loader {
             new StatusStage(100, "Orbital Insertion Successful!")
     };
 
-    // Automated multi-axis continuous rotation angles
-    private double angleX = 0.0;
+    private double angleX = 0.2;
     private double angleY = 0.0;
+    private int frameTick = 0;
 
     private final int width;
     private final int height;
+    private final Random random = new Random();
 
-    // HIGH-FIDELITY STRUCTURAL 3D MESH KEYFRAMES: THE NASA SPACE SHUTTLE ORBITER
-    // Maps [X, Y, Z] structural nodes capturing the real delta-wing and fin
-    // profiles.
-    // X = Left/Right span, Y = Front/Back length, Z = Up/Down vertical fuselage
-    // axis.
-    private static final double[][] SHUTTLE_NODES = {
-            // --- THE COCKPIT NOSE CONE & FORWARD FUSELAGE (Indices 0 - 6) ---
-            { 0.0, 1.8, -0.1 }, { 0.12, 1.6, -0.15 }, { -0.12, 1.6, -0.15 },
-            { 0.24, 1.3, -0.18 }, { -0.24, 1.3, -0.18 }, { 0.30, 0.9, -0.20 }, { -0.30, 0.9, -0.20 },
-            // --- MAIN CARGO BAY BODY HULL CORE (Indices 7 - 14) ---
-            { 0.32, 0.4, -0.22 }, { -0.32, 0.4, -0.22 }, { 0.35, -0.2, -0.25 }, { -0.35, -0.2, -0.25 },
-            { 0.35, -0.8, -0.25 }, { -0.35, -0.8, -0.25 }, { 0.32, -1.3, -0.22 }, { -0.32, -1.3, -0.22 },
-            // --- SWEEPING DELTA WING FORWARD GLIDE RIM (Indices 15 - 20) ---
-            { 0.45, 0.2, -0.24 }, { -0.45, 0.2, -0.24 }, { 0.85, -0.4, -0.26 }, { -0.85, -0.4, -0.26 },
-            { 1.35, -1.1, -0.28 }, { -1.35, -1.1, -0.28 },
-            // --- EXTENDED DELTA WING REAR TRAILING EDGES (Indices 21 - 24) ---
-            { 1.55, -1.4, -0.29 }, { -1.55, -1.4, -0.29 }, { 0.40, -1.4, -0.24 }, { -0.40, -1.4, -0.24 },
-            // --- REAR ORBITAL MANEUVERING SYSTEM PODS (OMS) & ENGINES (Indices 25 - 30)
-            // ---
-            { 0.22, -1.45, -0.05 }, { -0.22, -1.45, -0.05 }, { 0.18, -1.60, 0.10 }, { -0.18, -1.60, 0.10 },
-            { 0.0, -1.65, -0.12 }, { 0.0, -1.65, 0.0 },
-            // --- SWEEPING VERTICAL RUDDER TAIL STABILIZER FIN (Indices 31 - 34) ---
-            { 0.0, -0.9, 0.15 }, { 0.0, -1.2, 0.55 }, { 0.0, -1.5, 0.95 }, { 0.0, -1.52, 0.18 }
-    };
+    // High-Contrast Authentic NASA Color Palette
+    private static final String C_BLACK_TILE = "\u001B[38;2;60;65;75m";   // Thermal Protection Tiles (Wings/Nose)
+    private static final String C_WHITE_BODY = "\u001B[38;2;240;240;250m"; // White Orbiter Hull
+    private static final String C_TANK_ORANGE= "\u001B[38;2;215;85;25m";  // External Fuel Tank (ET)
+    private static final String C_SRB_WHITE  = "\u001B[38;2;200;205;215m"; // Solid Rocket Boosters
+    private static final String C_ENGINE_BLUE= "\u001B[38;2;0;210;255m";  // Main Engine Mach Diamonds
+    private static final String C_FIRE_ORANGE= "\u001B[38;2;255;120;0m";  // Plume Core Flame
+    private static final String C_FIRE_YELLOW= "\u001B[38;2;255;220;50m"; // Exhaust Plume Glow
 
     public RocketLoader(StatusStage[] stages, int width, int height) {
         super(stages, width, height);
@@ -49,153 +35,172 @@ public class RocketLoader extends Loader {
     }
 
     public RocketLoader() {
-        super(SHUTTLE_STAGES);
-        this.width = this.window_width;
-        this.height = this.window_height;
+        super(SHUTTLE_STAGES, 80, 22);
+        this.width = 80;
+        this.height = 22;
     }
 
     @Override
     protected void initialize() {
-        this.angleX = 0.4; // Default slight tilt angle to show off the delta-wings
-        this.angleY = 0.0;
-
-        if (!this.isRawCanvas) {
-            TerminalConfig.restoreMode();
-        }
+        this.angleX = 0.3;
+        this.angleY = -0.4;
     }
 
     @Override
     protected void renderGeometry(String[] outputBuffer, double[] zBuffer) {
-        // Smooth automated continuous multi-axis tumbling rotation
-        angleX += 0.020;
-        angleY += 0.035;
+        // Clear frame output buffer and reset z-buffer
+        Arrays.fill(outputBuffer, " ");
+        Arrays.fill(zBuffer, -Double.MAX_VALUE); // Correct min-sorting initialization
+
+        frameTick++;
+        angleY += 0.025; // Continuous Yaw Rotation
+        angleX = 0.25 + 0.1 * Math.sin(frameTick * 0.03); // Subtle Pitch Oscillations
 
         double cosX = Math.cos(angleX), sinX = Math.sin(angleX);
         double cosY = Math.cos(angleY), sinY = Math.sin(angleY);
 
-        // Directional overhead 3D lighting vector coming from the top-front-right
-        double lightX = 0.577;
-        double lightY = -0.577;
-        double lightZ = 0.577;
-        double cameraDistance = 4.2;
+        // Normalized Lighting Direction (Top-Right-Front)
+        double lightX = 0.577, lightY = -0.577, lightZ = 0.577;
 
-        // Loop 1: Render the Main Fuselage Hull and Cockpit (Indices 0 to 14)
-        // Sweeps the keyframe node profiles in a full cross-sectional circle to create
-        // the 3D body
-        for (int layer = 0; layer <= 14; layer += 1) {
-            int nodeL = layer;
-            int nodeR = Math.min(SHUTTLE_NODES.length - 1, layer + 1);
+        // 1. RENDER ORANGE EXTERNAL TANK (ET) - Center Axis [0, 0, -0.45]
+        renderCylinder(0.0, 0.0, -0.45, 0.42, 3.2, C_TANK_ORANGE,
+                cosX, sinX, cosY, sinY, lightX, lightY, lightZ, outputBuffer, zBuffer);
+        // Ogive Nose Cone of External Tank
+        renderCone(0.0, 1.6, -0.45, 0.42, 0.7, C_TANK_ORANGE,
+                cosX, sinX, cosY, sinY, lightX, lightY, lightZ, outputBuffer, zBuffer);
 
-            double baseWidth = Math.abs(SHUTTLE_NODES[nodeL][0] - SHUTTLE_NODES[nodeR][0]) * 0.5;
-            double baseLength = (SHUTTLE_NODES[nodeL][1] + SHUTTLE_NODES[nodeR][1]) * 0.5;
-            double baseHeight = (SHUTTLE_NODES[nodeL][2] + SHUTTLE_NODES[nodeR][2]) * 0.5;
+        // 2. RENDER TWIN SOLID ROCKET BOOSTERS (SRBs) - Flanking ET
+        double srbOffset = 0.65;
+        // Left SRB
+        renderCylinder(-srbOffset, -0.2, -0.45, 0.18, 3.4, C_SRB_WHITE,
+                cosX, sinX, cosY, sinY, lightX, lightY, lightZ, outputBuffer, zBuffer);
+        renderCone(-srbOffset, 1.5, -0.45, 0.18, 0.5, C_SRB_WHITE,
+                cosX, sinX, cosY, sinY, lightX, lightY, lightZ, outputBuffer, zBuffer);
 
-            for (int step = 0; step < 36; step++) {
-                double rad = step * (2.0 * Math.PI / 36.0);
-                double cosRad = Math.cos(rad);
-                double sinRad = Math.sin(rad);
+        // Right SRB
+        renderCylinder(srbOffset, -0.2, -0.45, 0.18, 3.4, C_SRB_WHITE,
+                cosX, sinX, cosY, sinY, lightX, lightY, lightZ, outputBuffer, zBuffer);
+        renderCone(srbOffset, 1.5, -0.45, 0.18, 0.5, C_SRB_WHITE,
+                cosX, sinX, cosY, sinY, lightX, lightY, lightZ, outputBuffer, zBuffer);
 
-                // Extrude a slightly flattened cylinder structure to match the real cargo bay
-                // cross section
-                double localX = baseWidth * cosRad;
-                double localY = baseLength;
-                double localZ = baseHeight + (baseWidth * 0.75 * sinRad); // Oval fuselage factor
+        // 3. RENDER SPACE SHUTTLE ORBITER (Mounted on top of External Tank)
+        renderOrbiterFuselage(cosX, sinX, cosY, sinY, lightX, lightY, lightZ, outputBuffer, zBuffer);
+        renderDeltaWings(cosX, sinX, cosY, sinY, lightX, lightY, lightZ, outputBuffer, zBuffer);
+        renderVerticalTailFin(cosX, sinX, cosY, sinY, lightX, lightY, lightZ, outputBuffer, zBuffer);
 
-                // Structural outward normals pointing away from the fuselage center axis
-                double normalX = cosRad;
-                double normalY = 0.2;
-                double normalZ = sinRad;
+        // 4. DYNAMIC EXHAUST THRUSTER PLUMES
+        renderThrusterPlume(0.0, -1.8, 0.1, 0.35, C_ENGINE_BLUE, C_FIRE_YELLOW, cosX, sinX, cosY, sinY, outputBuffer, zBuffer);
+        renderThrusterPlume(-srbOffset, -1.9, -0.45, 0.25, C_FIRE_ORANGE, C_FIRE_YELLOW, cosX, sinX, cosY, sinY, outputBuffer, zBuffer);
+        renderThrusterPlume(srbOffset, -1.9, -0.45, 0.25, C_FIRE_ORANGE, C_FIRE_YELLOW, cosX, sinX, cosY, sinY, outputBuffer, zBuffer);
+    }
 
-                projectShuttleVertex(localX, localY, localZ, normalX, normalY, normalZ,
-                        cosX, sinX, cosY, sinY, lightX, lightY, lightZ, outputBuffer, zBuffer);
-            }
+    private void renderOrbiterFuselage(double cosX, double sinX, double cosY, double sinY,
+                                       double lx, double ly, double lz, String[] out, double[] zb) {
+        // Cockpit & Nose (Black nose cap tiles)
+        for (double y = 0.8; y <= 1.6; y += 0.08) {
+            double alpha = (1.6 - y) / 0.8;
+            double radius = 0.32 * Math.sin(alpha * Math.PI / 2.0);
+            String color = (y > 1.45) ? C_BLACK_TILE : C_WHITE_BODY;
+            renderCircleSlice(0.0, y, 0.1, radius, color, cosX, sinX, cosY, sinY, lx, ly, lz, out, zb);
         }
-
-        // Loop 2: Render the Authentic Sweeping Delta Wings (Indices 15 to 24)
-        // Linearly interpolates skin points across the wing keyframe skeleton paths
-        for (int i = 15; i <= 19; i += 2) {
-            double[] rootL = SHUTTLE_NODES[i];
-            double[] rootR = SHUTTLE_NODES[i + 1];
-            double[] tipL = SHUTTLE_NODES[i + 2];
-            double[] tipR = SHUTTLE_NODES[Math.min(24, i + 3)];
-
-            for (int seg = 0; seg <= 25; seg++) {
-                double alpha = seg / 25.0; // Interpolation down the wing span
-
-                for (int thick = 0; thick < 4; thick++) {
-                    double wingThick = (thick - 2) * 0.025; // Gives the wings thin physical volume
-
-                    // Left wing sweep
-                    double lxL = rootL[0] * (1.0 - alpha) + tipL[0] * alpha;
-                    double lyL = rootL[1] * (1.0 - alpha) + tipL[1] * alpha;
-                    double lzL = rootL[2] * (1.0 - alpha) + tipL[2] * alpha + wingThick;
-                    projectShuttleVertex(lxL, lyL, lzL, 0, 0, 1.0, cosX, sinX, cosY, sinY, lightX, lightY, lightZ,
-                            outputBuffer, zBuffer);
-
-                    // Right wing sweep
-                    double lxR = rootR[0] * (1.0 - alpha) + tipR[0] * alpha;
-                    double lyR = rootR[1] * (1.0 - alpha) + tipR[1] * alpha;
-                    double lzR = rootR[2] * (1.0 - alpha) + tipR[2] * alpha + wingThick;
-                    projectShuttleVertex(lxR, lyR, lzR, 0, 0, 1.0, cosX, sinX, cosY, sinY, lightX, lightY, lightZ,
-                            outputBuffer, zBuffer);
-                }
-            }
+        // Main Payload Bay Cargo Fuselage
+        for (double y = -1.2; y <= 0.8; y += 0.08) {
+            renderCircleSlice(0.0, y, 0.1, 0.32, C_WHITE_BODY, cosX, sinX, cosY, sinY, lx, ly, lz, out, zb);
         }
+    }
 
-        // Loop 3: Render the Tall Vertical Rudder Fin Tail Stabilizer (Indices 31 to
-        // 34)
-        // Draws the towering triangular rudder spine rising out of the rear hull
-        for (int seg = 0; seg < 20; seg++) {
-            double alpha = seg / 20.0;
-            // Linearly interpolate coordinates from the base root up to the high peak node
-            double localX = 0.0;
-            double localY = SHUTTLE_NODES[31][1] * (1.0 - alpha) + SHUTTLE_NODES[33][1] * alpha;
-            double localZ = SHUTTLE_NODES[31][2] * (1.0 - alpha) + SHUTTLE_NODES[33][2] * alpha;
-
-            // Extrude width outward slightly to give the tail fin physical cross-sectional
-            // thickness
-            for (int w = -3; w <= 3; w++) {
-                double thickOffset = w * 0.015 * (1.0 - alpha); // Fin tapers to a sharp edge at the top peak
-
-                // Fin surface normals point directly out to the left and right sides
-                double normalX = (w >= 0) ? 1.0 : -1.0;
-                double normalY = -0.15; // Swept back slope
-                double normalZ = 0.0;
-
-                projectShuttleVertex(localX + thickOffset, localY, localZ, normalX, normalY, normalZ,
-                        cosX, sinX, cosY, sinY, lightX, lightY, lightZ, outputBuffer, zBuffer);
-            }
-        }
-
-        // Loop 4: Render the Rear OMS Thrust Pod Exhaust Cones (Indices 25 to 30)
-        for (int pod = 25; pod <= 26; pod++) {
-            double[] node = SHUTTLE_NODES[pod];
-            for (int step = 0; step < 16; step++) {
-                double rad = step * (2.0 * Math.PI / 16.0);
-                double localX = node[0] + 0.15 * Math.cos(rad);
-                double localY = node[1];
-                double localZ = node[2] + 0.15 * Math.sin(rad);
-                projectShuttleVertex(localX, localY, localZ, 0, -1.0, 0, cosX, sinX, cosY, sinY, lightX, lightY, lightZ,
-                        outputBuffer, zBuffer);
+    private void renderDeltaWings(double cosX, double sinX, double cosY, double sinY,
+                                  double lx, double ly, double lz, String[] out, double[] zb) {
+        // Swept Delta Wings (Black Leading Edge Thermal Tiles)
+        for (double y = -1.3; y <= 0.2; y += 0.06) {
+            double wingSpan = 1.4 * (0.2 - y) / 1.5;
+            for (double x = -wingSpan; x <= wingSpan; x += 0.08) {
+                if (Math.abs(x) < 0.25) continue; // Skip inner fuselage overlapping points
+                boolean isEdge = Math.abs(x) > (wingSpan - 0.12);
+                String color = isEdge ? C_BLACK_TILE : C_WHITE_BODY;
+                projectShuttlePoint(x, y, 0.0, 0.0, 0.0, 1.0, color, cosX, sinX, cosY, sinY, lx, ly, lz, out, zb);
             }
         }
     }
 
-    private void projectShuttleVertex(double lx, double ly, double lz, double nx, double ny, double nz,
-            double cosX, double sinX, double cosY, double sinY,
-            double lightX, double lightY, double lightZ, String[] out, double[] zb) {
-        // 1. Rotate the Vertex Position Vectors (Yaw around vertical Z, then Pitch
-        // around horizontal X)
-        double r1x = lx * cosY - ly * sinY;
-        double r1y = lx * sinY + ly * cosY;
-        double r1z = lz;
+    private void renderVerticalTailFin(double cosX, double sinX, double cosY, double sinY,
+                                      double lx, double ly, double lz, String[] out, double[] zb) {
+        // Tall Vertical Rudder Stabilizer Fin
+        for (double z = 0.2; z <= 0.95; z += 0.05) {
+            double heightAlpha = (z - 0.2) / 0.75;
+            double yFront = -0.8 - (0.3 * heightAlpha);
+            double yBack = -1.4;
+
+            for (double y = yBack; y <= yFront; y += 0.06) {
+                projectShuttlePoint(0.0, y, z, 1.0, 0.0, 0.0, C_WHITE_BODY, cosX, sinX, cosY, sinY, lx, ly, lz, out, zb);
+            }
+        }
+    }
+
+    private void renderCylinder(double cx, double cy, double cz, double radius, double height, String color,
+                                double cosX, double sinX, double cosY, double sinY,
+                                double lx, double ly, double lz, String[] out, double[] zb) {
+        for (double y = cy - height / 2.0; y <= cy + height / 2.0; y += 0.1) {
+            renderCircleSlice(cx, y, cz, radius, color, cosX, sinX, cosY, sinY, lx, ly, lz, out, zb);
+        }
+    }
+
+    private void renderCone(double cx, double cy, double cz, double baseRadius, double height, String color,
+                            double cosX, double sinX, double cosY, double sinY,
+                            double lx, double ly, double lz, String[] out, double[] zb) {
+        for (double dy = 0; dy <= height; dy += 0.08) {
+            double radius = baseRadius * (1.0 - (dy / height));
+            renderCircleSlice(cx, cy + dy, cz, radius, color, cosX, sinX, cosY, sinY, lx, ly, lz, out, zb);
+        }
+    }
+
+    private void renderCircleSlice(double cx, double cy, double cz, double radius, String color,
+                                  double cosX, double sinX, double cosY, double sinY,
+                                  double lx, double ly, double lz, String[] out, double[] zb) {
+        for (int step = 0; step < 20; step++) {
+            double rad = step * (2.0 * Math.PI / 20.0);
+            double nx = Math.cos(rad);
+            double nz = Math.sin(rad);
+            double px = cx + radius * nx;
+            double pz = cz + radius * nz;
+
+            projectShuttlePoint(px, cy, pz, nx, 0.1, nz, color, cosX, sinX, cosY, sinY, lx, ly, lz, out, zb);
+        }
+    }
+
+    private void renderThrusterPlume(double cx, double cy, double cz, double spread, String coreColor, String glowColor,
+                                     double cosX, double sinX, double cosY, double sinY, String[] out, double[] zb) {
+        char[] plumeChars = {'*', '@', '#', '%', '+'};
+        for (double dy = 0; dy < 1.4; dy += 0.12) {
+            double currentSpread = spread * (1.0 + dy * 1.2);
+            int particles = (int) (12 * (1.4 - dy));
+
+            for (int p = 0; p < particles; p++) {
+                double rx = cx + (random.nextDouble() - 0.5) * currentSpread;
+                double rz = cz + (random.nextDouble() - 0.5) * currentSpread;
+                double ry = cy - dy;
+
+                String color = (dy < 0.4) ? coreColor : glowColor;
+                char symbol = plumeChars[random.nextInt(plumeChars.length)];
+
+                projectRawParticle(rx, ry, rz, color, symbol, cosX, sinX, cosY, sinY, out, zb);
+            }
+        }
+    }
+
+    private void projectShuttlePoint(double px, double py, double pz, double nx, double ny, double nz, String colorCode,
+                                    double cosX, double sinX, double cosY, double sinY,
+                                    double lx, double ly, double lz, String[] out, double[] zb) {
+        // 1. Apply World Rotations (Yaw around Y-axis, then Pitch around X-axis)
+        double r1x = px * cosY - py * sinY;
+        double r1y = px * sinY + py * cosY;
+        double r1z = pz;
 
         double rotX = r1x;
         double rotY = r1y * cosX - r1z * sinX;
         double rotZ = r1y * sinX + r1z * cosX;
 
-        // 2. Rotate the Surface Normal Vectors identically so shading matches the
-        // viewpoint perspective
+        // Rotate Normal Vectors
         double n1x = nx * cosY - ny * sinY;
         double n1y = nx * sinY + ny * cosY;
         double n1z = nz;
@@ -204,41 +209,67 @@ public class RocketLoader extends Loader {
         double rotNY = n1y * cosX - n1z * sinX;
         double rotNZ = n1y * sinX + n1z * cosX;
 
-        double nLen = Math.sqrt(rotNX * rotNX + rotNY * rotNY + rotNZ * rotNZ);
+        // Normalization
+        double nLen = Math.hypot(rotNX, Math.hypot(rotNY, rotNZ));
         if (nLen > 0) {
-            rotNX /= nLen;
-            rotNY /= nLen;
-            rotNZ /= nLen;
+            rotNX /= nLen; rotNY /= nLen; rotNZ /= nLen;
         }
 
-        // 3. Perspective Projection & Scale calculations (Y represents deep distance
-        // away from eye)
-        double cameraDepth = rotY + 4.2;
+        // 2. Perspective Projection & Depth Calculations
+        double cameraDepth = rotY + 4.8;
+        if (cameraDepth <= 0.1) return;
+
         double D = 1.0 / cameraDepth;
 
-        // Map coordinates cleanly into your 80x22 canvas layout dimensions
-        int sx = (int) (width / 2.0 + 54 * D * rotX);
-        int sy = (int) (height / 2.0 - 24 * D * rotZ);
-        int o = sx + width * sy;
+        int sx = (int) (width / 2.0 + 46.0 * D * rotX);
+        int sy = (int) (height / 2.0 - 22.0 * D * rotZ);
 
-        // 4. VECTOR DIFFUSE LUMINANCE SHADER
-        double dotProduct = rotNX * lightX + rotNY * lightY + rotNZ * lightZ;
+        if (sx >= 0 && sx < width && sy >= 0 && sy < height) {
+            int idx = sx + width * sy;
 
-        // Ambient background illumination constant ensures unlit hulls don't disappear
-        // completely
-        double luminance = 0.16 + 0.84 * Math.max(0.0, dotProduct);
+            // Z-Buffer Max-Sorting (Closest geometry wins)
+            if (D > zb[idx]) {
+                zb[idx] = D;
 
-        if (sy < height && sy >= 0 && sx >= 0 && sx < width && D > (zb[o] + 0.0001)) {
-            zb[o] = D;
-            // Map intensity smoothly into a crisp 12-stage grayscale character ramp
-            String palette = " .,-~:;=!*#█";
-            int charIndex = (int) (luminance * (palette.length() - 1));
-            charIndex = Math.max(0, Math.min(palette.length() - 1, charIndex));
-            char asciiChar = palette.charAt(charIndex);
-            if (asciiChar != ' ') {
-                out[o] = WHITE + asciiChar + RESET;
-            } else {
-                out[o] = " ";
+                // Lighting Exposure Calculation
+                double dot = rotNX * lx + rotNY * ly + rotNZ * lz;
+                double illuminance = Math.max(0.25, dot); // Baseline ambient light
+
+                // ASCII Luminance Ramp Selection
+                char[] ramp = {' ', '.', ':', '-', '=', '+', '*', '#', '%', '@', '█'};
+                int rampIdx = (int) (illuminance * (ramp.length - 1));
+                rampIdx = Math.max(0, Math.min(ramp.length - 1, rampIdx));
+                char glyph = ramp[rampIdx];
+
+                if (glyph != ' ') {
+                    out[idx] = colorCode + glyph + RESET;
+                }
+            }
+        }
+    }
+
+    private void projectRawParticle(double px, double py, double pz, String colorCode, char symbol,
+                                    double cosX, double sinX, double cosY, double sinY, String[] out, double[] zb) {
+        double r1x = px * cosY - py * sinY;
+        double r1y = px * sinY + py * cosY;
+        double r1z = pz;
+
+        double rotX = r1x;
+        double rotY = r1y * cosX - r1z * sinX;
+        double rotZ = r1y * sinX + r1z * cosX;
+
+        double cameraDepth = rotY + 4.8;
+        if (cameraDepth <= 0.1) return;
+
+        double D = 1.0 / cameraDepth;
+        int sx = (int) (width / 2.0 + 46.0 * D * rotX);
+        int sy = (int) (height / 2.0 - 22.0 * D * rotZ);
+
+        if (sx >= 0 && sx < width && sy >= 0 && sy < height) {
+            int idx = sx + width * sy;
+            if (D > zb[idx]) {
+                zb[idx] = D;
+                out[idx] = colorCode + symbol + RESET;
             }
         }
     }

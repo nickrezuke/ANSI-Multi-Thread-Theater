@@ -12,10 +12,11 @@ public class TexelTriplePhaseCubeLoader extends TexelCubeLoader {
     };
 
     public TexelTriplePhaseCubeLoader() {
-        super(TEXEL_CUBE_STAGES);
+        // This uses 80x22 specifically
+        super(TEXEL_CUBE_STAGES, 80, 22);
     }
 
-    protected VoxelTexel getCubeTexel(int variant, int face, int x, int y) {
+    protected VoxelTexel getCubeTexel(int face, int x, int y) {
         int noise = (int) (Math.abs((x * 34211L + y * 12473L + face * 4567L) ^ 0x5DEECE66DL) % 3);
         // 1. Establish precise time tracks
             double time = System.currentTimeMillis() * 0.003;

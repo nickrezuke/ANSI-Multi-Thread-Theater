@@ -29,7 +29,8 @@ public class LangtonsAntLoader extends Loader {
     private static final String COLOR_ANT = "\u001B[38;5;196;1m";                     // Vibrant Red active ant worker
 
     public LangtonsAntLoader() {
-        super(ANT_STAGES);
+        // This uses 80x22 specifically
+        super(ANT_STAGES, 80, 22);
     }
 
     @Override

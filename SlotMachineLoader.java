@@ -22,8 +22,7 @@ public class SlotMachineLoader extends InteractiveLoader {
     private int leverState = 0;
     private int leverTimer = 0;
 
-    // CORRECTED: Fixed dimension formatting to properly map rows directly as String
-    // steps
+    // Slot Graphics
     private static final String[][] AS_ICONS = {
             { // 0: Lucky Seven
                     "  /█████ ", "  └───██ ", "     ██  ", "    ██   ", "    ██   "

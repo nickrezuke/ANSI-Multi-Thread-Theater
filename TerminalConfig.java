@@ -9,14 +9,65 @@ public class TerminalConfig {
 
     private static final int SANE_FALLBACK_MODE = 0x00C7; // 199
 
-    private static final String WIN_HANDLE_PRELUDE =
-            "Add-Type -Name Nat -Namespace TC -MemberDefinition '" +
+    private static final String WIN_HANDLE_PRELUDE = "Add-Type -Name Nat -Namespace TC -MemberDefinition '" +
             "[DllImport(\"kernel32.dll\", SetLastError=true)] public static extern IntPtr CreateFile(string name, uint access, uint share, IntPtr sa, uint disposition, uint flags, IntPtr template);"
             +
             "[DllImport(\"kernel32.dll\")] public static extern bool GetConsoleMode(IntPtr h, out int mode);" +
             "[DllImport(\"kernel32.dll\")] public static extern bool SetConsoleMode(IntPtr h, int mode);' " +
             "-ErrorAction SilentlyContinue; " +
             "$h = [TC.Nat]::CreateFile('CONIN$', 0xC0000000, 3, [IntPtr]::Zero, 3, 0, [IntPtr]::Zero); ";
+
+    public static int[] getTerminalSize() {
+        int defaultWidth = 80;
+        int defaultHeight = 24;
+
+        // Check common IDE/Terminal environment variable fallbacks first
+        String envCols = System.getenv("COLUMNS");
+        String envLines = System.getenv("LINES");
+        if (envCols != null && envLines != null) {
+            try {
+                return new int[] { Integer.parseInt(envCols), Integer.parseInt(envLines) };
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
+        try {
+            if (IS_WINDOWS) {
+                // Query Windows console buffer width and height
+                String output = runPowershell("[System.Console]::WindowWidth; [System.Console]::WindowHeight");
+                String[] lines = output.split("\\r?\\n");
+                if (lines.length >= 2) {
+                    int w = Integer.parseInt(lines[0].trim());
+                    int h = Integer.parseInt(lines[1].trim());
+                    if (w > 0 && h > 0)
+                        return new int[] { w, h };
+                }
+            } else {
+                // Mac/Linux: Try regular stty size first
+                String output = runCommand("stty size 2>/dev/null");
+
+                // IDE Terminal Fallback: If regular stty fails, point explicitly to the tty
+                // device
+                if (output.isEmpty()) {
+                    output = runCommand("stty size < /dev/tty 2>/dev/null");
+                }
+
+                if (!output.isEmpty()) {
+                    String[] parts = output.trim().split("\\s+");
+                    if (parts.length >= 2) {
+                        int h = Integer.parseInt(parts[0]);
+                        int w = Integer.parseInt(parts[1]);
+                        if (w > 0 && h > 0)
+                            return new int[] { w, h };
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Absorb exceptions and let system fall back safely, we already defined defaults
+        }
+
+        return new int[] { defaultWidth, defaultHeight };
+    }
 
     public static void setRawMode() {
         try {

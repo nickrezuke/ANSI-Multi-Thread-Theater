@@ -46,7 +46,8 @@ public class PerlinNoiseLoader2 extends Loader {
     private double cameraX = 0.0;
 
     public PerlinNoiseLoader2() {
-        super(STAGES);
+        // This uses 80x22 specifically
+        super(STAGES, WIDTH, HEIGHT);
     }
 
     @Override

@@ -27,7 +27,8 @@ public class DonutLoader extends Loader {
     private double B = 0;
 
     public DonutLoader() {
-        super(DONUT_STAGES);
+        // Donut uses 80x22
+        super(DONUT_STAGES, 80, 22);
     }
 
     @Override
@@ -142,12 +143,12 @@ public class DonutLoader extends Loader {
 
                 int x = (int) (40 + 42 * D * (cosTheta * h * cosB - t * sinB));
                 int y = (int) (12 + 21 * D * (cosTheta * h * sinB + t * cosB));
-                int o = x + 80 * y;
+                int o = x + window_width * y;
 
                 double N_double = 8 * ((sinPhi * sinA - sinTheta * cosPhi * cosA) * cosB - sinTheta * cosPhi * sinA
                         - sinPhi * cosA - cosTheta * cosPhi * sinB);
 
-                if (22 > y && y > 0 && x > 0 && 80 > x && D > (zBuffer[o] + 0.0001)) {
+                if (this.window_height > y && y > 0 && x > 0 && this.window_width > x && D > (zBuffer[o] + 0.0001)) {
                     zBuffer[o] = D;
                     int charIndex = (int) Math.round(N_double);
                     if (charIndex < 0)

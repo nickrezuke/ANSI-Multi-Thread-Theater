@@ -12,8 +12,50 @@ public class EarthLoader extends Loader {
     private final int[] starPositions = new int[MAX_STARS];
     private final double[] starPhases = new double[MAX_STARS];
 
-    // Dynamic timeline tracking our continuous planetary spin
     private double earthRotationAngle = 0.0;
+
+    // -------------------------------------------------------------------------
+    // HIGH-ACCURACY EQUIRECTANGULAR CONTINENT BITMAP (72 Columns x 36 Rows)
+    // Map bounds: Lat [90N to 90S], Lon [-180W to 180E]
+    // -------------------------------------------------------------------------
+    private static final String[] EARTH_BITMAP = {
+            "000000000000000000000000000000000000000000000000000000000000000000000000", // 90N
+            "000000000000000000001100001111100000000000000000000000000000000000000000", // 85N
+            "000000000000000001110011111111110000000000000000000000001000000000000000", // 80N
+            "000000000000011010111000011111110000000000000000000011111111110011000000", // 75N
+            "100111111111111111110110011110000000000111110111111111111111111111111111", // 70N
+            "000111111111111111000110001100000000011111111111111111111111111111111110", // 65N
+            "000000000111111111001111000000000000001001111111111111111111111100011000", // 60N
+            "000000000011111111111111100000000001011111111111111111111111111100000000", // 55N
+            "000000000001111111111110000000000000111111111111111111111111111100000000", // 50N
+            "000000000001111111111100000000000011100111001111111111111111110000000000", // 45N
+            "000000000001111111111000000000000011000001111111111111111111010000000000", // 40N
+            "000000000000111111110000000000000011111000011111111111111111000000000000", // 35N
+            "000000000000001110000000000000000111111111111111111111111111000000000000", // 30N
+            "000000000000000110000000000000000111111111111111001111111110000000000000", // 25N
+            "000000000000000011100000000000000111111111111110000110011100000000000000", // 20N
+            "000000000000000000100000000000000111111111111000000100001100000000000000", // 15N
+            "000000000000000000001111000000000011111111111100000000000000000000000000", // 10N
+            "000000000000000000001111110000000000001111111000000000001011000000000000", // 5N
+            "000000000000000000001111111100000000001111110000000000001010000100000000", // 0
+            "000000000000000000001111111110000000000111110000000000000000000010000000", // 5S
+            "000000000000000000000111111100000000000111110000000000000000001000000000", // 10S
+            "000000000000000000000011111100000000001111110100000000000000011110000000", // 15S
+            "000000000000000000000011111100000000000111100100000000000001111111000000", // 20S
+            "000000000000000000000011110000000000000111100000000000000001111111100000", // 25S
+            "000000000000000000000011110000000000000011000000000000000001100111000000", // 30S
+            "000000000000000000000111000000000000000000000000000000000000000011000000", // 35S
+            "000000000000000000000110000000000000000000000000000000000000000000000000", // 40S
+            "000000000000000000000110000000000000000000000000000000000000000000000000", // 45S
+            "000000000000000000000100000000000000000000000000000000000000000000000000", // 50S
+            "000000000000000000000000000000000000000000000000000000000000000000000000", // 55S
+            "000000000000000000000000000000000000000000000000000000000000000000000000", // 60S
+            "000000000000000000000000000000000000000000000111100011111111111110000000", // 65S
+            "000000000000000000000111000000000111111111111111111111111111111111111100", // 70S
+            "000000111111111111111000000000111111111111111111111111111111111111111000", // 75S
+            "000001111111111111111110011111111111111111111111111111111111111111111000", // 80S
+            "111111111111111111111111111111111111111111111111111111111111111111111111" // 85S
+    };
 
     public EarthLoader(StatusStage[] stages, int width, int height) {
         super(stages, width, height);
@@ -27,7 +69,6 @@ public class EarthLoader extends Loader {
     protected void initialize() {
         this.earthRotationAngle = 0.0;
 
-        // Procedurally generate a fixed random star field that skips text margins
         Random rand = new Random(9999);
         for (int i = 0; i < MAX_STARS; i++) {
             int rx = rand.nextInt(80);
@@ -43,7 +84,7 @@ public class EarthLoader extends Loader {
 
     @Override
     protected void renderGeometry(String[] outputBuffer, double[] zBuffer) {
-        // Step 1: Draw the Twinkling Background Starfield
+        // Step 1: Draw the Background Starfield
         long currentTime = System.currentTimeMillis();
         for (int i = 0; i < MAX_STARS; i++) {
             int starIdx = starPositions[i];
@@ -63,20 +104,14 @@ public class EarthLoader extends Loader {
             }
         }
 
-        // Step 2: COMPUTE ROTATION WITH INTENSITY ADJUSTMENTS
-        // FIX 1: Slowed rotation speed down by exactly a factor of 10 (0.035 -> 0.0035)
+        // Step 2: Compute Planetary Spin & Tilt
         earthRotationAngle += 0.0035;
-
-        // FIX 2: Explicit structural wrap guard ensures angles never spill to infinity,
-        // completely resolving the permanent "blue ocean planet" disappearance bug!
         earthRotationAngle %= (2.0 * Math.PI);
 
-        // Natural Earth axial tilt inclination (23.5 degrees)
         double axialTilt = Math.toRadians(23.5);
         double cosTilt = Math.cos(axialTilt);
         double sinTilt = Math.sin(axialTilt);
 
-        // Broad, high-visibility directional light source targeting the near face
         double lightX = 0.35;
         double lightY = -0.85;
         double lightZ = 0.35;
@@ -84,35 +119,29 @@ public class EarthLoader extends Loader {
         double cameraDistance = 3.6;
         double sphereRadius = 1.0;
 
-        // Step 3: Render the Texturized 3D Earth Globe
+        // Step 3: Render 3D Earth Globe
         for (double theta = 0.01; theta < Math.PI; theta += 0.015) {
             double sinTheta = Math.sin(theta);
             double cosTheta = Math.cos(theta);
 
-            // Latitude mapping in radians
             double lat = (Math.PI / 2.0) - theta;
 
             for (double phi = 0; phi < 2 * Math.PI; phi += 0.015) {
                 double sinPhi = Math.sin(phi);
                 double cosPhi = Math.cos(phi);
 
-                // Local unrotated positions
                 double lx = sphereRadius * sinTheta * cosPhi;
                 double ly = sphereRadius * sinTheta * sinPhi;
                 double lz = sphereRadius * cosTheta;
 
-                // Longitude vector mapping (-PI to +PI)
                 double rawLong = Math.atan2(sinPhi, cosPhi);
 
-                // Track our slow horizontal drift rotation step
                 double animatedLong = rawLong - earthRotationAngle;
                 if (animatedLong < -Math.PI)
                     animatedLong += 2.0 * Math.PI;
                 if (animatedLong > Math.PI)
                     animatedLong -= 2.0 * Math.PI;
 
-                // Apply the 23.5-degree global axial tilt rotation matrix (Roll around depth
-                // axis)
                 double rx = lx * cosTilt - lz * sinTilt;
                 double ry = ly;
                 double rz = lx * sinTilt + lz * cosTilt;
@@ -132,60 +161,26 @@ public class EarthLoader extends Loader {
                         double nz = rz / sphereRadius;
 
                         // -------------------------------------------------------------
-                        // GEOGRAPHY MATRIX: TRUE CONTINENTAL OUTLINES
+                        // EQUIRECTANGULAR BITMAP RASTERIZER
+                        // Map Lat/Lon directly to Bitmap Grid Coordinates
                         // -------------------------------------------------------------
-                        boolean isLand = false;
                         double latDeg = Math.toDegrees(lat);
                         double lonDeg = Math.toDegrees(animatedLong);
 
-                        if (latDeg < -62.0) {
-                            // Antarctica Polar Core
-                            isLand = true;
-                        } else if (lonDeg > -90.0 && lonDeg < -34.0 && latDeg > -56.0 && latDeg < 13.0) {
-                            // South America
-                            double halfWidth = (latDeg + 56.0) * 1.4;
-                            if (Math.abs(lonDeg + 60.0) < halfWidth || latDeg > -15.0) {
-                                isLand = true;
-                            }
-                        } else if (lonDeg > -168.0 && lonDeg < -52.0 && latDeg >= 13.0 && latDeg < 76.0) {
-                            // North America
-                            if (!(lonDeg < -114.0 && latDeg < 32.0)) { // Clear California Gulf
-                                if (latDeg > 48.0 || lonDeg < -74.0 || (lonDeg > -100.0 && latDeg > 24.0)
-                                        || lonDeg <= -100.0) {
-                                    isLand = true;
-                                }
-                            }
-                        } else if (lonDeg > -22.0 && lonDeg < 52.0 && latDeg > -35.0 && latDeg < 38.0) {
-                            // Africa
-                            if (latDeg > 6.0) {
-                                isLand = (lonDeg > -17.0 && lonDeg < 51.0);
-                            } else {
-                                double halfWidth = (latDeg + 35.0) * 0.65;
-                                isLand = (Math.abs(lonDeg - 21.0) < halfWidth);
-                            }
-                        } else if (lonDeg >= -12.0 && lonDeg < 168.0 && latDeg >= 10.0 && latDeg < 76.0) {
-                            // Eurasia
-                            isLand = true;
-                            if (latDeg < 24.0 && lonDeg > 66.0 && lonDeg < 94.0) {
-                                isLand = (Math.abs(lonDeg - 80.0) < (latDeg - 6.0) * 0.85); // India Triangle
-                            }
-                            if (latDeg < 32.0 && lonDeg > 34.0 && lonDeg < 62.0) {
-                                isLand = true; // Arabian Block
-                            }
-                        } else if (lonDeg > 112.0 && lonDeg < 154.0 && latDeg > -39.0 && latDeg < -10.0) {
-                            // Australia
-                            isLand = true;
-                        }
+                        int mapRow = (int) ((90.0 - latDeg) / 180.0 * EARTH_BITMAP.length);
+                        mapRow = Math.max(0, Math.min(EARTH_BITMAP.length - 1, mapRow));
+
+                        String bitmapLine = EARTH_BITMAP[mapRow];
+                        int mapCol = (int) ((lonDeg + 180.0) / 360.0 * bitmapLine.length());
+                        mapCol = Math.max(0, Math.min(bitmapLine.length() - 1, mapCol));
+
+                        boolean isLand = bitmapLine.charAt(mapCol) == '1';
 
                         // -------------------------------------------------------------
-                        // HIGH-LUMINANCE WEATHER & TEXTURE SHADER
+                        // SHADING & COLOR ENGINE
                         // -------------------------------------------------------------
                         double diffuse = nx * lightX + ny * lightY + nz * lightZ;
                         double baseLight = Math.max(0.0, diffuse);
-
-                        // FIX 3: Boosted background global illumination.
-                        // We use a high ambient minimum floor (0.34) and linear light scaling.
-                        // This exposes dark zones while showing full crisp contrast on landmasses.
                         double finalLuminance = 0.34 + 0.66 * baseLight;
 
                         String palette = " .:-=+#%@█";
@@ -197,33 +192,36 @@ public class EarthLoader extends Loader {
 
                         if (isLand) {
                             if (latDeg < -62.0 || latDeg > 70.0) {
-                                // Polar Caps: Ice White
+                                // Ice Caps
                                 outR = (int) (220 * finalLuminance);
                                 outG = (int) (225 * finalLuminance);
                                 outB = (int) (235 * finalLuminance);
                             } else {
-                                // Dynamic Terrain Vegetation Greens
+                                // Vegetation
                                 outR = (int) (35 * finalLuminance);
-                                outG = (int) (155 * finalLuminance); // Saturated green for clarity
+                                outG = (int) (155 * finalLuminance);
                                 outB = (int) (45 * finalLuminance);
                             }
                         } else {
-                            // Ocean Water: High-visibility Deep Sapphire Blue
+                            // Deep Blue Ocean
                             outR = (int) (10 * finalLuminance);
                             outG = (int) (55 * finalLuminance);
                             outB = (int) (185 * finalLuminance);
                         }
-                        // Rayleigh Scattering Atmosphere Halo Rim
-                        double rimFactor = 1.0 - (nx*nx + nz*nz);
+
+                        // Atmosphere Edge Glow
+                        double rimFactor = 1.0 - 0.55 * (nx * nx + nz * nz);
                         if (rimFactor > 0.75) {
-                            double glow = (rimFactor - 0.75) / 0.25;
+                            double glow = (rimFactor - 0.75) / 0.4;
                             outR += (int) (40 * glow * finalLuminance);
                             outG += (int) (130 * glow * finalLuminance);
                             outB += (int) (255 * glow * finalLuminance);
                         }
+
                         outR = Math.max(0, Math.min(255, outR));
                         outG = Math.max(0, Math.min(255, outG));
                         outB = Math.max(0, Math.min(255, outB));
+
                         String colorCode = String.format("\u001B[38;2;%d;%d;%dm", outR, outG, outB);
                         outputBuffer[index] = colorCode + renderChar + RESET;
                     }

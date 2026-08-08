@@ -59,7 +59,9 @@ public abstract class Loader implements Runnable {
 
     // Default constructor retains original 80x22 layout for your other loaders
     public Loader(StatusStage[] stages) {
-        this(stages, 80, 22);
+        int[] dimensions = TerminalConfig.getTerminalSize();
+        this(stages, dimensions[0], dimensions[1]);
+        //this(stages, 80, 22);
     }
 
     // Overloaded constructor allowing custom dimensions

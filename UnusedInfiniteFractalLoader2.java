@@ -15,7 +15,8 @@ public class UnusedInfiniteFractalLoader2 extends Loader {
     private double rotationAngle = 0.0;
 
     public UnusedInfiniteFractalLoader2() {
-        super(FRACTAL_STAGES);
+        // This uses 80x22 specifically
+        super(FRACTAL_STAGES, 80, 22);
     }
 
     @Override

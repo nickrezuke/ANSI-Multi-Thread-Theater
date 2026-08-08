@@ -29,7 +29,8 @@ public class BriansBrainLoader extends Loader {
     private static final String COLOR_REFRACTORY = "\u001B[38;5;162m░" + RESET; // Muted Magenta/Red decay shade
 
     public BriansBrainLoader() {
-        super(BRAIN_STAGES);
+        // This uses 80x22 specifically
+        super(BRAIN_STAGES, 80, 22);
     }
 
     @Override

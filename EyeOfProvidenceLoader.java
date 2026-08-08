@@ -23,7 +23,8 @@ public class EyeOfProvidenceLoader extends Loader {
     private static final double CAMERA_TILT = 0.42; // Constant downward view tilt
 
     public EyeOfProvidenceLoader() {
-        super(PYRAMID_STAGES);
+        // This uses 80x22 specifically
+        super(PYRAMID_STAGES, 80, 22);
     }
 
     @Override

@@ -34,7 +34,8 @@ public class RainbowWhispPyramidLoader extends Loader {
     private final double sinTilt = Math.sin(CAMERA_TILT);
 
     public RainbowWhispPyramidLoader() {
-        super(PYRAMID_STAGES);
+        // This uses 80x22 specifically
+        super(PYRAMID_STAGES, 80, 22);
     }
 
     @Override

@@ -37,6 +37,7 @@ public class MoonLoader extends Loader {
     private static final int MOON_B = 205;
 
     public MoonLoader() {
+        // This uses 80x22 specifically
         super(MOON_STAGES, 80, 22);
     }
 

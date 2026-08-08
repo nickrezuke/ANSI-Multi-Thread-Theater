@@ -18,7 +18,8 @@ public class SeifertLoader extends InteractiveLoader {
     private static final double FRICTION = 0.92;
 
     public SeifertLoader() {
-        super(RING_STAGES);
+        // This uses 80x22 specifically
+        super(RING_STAGES, 80, 22);
     }
 
     @Override

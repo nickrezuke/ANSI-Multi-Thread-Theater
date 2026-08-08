@@ -35,7 +35,8 @@ public class LouvreLoader extends Loader {
     private static final double CAMERA_DISTANCE = 3.2;
 
     public LouvreLoader() {
-        super(LOUVRE_STAGES);
+        // This uses 80x22 specifically
+        super(LOUVRE_STAGES, 80, 22);
     }
 
     @Override

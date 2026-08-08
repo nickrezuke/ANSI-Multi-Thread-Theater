@@ -12,10 +12,11 @@ public class TexelRubixCubeLoader extends TexelCubeLoader {
 };
 
     public TexelRubixCubeLoader() {
-        super(TEXEL_CUBE_STAGES);
+        // This uses 80x22 specifically
+        super(TEXEL_CUBE_STAGES, 80, 22);
     }
 
-    protected VoxelTexel getCubeTexel(int variant, int face, int x, int y) {
+    protected VoxelTexel getCubeTexel(int face, int x, int y) {
         // 1. Gridlines: 16x16 boundaries wrapping 3x3 tiles separated by 5-cell
             // intervals
             if (x == 0 || x == 5 || x == 10 || x == 15 || y == 0 || y == 5 || y == 10 || y == 15) {

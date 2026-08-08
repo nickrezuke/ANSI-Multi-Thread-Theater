@@ -20,7 +20,8 @@ public class SynthWaveLoader extends Loader {
     private static final String COLOR_WINDOW = "\u001B[38;5;87m"; // High-Gloss Cyan Window
 
     public SynthWaveLoader() {
-        super(STAGES);
+        // This uses 80x22 specifically
+        super(STAGES, 80, 22);
     }
 
     @Override

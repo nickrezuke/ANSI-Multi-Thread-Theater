@@ -65,7 +65,8 @@ public class BigBenLoader extends Loader {
     private static final double R_SPIRE_BASE = 0.30;
 
     public BigBenLoader() {
-        super(BIG_BEN_STAGES);
+        // This uses 80x22 specifically
+        super(BIG_BEN_STAGES, 80, 22);
     }
 
     @Override

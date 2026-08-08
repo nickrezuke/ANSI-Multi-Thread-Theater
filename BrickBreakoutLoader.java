@@ -1,10 +1,10 @@
 import java.util.Random;
 
 public class BrickBreakoutLoader extends Loader {
-    private static final StatusStage[] ARK_STAGES = {
-        new StatusStage(25, "Loading breakout brick matrices:"),
-        new StatusStage(50, "Calibrating tracking paddle logic:"),
-        new StatusStage(75, "Syncing structural collision arrays:"),
+    private static final StatusStage[] STAGES = {
+        new StatusStage(25, "Loading brick matrices:"),
+        new StatusStage(50, "Calibrating tracking paddle:"),
+        new StatusStage(75, "Syncing collision arrays:"),
         new StatusStage(100, "Breakout Core Operational!")
     };
 
@@ -49,7 +49,8 @@ public class BrickBreakoutLoader extends Loader {
     private static final String COLOR_TEXT = "\u001B[38;5;244m";    // Accent Gray
 
     public BrickBreakoutLoader() {
-        super(ARK_STAGES);
+        // This uses 80x22 specifically
+        super(STAGES, 80, 22);
     }
 
     @Override

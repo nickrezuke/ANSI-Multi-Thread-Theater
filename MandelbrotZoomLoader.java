@@ -26,7 +26,8 @@ public class MandelbrotZoomLoader extends Loader {
     };
 
     public MandelbrotZoomLoader() {
-        super(ZOOM_STAGES);
+        // This uses 80x22 specifically
+        super(ZOOM_STAGES, 80, 22);
     }
 
     @Override 

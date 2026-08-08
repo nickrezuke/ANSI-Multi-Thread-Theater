@@ -1,5 +1,3 @@
-// TODO: Fix the storm spot.  Its not accurate
-
 import java.util.Random;
 
 public class JupiterLoader extends Loader {
@@ -14,17 +12,14 @@ public class JupiterLoader extends Loader {
     private final int[] starPositions = new int[MAX_STARS];
     private final double[] starPhases = new double[MAX_STARS];
 
-    // Dynamic timeline variable driving our continuous planetary spin
-    private double jupiterRotationAngle = 0.0;
+    private double jupiterRotationAngle = Math.PI;
 
-    // Authentic warm Jupiter cream and deep brick-red base color palette
-    private static final int JUPITER_CREAM_R = 225;
-    private static final int JUPITER_CREAM_G = 200;
-    private static final int JUPITER_CREAM_B = 170;
-
-    private static final int JUPITER_RED_R = 185;
-    private static final int JUPITER_RED_G = 85;
-    private static final int JUPITER_RED_B = 55;
+    // Authentic RGB Palette for Jupiter's Belts, Zones, and Storm Core
+    private static final int[] C_ZONE_CREAM  = {235, 215, 185};
+    private static final int[] C_BELT_BROWN  = {165, 95,  55};
+    private static final int[] C_GRS_CORE    = {215, 45,  25};
+    private static final int[] C_GRS_HALO    = {245, 230, 210};
+    private static final int[] C_POLAR_BLUE  = {110, 125, 145};
 
     public JupiterLoader(StatusStage[] stages, int width, int height) {
         super(stages, width, height);
@@ -36,9 +31,8 @@ public class JupiterLoader extends Loader {
 
     @Override
     protected void initialize() {
-        this.jupiterRotationAngle = 0.0;
+        this.jupiterRotationAngle = Math.PI;
 
-        // Procedurally generate a fixed random star field that skips text margins
         Random rand = new Random(1111);
         for (int i = 0; i < MAX_STARS; i++) {
             int rx = rand.nextInt(80);
@@ -54,19 +48,16 @@ public class JupiterLoader extends Loader {
 
     @Override
     protected void renderGeometry(String[] outputBuffer, double[] zBuffer) {
-        // Step 1: Draw the Twinkling Background Starfield
+        // 1. Draw Background Stars
         long currentTime = System.currentTimeMillis();
         for (int i = 0; i < MAX_STARS; i++) {
             int starIdx = starPositions[i];
             double twinkleFactor = Math.sin((currentTime * 0.004) + starPhases[i]);
 
             char starChar = ' ';
-            if (twinkleFactor > 0.82)
-                starChar = '*';
-            else if (twinkleFactor > 0.20)
-                starChar = '.';
-            else if (twinkleFactor > -0.3)
-                starChar = '·';
+            if (twinkleFactor > 0.82) starChar = '*';
+            else if (twinkleFactor > 0.20) starChar = '.';
+            else if (twinkleFactor > -0.3) starChar = '·';
 
             if (starChar != ' ' && starIdx >= 0 && starIdx < 1760) {
                 zBuffer[starIdx] = 0.0001;
@@ -74,61 +65,54 @@ public class JupiterLoader extends Loader {
             }
         }
 
-        // Step 2: COMPUTE GLOBAL SUNLIGHT AND AXIAL MATRICES
-        jupiterRotationAngle += 0.004; // Cinematic slow spin rate
+        // 2. Global Planetary Kinematics
+        jupiterRotationAngle += 0.005;
         jupiterRotationAngle %= (2.0 * Math.PI);
 
-        // Jupiter has a tiny axial tilt (only 3.1 degrees), making its bands nearly
-        // perfectly horizontal
         double axialTilt = Math.toRadians(3.1);
         double cosTilt = Math.cos(axialTilt);
         double sinTilt = Math.sin(axialTilt);
 
-        // High-visibility directional light source targeting the near face
-        double lightX = 0.45;
-        double lightY = -0.80;
-        double lightZ = 0.40;
-
+        double lightX = 0.50, lightY = -0.75, lightZ = 0.42;
         double cameraDistance = 2.6;
         double sphereRadius = 1.0;
-        double flattenFactor = 0.935; // Authentic oblate flattening ratio for Jupiter
+        double flattenFactor = 0.935; // Oblate vertical squashing
 
-        // Step 3: Render the Texturized 3D Jupiter Spheroid
-        for (double theta = 0.01; theta < Math.PI; theta += 0.015) {
+        // Pre-compute 3D Location Vector of Great Red Spot Center (at 22° S Latitude)
+        double spotLatRad = Math.toRadians(-22.0);
+        double spotLonRad = Math.toRadians(30.0) + jupiterRotationAngle; // Moves rigidly with rotation
+        
+        double spotCenterUnboundX = Math.cos(spotLatRad) * Math.cos(spotLonRad);
+        double spotCenterUnboundY = Math.cos(spotLatRad) * Math.sin(spotLonRad);
+        double spotCenterUnboundZ = Math.sin(spotLatRad);
+
+        // 3. Dense 3D Surface Grid Sampling
+        for (double theta = 0.008; theta < Math.PI; theta += 0.008) {
             double sinTheta = Math.sin(theta);
             double cosTheta = Math.cos(theta);
-
-            // Compute exact relative latitude in degrees (-90 at South Pole to +90 at North
-            // Pole)
             double latDeg = Math.toDegrees((Math.PI / 2.0) - theta);
 
-            // DYNAMIC COUNTER-ROTATING JET STREAM LINES:
-            // Different latitudes on Jupiter spin at different rates and directions!
-            // We set up alternating bands based on sine-wave latitude slots
-            double bandDirection = (Math.sin(latDeg * 0.18) > 0) ? 1.0 : -1.0;
-            double localizedSpin = jupiterRotationAngle * (1.0 + 0.5 * Math.sin(latDeg * 0.12)) * bandDirection;
-
-            for (double phi = 0; phi < 2 * Math.PI; phi += 0.015) {
+            for (double phi = 0; phi < 2 * Math.PI; phi += 0.008) {
                 double sinPhi = Math.sin(phi);
                 double cosPhi = Math.cos(phi);
 
-                // Convert spherical steps to raw oblate space coordinates
-                double lx = sphereRadius * sinTheta * cosPhi;
-                double ly = sphereRadius * sinTheta * sinPhi;
-                double lz = sphereRadius * cosTheta * flattenFactor; // Squashed vertically
+                // Unrotated Unit Sphere Coordinates (for storm tracking)
+                double ux = sinTheta * cosPhi;
+                double uy = sinTheta * sinPhi;
+                double uz = cosTheta;
 
-                // Extract exact mathematical Longitude Angle (-PI to +PI)
-                double rawLong = Math.atan2(sinPhi, cosPhi);
+                // Scaled Oblate Coordinates
+                double lx = sphereRadius * ux;
+                double ly = sphereRadius * uy;
+                double lz = sphereRadius * uz * flattenFactor;
 
-                // Inject the dynamic counter-rotating jet longitude variable
-                double animatedLong = rawLong - localizedSpin;
-                if (animatedLong < -Math.PI)
-                    animatedLong += 2.0 * Math.PI;
-                if (animatedLong > Math.PI)
-                    animatedLong -= 2.0 * Math.PI;
+                // Calculate local jet stream longitude drift for belt turbulence
+                double rigidLong = Math.atan2(uy, ux) - jupiterRotationAngle;
+                double jetSpeed = Math.sin(latDeg * 0.22) * 0.45;
+                double animatedLong = normalizeAngleRad(rigidLong - jetSpeed);
                 double lonDeg = Math.toDegrees(animatedLong);
 
-                // Apply the minor 3.1-degree tilt rotation matrix (Roll around depth axis)
+                // Apply axial tilt
                 double rx = lx * cosTilt - lz * sinTilt;
                 double ry = ly;
                 double rz = lx * sinTilt + lz * cosTilt;
@@ -137,110 +121,113 @@ public class JupiterLoader extends Loader {
                 int xp = (int) (40 + 74 * ooz * rx);
                 int yp = (int) (11 - 36 * ooz * rz);
 
-                // Filter points facing the camera lens (ry < 0)
+                // Filter for camera facing points
                 if (xp >= 0 && xp < 80 && yp >= 0 && yp < 22 && ry < 0) {
                     int index = xp + 80 * yp;
 
                     if (ooz > zBuffer[index] + 0.0001) {
                         zBuffer[index] = ooz;
 
+                        // Surface Normals for Lighting
                         double nx = rx / sphereRadius;
                         double ny = ry / sphereRadius;
                         double nz = rz / (sphereRadius * flattenFactor * flattenFactor);
                         double nLen = Math.sqrt(nx * nx + ny * ny + nz * nz);
-                        if (nLen > 0) {
-                            nx /= nLen;
-                            ny /= nLen;
-                            nz /= nLen;
-                        }
+                        if (nLen > 0) { nx /= nLen; ny /= nLen; nz /= nLen; }
 
                         // -------------------------------------------------------------
-                        // NASA CALIBRATED ATMOSPHERIC VORTEX MATRIX (The Great Red Spot)
+                        // 3D GREAT-CIRCLE DISTANCE METRIC (Prevents Distortion Near Limbs)
                         // -------------------------------------------------------------
-                        // The Great Red Spot is permanently located at 22 degrees South Latitude.
-                        // We track an ellipsoidal distance bounding box around this location.
-                        double spotLatCenter = -22.0;
-                        double spotLonCenter = 45.0; // Fixed local texture landing zone
+                        // Dot product gives spherical angular distance from storm center
+                        double dotSpot = ux * spotCenterUnboundX + uy * spotCenterUnboundY + uz * spotCenterUnboundZ;
+                        dotSpot = Math.max(-1.0, Math.min(1.0, dotSpot));
 
-                        // Measure elliptical distance to the center of the storm vortex
-                        double dLat = latDeg - spotLatCenter;
-                        double dLon = lonDeg - spotLonCenter;
-                        // Handle texture wrap boundaries seamlessly for longitudes
-                        if (dLon > 180.0)
-                            dLon -= 360.0;
-                        if (dLon < -180.0)
-                            dLon += 360.0;
+                        // Project onto local tangent coordinate plane to measure 2:1 elliptical aspect ratio
+                        double dLatRad = Math.toRadians(latDeg - (-22.0));
+                        double dLonRad = Math.atan2(uy, ux) - spotLonRad;
+                        dLonRad = normalizeAngleRad(dLonRad);
 
-                        // Ellipse formula: (dLon / radiusLon)^2 + (dLat / radiusLat)^2
-                        // The Red Spot is roughly twice as wide as it is tall
-                        double spotVortex = Math.pow(dLon / 18.0, 2) + Math.pow(dLat / 9.0, 2);
+                        // Elliptical storm distance (1.0 = storm boundary)
+                        double scaledLon = (dLonRad * Math.cos(spotLatRad)) / Math.toRadians(15.0); // ~15 deg width
+                        double scaledLat = dLatRad / Math.toRadians(7.5);                           // ~7.5 deg height
+                        
+                        double spotVortex = scaledLon * scaledLon + scaledLat * scaledLat;
 
                         // -------------------------------------------------------------
-                        // HIGH-CONTRAST ATMOSPHERIC SHADER
+                        // SHADING & COLOR PIPELINE
                         // -------------------------------------------------------------
-                        // Generate rich horizontal gas band turbulence waves
-                        double bandNoise = Math.sin(latDeg * 0.35) * 0.4
-                                + Math.sin(latDeg * 0.12) * 0.3
-                                + 0.1 * Math.sin(lonDeg * 0.08) * Math.cos(latDeg * 0.2); // Soft whorl texture
+                        double bandNoise = Math.sin(latDeg * 0.28) * 0.5
+                                + 0.25 * Math.sin(latDeg * 0.65 + Math.sin(lonDeg * 0.08))
+                                + 0.12 * Math.sin(lonDeg * 0.15) * Math.cos(latDeg * 0.3);
 
-                        // Map the structural band weight factor [0.0 to 1.0]
-                        double bandWeight = 0.5 + 0.5 * bandNoise;
+                        double bandWeight = Math.min(1.0, Math.max(0.0, 0.5 + 0.5 * bandNoise));
 
-                        // Base illumination calculations
                         double diffuse = nx * lightX + ny * lightY + nz * lightZ;
                         double baseLight = Math.max(0.0, diffuse);
-                        double finalLuminance = 0.32 + 0.68 * Math.pow(baseLight, 1.4); // High ambient floor
 
-                        String palette = " .:-=+#&%@";
+                        // Limb Darkening
+                        double viewAngle = Math.abs(ny);
+                        double limbDarkening = 0.6 + 0.4 * Math.pow(viewAngle, 0.7);
+
+                        double finalLuminance = (0.28 + 0.72 * Math.pow(baseLight, 1.3)) * limbDarkening;
+
+                        String palette = " .:-=+#%@";
                         int shadeIndex = (int) (finalLuminance * (palette.length() - 1));
                         shadeIndex = Math.max(0, Math.min(palette.length() - 1, shadeIndex));
                         char renderChar = palette.charAt(shadeIndex);
 
-                        // Color Interpolation Blending Block
                         int outR, outG, outB;
 
+                        // Anti-aliased storm boundary interpolation
                         if (spotVortex < 1.0) {
-                            // INSIDE THE GREAT RED SPOT VORTEX: Bright Crimson-Brick Orange Core
-                            double edgeFade = 1.0 - spotVortex; // 1 at center, 0 at edge boundary
+                            // Core
+                            double coreFade = 1.0 - spotVortex;
+                            outR = (int) (C_GRS_CORE[0] * (0.85 + 0.3 * coreFade));
+                            outG = (int) (C_GRS_CORE[1] * (0.7 + 0.3 * (1.0 - coreFade)));
+                            outB = (int) (C_GRS_CORE[2] * (0.6 + 0.4 * (1.0 - coreFade)));
+                        } else if (spotVortex < 1.4) {
+                            // Eyewall & Soft Edge Transition
+                            double blend = (spotVortex - 1.0) / 0.4;
+                            // Smoothstep curve for anti-aliased edges
+                            blend = blend * blend * (3.0 - 2.0 * blend);
 
-                            // Blend from a deep dark perimeter trench to a vivid crimson center peak
-                            outR = (int) ((JUPITER_RED_R * 1.2 * edgeFade + JUPITER_RED_R * 0.7 * (1.0 - edgeFade))
-                                    * finalLuminance);
-                            outG = (int) ((JUPITER_RED_G * 0.6 * edgeFade + JUPITER_RED_G * 0.8 * (1.0 - edgeFade))
-                                    * finalLuminance);
-                            outB = (int) ((JUPITER_RED_B * 0.5 * edgeFade + JUPITER_RED_B * 0.9 * (1.0 - edgeFade))
-                                    * finalLuminance);
-                        } else if (spotVortex < 1.45) {
-                            // THE STORM TURBULENCE ZONE: Distorted, swirly white/cream wake surrounding the
-                            // storm
-                            double blend = (spotVortex - 1.0) / 0.45;
-                            outR = (int) ((240 * (1.0 - blend) + JUPITER_CREAM_R * blend) * finalLuminance);
-                            outG = (int) ((220 * (1.0 - blend) + JUPITER_CREAM_G * blend) * finalLuminance);
-                            outB = (int) ((190 * (1.0 - blend) + JUPITER_CREAM_B * blend) * finalLuminance);
-                        } else {// STANDARD PLANETARY BELTS: Blend between bright cream zones and dark
-                                // orange-red belts
-                            outR = (int) ((JUPITER_CREAM_R * (1.0 - bandWeight) + JUPITER_RED_R * 1.05 * bandWeight)
-                                    * finalLuminance);
-                            outG = (int) ((JUPITER_CREAM_G * (1.0 - bandWeight) + JUPITER_RED_G * 0.85 * bandWeight)
-                                    * finalLuminance);
-                            outB = (int) ((JUPITER_CREAM_B * (1.0 - bandWeight) + JUPITER_RED_B * 0.75 * bandWeight)
-                                    * finalLuminance);
-                        } // Apply subtle cooling filters near polar vortex tips (Muted blue-gray rock
-                          // hue)
-                        if (latDeg > 60.0 || latDeg < -60.0) {
-                            double poleWeight = (Math.abs(latDeg) - 60.0) / 30.0; // 0 to 1 at pole tip
-                            outR = (int) (outR * (1.0 - poleWeight * 0.25));
-                            outG = (int) (outG * (1.0 - poleWeight * 0.10));
-                            outB = (int) (outB * (1.0 + poleWeight * 0.15)); // Add soft blue polar mist
+                            int baseR = (int) (C_ZONE_CREAM[0] * (1.0 - bandWeight) + C_BELT_BROWN[0] * bandWeight);
+                            int baseG = (int) (C_ZONE_CREAM[1] * (1.0 - bandWeight) + C_BELT_BROWN[1] * bandWeight);
+                            int baseB = (int) (C_ZONE_CREAM[2] * (1.0 - bandWeight) + C_BELT_BROWN[2] * bandWeight);
+
+                            outR = (int) (C_GRS_HALO[0] * (1.0 - blend) + baseR * blend);
+                            outG = (int) (C_GRS_HALO[1] * (1.0 - blend) + baseG * blend);
+                            outB = (int) (C_GRS_HALO[2] * (1.0 - blend) + baseB * blend);
+                        } else {
+                            // Belts and Zones
+                            outR = (int) (C_ZONE_CREAM[0] * (1.0 - bandWeight) + C_BELT_BROWN[0] * bandWeight);
+                            outG = (int) (C_ZONE_CREAM[1] * (1.0 - bandWeight) + C_BELT_BROWN[1] * bandWeight);
+                            outB = (int) (C_ZONE_CREAM[2] * (1.0 - bandWeight) + C_BELT_BROWN[2] * bandWeight);
                         }
-                        outR = Math.max(0, Math.min(255, outR));
-                        outG = Math.max(0, Math.min(255, outG));
-                        outB = Math.max(0, Math.min(255, outB));
+
+                        // Polar Caps
+                        if (Math.abs(latDeg) > 55.0) {
+                            double poleWeight = Math.min(1.0, (Math.abs(latDeg) - 55.0) / 30.0);
+                            outR = (int) (outR * (1.0 - poleWeight) + C_POLAR_BLUE[0] * poleWeight);
+                            outG = (int) (outG * (1.0 - poleWeight) + C_POLAR_BLUE[1] * poleWeight);
+                            outB = (int) (outB * (1.0 - poleWeight) + C_POLAR_BLUE[2] * poleWeight);
+                        }
+
+                        outR = Math.max(0, Math.min(255, (int) (outR * finalLuminance)));
+                        outG = Math.max(0, Math.min(255, (int) (outG * finalLuminance)));
+                        outB = Math.max(0, Math.min(255, (int) (outB * finalLuminance)));
+
                         String colorCode = String.format("\u001B[38;2;%d;%d;%dm", outR, outG, outB);
                         outputBuffer[index] = colorCode + renderChar + RESET;
                     }
                 }
             }
         }
+    }
+
+    private double normalizeAngleRad(double angle) {
+        while (angle < -Math.PI) angle += 2.0 * Math.PI;
+        while (angle > Math.PI)  angle -= 2.0 * Math.PI;
+        return angle;
     }
 }

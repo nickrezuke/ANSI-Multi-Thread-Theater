@@ -51,7 +51,7 @@ public class LunarLanderLoader extends Loader {
     private static final String C_BEDROCK = "\u001B[38;5;237m";
 
     public LunarLanderLoader() {
-        super(LANDER_STAGES);
+        super(LANDER_STAGES, TERMINAL_W, TERMINAL_H);
     }
 
     @Override

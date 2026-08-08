@@ -9,11 +9,12 @@ public class TexelPlasmaCubeLoader extends TexelCubeLoader {
     };
 
     public TexelPlasmaCubeLoader() {
-        super(TEXEL_CUBE_STAGES);
+        // This uses 80x22 specifically
+        super(TEXEL_CUBE_STAGES, 80, 22);
     }
 
     @Override
-    protected VoxelTexel getCubeTexel(int variant, int face, int x, int y) {
+    protected VoxelTexel getCubeTexel(int face, int x, int y) {
         long time = System.currentTimeMillis();
 
         // 1. AFFINE MATRIX BOUNDARY SEPARATORS

@@ -21,7 +21,8 @@ public class Mario64CubeLoader extends Loader {
     private double angle = 0.0;
 
     public Mario64CubeLoader() {
-        super(CUBE_STAGES);
+        // This uses 80x22 specifically
+        super(CUBE_STAGES, 80, 22);
     }
 
     @Override

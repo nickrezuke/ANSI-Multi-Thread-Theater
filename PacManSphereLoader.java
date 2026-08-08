@@ -16,7 +16,8 @@ public class PacManSphereLoader extends Loader {
     private int mouthOpening = -1; 
 
     public PacManSphereLoader() { 
-        super(REFLECTIVE_STAGES); 
+        // This uses 80x22 specifically
+        super(REFLECTIVE_STAGES, 80, 22); 
     } 
 
     @Override 

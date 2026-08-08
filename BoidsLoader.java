@@ -47,7 +47,8 @@ public class BoidsLoader extends Loader {
     private static final String BACKGROUND_DOT = "\u001B[38;5;234m·\u001B[0m";
 
     public BoidsLoader() {
-        super(FLOCK_STAGES);
+        // This uses 80x22 specifically
+        super(FLOCK_STAGES, 80, 22);
     }
 
     @Override

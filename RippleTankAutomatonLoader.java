@@ -25,7 +25,8 @@ public class RippleTankAutomatonLoader extends Loader {
     private double timeClock = 0.0;
 
     public RippleTankAutomatonLoader() {
-        super(STAGES);
+        // This uses 80x22 specifically
+        super(STAGES, OUT_W, OUT_H);
     }
 
     @Override

@@ -12,10 +12,11 @@ public class TexelGreyRubixLoader extends TexelCubeLoader {
     };
 
     public TexelGreyRubixLoader() {
-        super(TEXEL_CUBE_STAGES);
+        // This uses 80x22 specifically
+        super(TEXEL_CUBE_STAGES, 80, 22);
     }
 
-    protected VoxelTexel getCubeTexel(int variant, int face, int x, int y) {
+    protected VoxelTexel getCubeTexel(int face, int x, int y) {
         // 1. Symmetrical Grid Borders (Locked at perfect 5-cell intervals)
         boolean isGridBorder = (x == 0 || x == 5 || x == 10 || x == 15 ||
                 y == 0 || y == 5 || y == 10 || y == 15);

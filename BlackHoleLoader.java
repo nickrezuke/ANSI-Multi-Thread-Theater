@@ -1,3 +1,5 @@
+// TODO: Make this look better its hard to follow at the moment
+
 public class BlackHoleLoader extends Loader {
     private static final StatusStage[] STAGES = {
             new StatusStage(30, "Generating singularity core:"),
@@ -25,7 +27,8 @@ public class BlackHoleLoader extends Loader {
     private final double[] camRight = new double[3];
 
     public BlackHoleLoader() {
-        super(STAGES);
+        // This uses 80x22 specifically
+        super(STAGES, 80, 22);
     }
 
     @Override

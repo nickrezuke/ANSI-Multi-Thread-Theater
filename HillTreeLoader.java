@@ -33,6 +33,7 @@ public class HillTreeLoader extends Loader {
     private static final String COLOR_WHITE_F = "\u001B[38;2;245;245;250m"; // White Daisy Petal
 
     public HillTreeLoader() {
+        // This uses 80x22 specifically
         super(ARBOR_STAGES, 80, 22);
     }
 

@@ -64,7 +64,8 @@ public class SpaceInvadersLoader extends Loader {
     };
 
     public SpaceInvadersLoader() {
-        super(SPACE_STAGES);
+        // This uses 80x22 specifically
+        super(SPACE_STAGES, 80, 22);
     }
 
     @Override

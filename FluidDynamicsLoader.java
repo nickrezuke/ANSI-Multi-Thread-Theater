@@ -43,7 +43,7 @@ public class FluidDynamicsLoader extends Loader {
         // 1. Source Injection: Continuously force hot up-welling velocity vectors
         injectSources();
 
-        // 3. Velocity Solver: Resolve Navier-Stokes conservation of mass and momentum
+        // 2. Velocity Solver: Resolve Navier-Stokes conservation of mass and momentum
         diffuse(1, uPrev, u, visc);
         diffuse(2, vPrev, v, visc);
         project(uPrev, vPrev, u, v);
@@ -51,11 +51,11 @@ public class FluidDynamicsLoader extends Loader {
         advect(2, v, vPrev, uPrev, vPrev);
         project(u, v, uPrev, vPrev);
 
-        // 4. Scalar Density Solver: Advance dye/smoke propagation across our vector grid
+        // 3. Scalar Density Solver: Advance dye/smoke propagation across our vector grid
         diffuse(0, dPrev, density, diff);
         advect(0, density, dPrev, u, v);
 
-        // 5. Render Layout Processor & Exponential Dissipation
+        // 4. Render Layout Processor & Exponential Dissipation
         for (int j = 0; j < HEIGHT; j++) {
             int rowOffset = j * WIDTH;
             for (int i = 0; i < WIDTH; i++) {
@@ -78,9 +78,6 @@ public class FluidDynamicsLoader extends Loader {
                 outputBuffer[idx] = colorCode + renderChar + RESET;
             }
         }
-
-        // PERFORMANCE FIX: Wipe baseline density history using a pre-allocated zero reference 
-        // instead of hitting 'new double[SIZE]' at 60 frames per second!
         System.arraycopy(zeroBuffer, 0, dPrev, 0, SIZE);
     }
 
@@ -113,7 +110,6 @@ public class FluidDynamicsLoader extends Loader {
     }
 
     private void linearSolve(int b, double[] x, double[] x0, double a, double c) {
-        // PERFORMANCE FIX: Loop orientation fixed to preserve strict linear cache adjacency lines
         for (int k = 0; k < 20; k++) {
             for (int j = 1; j < HEIGHT - 1; j++) {
                 int rowOffset = j * WIDTH;

@@ -9,10 +9,11 @@ public class TexelPsychCubeLoader extends TexelCubeLoader {
     };
 
     public TexelPsychCubeLoader() {
-        super(TEXEL_CUBE_STAGES);
+        // This uses 80x22 specifically
+        super(TEXEL_CUBE_STAGES, 80, 22);
     }
 
-    protected VoxelTexel getCubeTexel(int variant, int face, int x, int y) {
+    protected VoxelTexel getCubeTexel(int face, int x, int y) {
         // 1. Establish Time Vectors
         double t = System.currentTimeMillis() * 0.003; // Speed of the fluid morphing
 

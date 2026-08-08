@@ -71,7 +71,8 @@ public class AsteroidsLoader extends Loader {
     private static final String COLOR_ROCK = "\u001B[38;5;246m"; // Gray Asteroid
 
     public AsteroidsLoader() {
-        super(ACTION_STAGES);
+        // This uses 80x22 specifically
+        super(ACTION_STAGES, 80, 22);
     }
 
     @Override

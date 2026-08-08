@@ -23,7 +23,8 @@ public class ConwaysGameOfLifeLoader extends Loader {
     private int[][] cellAge = new int[HEIGHT][WIDTH];
 
     public ConwaysGameOfLifeLoader() {
-        super(STAGES);
+        // This uses 80x22 specifically
+        super(STAGES, 80, 22);
     }
 
     @Override

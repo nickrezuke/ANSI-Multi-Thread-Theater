@@ -16,6 +16,7 @@ public class ChladniLoader extends Loader {
     private static final String COLOR_ENERGY = "\u001B[38;2;255;0;128m";  // Blazing Pink Antinodes
 
     public ChladniLoader() {
+        // This uses 80x22 specifically
         super(CHLADNI_STAGES, 80, 22);
     }
 

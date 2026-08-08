@@ -1,6 +1,6 @@
 public class PendulumLoader extends InteractiveLoader {
     private static final StatusStage[] RING_STAGES = {
-        new StatusStage(100, "3D Cartesian Physics Pendulum Active! [Arrow Keys, Q to quit]")
+        new StatusStage(100, "[Arrow Keys add Momentum!]")
     };
 
     // Physics Tuning Parameters
@@ -24,7 +24,8 @@ public class PendulumLoader extends InteractiveLoader {
     private final double[][] trailX = new double[3][TRAIL_SIZE];
 
     public PendulumLoader() {
-        super(RING_STAGES);
+        // This uses 80x22 specifically
+        super(RING_STAGES, 80, 22);
     }
 
     @Override

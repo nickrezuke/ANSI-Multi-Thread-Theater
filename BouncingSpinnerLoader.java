@@ -23,7 +23,8 @@ public class BouncingSpinnerLoader extends Loader {
     private static final int[] COLOR_POOL = { 51, 201, 226, 46, 196, 214, 129, 87, 118, 208, 45, 198 };
 
     public BouncingSpinnerLoader() {
-        super(SPINNER_STAGES);
+        // This uses 80x22 specifically
+        super(SPINNER_STAGES, 80, 22);
     }
 
     @Override

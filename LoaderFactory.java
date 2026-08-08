@@ -25,12 +25,14 @@ public class LoaderFactory {
         register("TexelMinecraftGrassBlock", TexelMinecraftGrassBlockLoader::new);
         register("TexelBorgCube", TexelBorgCubeLoader::new);
         register("TexelAllspark", TexelAllsparkLoader::new);
+        register("TexelHyperspaceVoid", TexelHyperspaceVoidLoader::new);
         register("TexelEmojiCube", TexelEmojiCubeLoader::new);
         register(List.of("ConwaysGameOfLife", "GameOfLife"), ConwaysGameOfLifeLoader::new);
         register("TexelPlasmaCube", TexelPlasmaCubeLoader::new);
         register("TexelPsychCube", TexelPsychCubeLoader::new);
         register("TexelHellraiserLamentConfiguration", TexelHellraiserLamentConfigurationLoader::new);
         register("TexelFlatEarth", TexelFlatEarthLoader::new);
+        register("TexelMarioCapBlock",TexelMarioCapBlockLoader::new);
         register("TexelGlitch", TexelGlitchLoader::new);
         register(List.of("Aizawa", "AizawaAttractor"), AizawaLoader::new);
         register("TexelRubixCube", TexelRubixCubeLoader::new);
@@ -38,6 +40,7 @@ public class LoaderFactory {
         register("TexelMCUTesseract", TexelMCUTesseractLoader::new);
         register("TexelTriplePhaseCube", TexelTriplePhaseCubeLoader::new);
         register("TexelMarioBricks", TexelMarioBricksLoader::new);
+        register("TexelHighResMonochromeStatic",TexelHighResMonochromeStaticLoader::new);
         register("MarioCoinBlock", TexelMarioCoinBlockLoader::new);
         register("CatHead", CatHeadLoader::new);
         register("IkedaRibbon", IkedaRibbonLoader::new);
@@ -46,8 +49,9 @@ public class LoaderFactory {
         register("Vaporwave", VaporWaveLoader::new);
         register("LunarLander", LunarLanderLoader::new);
         register("Jupiter", JupiterLoader::new);
-        register(List.of("GreyScottReactionDiffusion", "ReactionDiffusion"), ReactionDiffusionLoader::new);
+        register(List.of("GreyScottReactionDiffusion", "ReactionDiffusion", "DiffusionReaction"), ReactionDiffusionLoader::new);
         register("MotorcycleRacer", MotorcycleRacerLoader::new);
+        register("TexelEldritchAetherCube", TexelEldritchAetherCubeLoader::new);
         register("Radar", RadarLoader::new);
         register("Rocket", RocketLoader::new);
         register("HillTree", HillTreeLoader::new);
@@ -88,6 +92,7 @@ public class LoaderFactory {
         register("TexelKevinCube", TexelKevinCubeLoader::new);
         register("NyanCat", NyanCatLoader::new);
         register("BouncingSpinner", BouncingSpinnerLoader::new);
+        register("TexelHyperchromaticKaleidoscope", TexelHyperchromaticKaleidoscopeLoader::new);
         register("DancingBanana", DancingBananaLoader::new);
         register("ThreeBody", ThreeBodyLoader::new);
         register("WireframeCube", WireframeCubeLoader::new);

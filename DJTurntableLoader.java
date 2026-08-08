@@ -34,7 +34,8 @@ public class DJTurntableLoader extends Loader {
     private static final char CH_VU_BAR = '\u2584'; // ▄ Solid audio segment block
 
     public DJTurntableLoader() {
-        super(DJ_STAGES);
+        // This uses 80x22 specifically
+        super(DJ_STAGES, 80, 22);
     }
 
     @Override

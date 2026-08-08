@@ -23,7 +23,8 @@ public class TajMahalLoader extends Loader {
     private static final double CAMERA_DISTANCE = 4.2;
 
     public TajMahalLoader() {
-        super(TAJ_STAGES);
+        // This uses 80x22 specifically
+        super(TAJ_STAGES, 80, 22);
     }
 
     @Override

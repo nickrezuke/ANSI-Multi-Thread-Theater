@@ -22,7 +22,8 @@ public class GyroidLoader extends Loader {
     }
 
     public GyroidLoader() {
-        super(STAGES);
+        // This uses 80x22 specifically
+        super(STAGES, 80, 22);
         this.width = this.window_width;
         this.height = this.window_height;
     }

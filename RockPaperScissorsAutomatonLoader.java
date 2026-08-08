@@ -23,7 +23,8 @@ public class RockPaperScissorsAutomatonLoader extends Loader {
     private int activeThreshold = 3;
 
     public RockPaperScissorsAutomatonLoader() {
-        super(STAGES);
+        // This uses 80x22 specifically
+        super(STAGES, WIDTH, HEIGHT);
     }
 
     @Override

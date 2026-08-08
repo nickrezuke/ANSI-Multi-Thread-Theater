@@ -16,7 +16,8 @@ public class OctahedralMatrixLoader extends Loader {
     private static final double CAMERA_DISTANCE = 3.5; 
 
     public OctahedralMatrixLoader() { 
-        super(OCTAHEDRAL_STAGES); 
+        // This uses 80x22 specifically
+        super(OCTAHEDRAL_STAGES, 80, 22); 
     } 
 
     @Override 

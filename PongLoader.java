@@ -36,7 +36,8 @@ public class PongLoader extends Loader {
     private static final String COLOR_TEXT = "\u001B[38;5;255m";    // Soft White Accent
 
     public PongLoader() {
-        super(PONG_STAGES);
+        // This uses 80x22 specifically
+        super(PONG_STAGES, 80, 22);
     }
 
     @Override

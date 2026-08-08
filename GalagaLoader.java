@@ -5,10 +5,10 @@ import java.util.Random;
 
 public class GalagaLoader extends Loader {
     private static final StatusStage[] GALAGA_STAGES = {
-            new StatusStage(25, "Booting dual-fighter weapon profiles:"),
-            new StatusStage(50, "Assembling elite flagship command grids:"),
-            new StatusStage(75, "Syncing dynamic flight attack paths:"),
-            new StatusStage(100, "Galaga Star-Force Matrix Operational!")
+            new StatusStage(25, "Booting dual-fighter profiles:"),
+            new StatusStage(50, "Assembling flagship command grids:"),
+            new StatusStage(75, "Syncing flight attack paths:"),
+            new StatusStage(100, "Galaga Star-Force Operational!")
     };
 
     // Aligned to space-conscious vertical cabinet specifications

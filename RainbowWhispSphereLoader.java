@@ -31,7 +31,8 @@ public class RainbowWhispSphereLoader extends Loader {
     private static final int BASE_B = 155;
 
     public RainbowWhispSphereLoader() {
-        super(REFLECTIVE_STAGES);
+        // This uses 80x22 specifically
+        super(REFLECTIVE_STAGES, 80, 22);
     }
 
     @Override

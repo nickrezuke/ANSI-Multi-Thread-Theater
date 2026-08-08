@@ -36,7 +36,8 @@ public class TextFallLoader extends Loader {
     private static final String BG_LOW  = "\u001B[38;5;234m"; // Dark Charcoal Green Tail
 
     public TextFallLoader() {
-        super(TEXTFALL_STAGES);
+        // This uses 80x22 specifically
+        super(TEXTFALL_STAGES, 80, 22);
     }
 
     @Override

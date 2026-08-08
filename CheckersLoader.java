@@ -67,7 +67,8 @@ public class CheckersLoader extends Loader {
     }
 
     public CheckersLoader() {
-        super(CHECKERS_STAGES);
+        // This uses 80x22 specifically
+        super(CHECKERS_STAGES, 80, 22);
     }
 
     @Override

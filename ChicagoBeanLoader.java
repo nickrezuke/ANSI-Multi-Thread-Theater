@@ -47,7 +47,8 @@ public class ChicagoBeanLoader extends Loader {
     private static final double PROJ_Y_SCALE = 46;
 
     public ChicagoBeanLoader() {
-        super(BEAN_STAGES);
+        // This uses 80x22 specifically
+        super(BEAN_STAGES, 80, 22);
     }
 
     @Override

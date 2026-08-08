@@ -41,7 +41,8 @@ public class ThreeBodyLoader extends Loader {
     private double dist31 = 0.0;
 
     public ThreeBodyLoader() {
-        super(STAGES);
+        // This uses 80x22 specifically
+        super(STAGES, 80, 22);
     }
 
     @Override

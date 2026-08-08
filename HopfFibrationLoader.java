@@ -22,7 +22,8 @@ public class HopfFibrationLoader extends Loader {
     private double rotationZ = 0.0;
 
     public HopfFibrationLoader() {
-        super(HOPF_STAGES);
+        // This uses 80x22 specifically
+        super(HOPF_STAGES, 80, 22);
     }
 
     @Override

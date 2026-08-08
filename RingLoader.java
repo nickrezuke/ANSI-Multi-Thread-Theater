@@ -12,7 +12,8 @@ public class RingLoader extends Loader {
     private double C = 0; // Time variable / Z-axis rotation for shape shifting
 
     public RingLoader() {
-        super(RING_STAGES);
+        // This uses 80x22 specifically
+        super(RING_STAGES, 80, 22);
     }
 
     @Override

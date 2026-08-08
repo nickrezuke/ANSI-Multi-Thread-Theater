@@ -21,7 +21,8 @@ public class RadarLoader extends Loader {
     };
 
     public RadarLoader() {
-        super(STAGES);
+        // This uses 80x22 specifically
+        super(STAGES, 80, 22);
     }
 
     @Override
