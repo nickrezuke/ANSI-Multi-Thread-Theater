@@ -1,5 +1,5 @@
-// TODO: Investigate if the game is too deterministic and if the same game plays out each time... does OpeningMoves function need to be bigger?
-// TODO: Test what happens when game is played for very very very long times... Do players "shuffle" and should stalemate after repeated boards??
+// TODO: Investigate if the game is too deterministic and if the same game plays out each time... does OpeningMoves function need to be bigger??
+// TODO: Players move back and forth when game is played for very very very long times...  should avoid stalemate after repeated boards??
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -16,6 +16,16 @@ public class ChessLoader extends Loader {
     private static final int EMPTY = 0;
     private static final int PAWN = 1, KNIGHT = 2, BISHOP = 3, ROOK = 4, QUEEN = 5, KING = 6;
     private static final int WHITE_PIECE = 8, BLACK_PIECE = 16;
+
+    // Track if kings and rooks have moved to determine castling rights
+    private boolean whiteKingMoved = false;
+    private boolean whiteLeftRookMoved = false;
+    private boolean whiteRightRookMoved = false;
+    private boolean blackKingMoved = false;
+    private boolean blackLeftRookMoved = false;
+    private boolean blackRightRookMoved = false;
+
+    private int enPassantTargetSquare = -1; // -1 means no en passant is available
 
     private final int[] board = new int[64];
     private boolean isWhiteTurn = true;
@@ -36,7 +46,7 @@ public class ChessLoader extends Loader {
     private static final String COLOR_OVER = "\u001B[38;5;196m";
 
     private static final String[] PIECE_SYMBOLS = {
-        " ", "\u265F", "\u265E", "\u265D", "\u265C", "\u265B", "\u265A", " ",
+            " ", "\u265F", "\u265E", "\u265D", "\u265C", "\u265B", "\u265A", " ",
             " ", "\u265F", "\u265E", "\u265D", "\u265C", "\u265B", "\u265A", " "
     };
 
@@ -71,6 +81,28 @@ public class ChessLoader extends Loader {
             -10, 10, 10, 10, 10, 10, 10, -10,
             -10, 5, 0, 0, 0, 0, 5, -10,
             -20, -10, -10, -10, -10, -10, -10, -20
+    };
+
+    private static final int[] ROOK_TABLE = {
+            0, 0, 0, 0, 0, 0, 0, 0,
+            5, 10, 10, 10, 10, 10, 10, 5,
+            -5, 0, 0, 0, 0, 0, 0, -5,
+            -5, 0, 0, 0, 0, 0, 0, -5,
+            -5, 0, 0, 0, 0, 0, 0, -5,
+            -5, 0, 0, 0, 0, 0, 0, -5,
+            -5, 0, 0, 0, 0, 0, 0, -5,
+            0, 0, 0, 5, 5, 0, 0, 0
+    };
+
+    private static final int[] QUEEN_TABLE = {
+            -20, -10, -10, -5, -5, -10, -10, -20,
+            -10, 0, 0, 0, 0, 0, 0, -10,
+            -10, 0, 5, 5, 5, 5, 0, -10,
+            -5, 0, 5, 5, 5, 5, 0, -5,
+            0, 0, 5, 5, 5, 5, 0, -5,
+            -10, 5, 5, 5, 5, 5, 0, -10,
+            -10, 0, 5, 0, 0, 0, 0, -10,
+            -20, -10, -10, -5, -5, -10, -10, -20
     };
 
     private static class Move {
@@ -112,6 +144,16 @@ public class ChessLoader extends Loader {
             board[48 + i] = PAWN | WHITE_PIECE;
             board[56 + i] = backRank[i] | WHITE_PIECE;
         }
+
+        enPassantTargetSquare = -1;
+
+        blackKingMoved = false;
+        blackLeftRookMoved = false;
+        blackRightRookMoved = false;
+        whiteKingMoved = false;
+        whiteLeftRookMoved = false;
+        whiteRightRookMoved = false;
+
         lastMoveTime = System.currentTimeMillis();
     }
 
@@ -164,15 +206,76 @@ public class ChessLoader extends Loader {
             moveHistory.remove(0);
         }
 
+        // Keep track of the moving piece type
+        int movedPieceType = board[bestMove.from] & 7;
+
+        // Execute the board move
         board[bestMove.to] = board[bestMove.from];
         board[bestMove.from] = EMPTY;
 
-        if ((board[bestMove.to] & 7) == PAWN) {
-            int rank = bestMove.to / 8;
-            if (rank == 0 || rank == 7) {
+        // ---- NEW: EN PASSANT STATE TRACKING ----
+        int previousEnPassantTarget = enPassantTargetSquare; // Save for capture handling
+        enPassantTargetSquare = -1; // Reset by default every turn
+
+        if (movedPieceType == PAWN) {
+            int fromRow = bestMove.from / 8;
+            int toRow = bestMove.to / 8;
+
+            // Check if it was a 2-square jump
+            if (Math.abs(fromRow - toRow) == 2) {
+                // The target square is exactly halfway between from and to
+                enPassantTargetSquare = (bestMove.from + bestMove.to) / 2;
+            }
+
+            // Check if this move was an actual En Passant capture execution
+            if (bestMove.to == previousEnPassantTarget) {
+                // If a pawn moved diagonally to the target square, delete the victim pawn
+                // behind it
+                int victimSquare = isWhiteTurn ? (bestMove.to + 8) : (bestMove.to - 8);
+                board[victimSquare] = EMPTY;
+            }
+
+            // Handle normal promotion
+            if (toRow == 0 || toRow == 7) {
                 board[bestMove.to] = QUEEN | (board[bestMove.to] & (WHITE_PIECE | BLACK_PIECE));
             }
         }
+
+        // ---- NEW: CASTLING RIGHTS AND EXECUTION LOGIC ----
+        if (movedPieceType == KING) {
+            // If the king moved 2 squares, it's a castle! Jump the associated rook.
+            if (bestMove.from == 60 && bestMove.to == 62) {
+                board[61] = board[63];
+                board[63] = EMPTY;
+            } // White Kingside
+            else if (bestMove.from == 60 && bestMove.to == 58) {
+                board[59] = board[56];
+                board[56] = EMPTY;
+            } // White Queenside
+            else if (bestMove.from == 4 && bestMove.to == 6) {
+                board[5] = board[7];
+                board[7] = EMPTY;
+            } // Black Kingside
+            else if (bestMove.from == 4 && bestMove.to == 2) {
+                board[3] = board[0];
+                board[0] = EMPTY;
+            } // Black Queenside
+
+            if (isWhiteTurn)
+                whiteKingMoved = true;
+            else
+                blackKingMoved = true;
+        }
+
+        // Clear rights if rooks move or are captured
+        if (bestMove.from == 56 || bestMove.to == 56)
+            whiteLeftRookMoved = true;
+        if (bestMove.from == 63 || bestMove.to == 63)
+            whiteRightRookMoved = true;
+        if (bestMove.from == 0 || bestMove.to == 0)
+            blackLeftRookMoved = true;
+        if (bestMove.from == 7 || bestMove.to == 7)
+            blackRightRookMoved = true;
 
         isWhiteTurn = !isWhiteTurn;
     }
@@ -195,19 +298,96 @@ public class ChessLoader extends Loader {
 
         for (Move move : legalMoves) {
             int savedPiece = board[move.to];
+            int savedEnPassantTarget = enPassantTargetSquare; // Save historical target state
+
+            // Handle simulated En Passant capture removal
+            int epVictomSquare = -1;
+            int movingPiece = board[move.from] & 7;
+            if (movingPiece == PAWN && move.to == enPassantTargetSquare) {
+                epVictomSquare = isMax ? (move.to + 8) : (move.to - 8);
+            }
+            int savedVictimPiece = (epVictomSquare != -1) ? board[epVictomSquare] : EMPTY;
+
+            // Handle Castling
+            boolean oldWKM = whiteKingMoved, oldWLRM = whiteLeftRookMoved, oldWRRM = whiteRightRookMoved;
+            boolean oldBKM = blackKingMoved, oldBLRM = blackLeftRookMoved, oldBRRM = blackRightRookMoved;
+            int rankOffset = (isMax) ? 56 : 0;
+
+            // Handle simulated Rook warping during castling
+            boolean isSimulatedCastle = false;
+            int castledRookFrom = -1, castledRookTo = -1;
+            if (movingPiece == KING && Math.abs(move.from - move.to) == 2) {
+                isSimulatedCastle = true;
+                castledRookFrom = (move.to > move.from) ? (rankOffset + 7) : rankOffset;
+                castledRookTo = (move.to > move.from) ? (rankOffset + 5) : (rankOffset + 3);
+            }
+
+            // Execute simulated move
             board[move.to] = board[move.from];
             board[move.from] = EMPTY;
 
+            if (isSimulatedCastle) {
+                board[castledRookTo] = board[castledRookFrom];
+                board[castledRookFrom] = EMPTY;
+            }
+
+            // Temporarily flag movement variables for deeper search branch evaluation
+            if (movingPiece == KING) {
+                if (isMax)
+                    whiteKingMoved = true;
+                else
+                    blackKingMoved = true;
+            }
+            if (move.from == 56 || move.to == 56)
+                whiteLeftRookMoved = true;
+            if (move.from == 63 || move.to == 63)
+                whiteRightRookMoved = true;
+            if (move.from == 0 || move.to == 0)
+                blackLeftRookMoved = true;
+            if (move.from == 7 || move.to == 7)
+                blackRightRookMoved = true;
+
+            if (epVictomSquare != -1)
+                board[epVictomSquare] = EMPTY;
+
+            // Simulate updating the tracker for the deeper branches
+            if (movingPiece == PAWN && Math.abs((move.from / 8) - (move.to / 8)) == 2) {
+                enPassantTargetSquare = (move.from + move.to) / 2;
+            } else {
+                enPassantTargetSquare = -1;
+            }
+
+            // Call deeper search layer
             int score = minimax(depth - 1, !isMax, alpha, beta).score;
 
             board[move.from] = board[move.to];
             board[move.to] = savedPiece;
+            if (isSimulatedCastle) {
+                board[castledRookFrom] = board[castledRookTo];
+                board[castledRookTo] = EMPTY;
+            }
+            whiteKingMoved = oldWKM;
+            whiteLeftRookMoved = oldWLRM;
+            whiteRightRookMoved = oldWRRM;
+            blackKingMoved = oldBKM;
+            blackLeftRookMoved = oldBLRM;
+            blackRightRookMoved = oldBRRM;
+
+            if (epVictomSquare != -1)
+                board[epVictomSquare] = savedVictimPiece;
+            enPassantTargetSquare = savedEnPassantTarget; // Restore old tracker state
 
             if (isMax) {
                 if (score > bestMove.score) {
                     bestMove.score = score;
                     bestMove.from = move.from;
                     bestMove.to = move.to;
+                } else if (score == bestMove.score) {
+                    // 50% chance to swap to a different move of equal strength
+                    if ((int) (Math.random() * 2) % 2 == 0) {
+                        bestMove.from = move.from;
+                        bestMove.to = move.to;
+                    }
                 }
                 alpha = Math.max(alpha, score);
             } else {
@@ -215,6 +395,12 @@ public class ChessLoader extends Loader {
                     bestMove.score = score;
                     bestMove.from = move.from;
                     bestMove.to = move.to;
+                } else if (score == bestMove.score) {
+                    // 50% chance to swap to a different move of equal strength
+                    if ((int) (Math.random() * 2) % 2 == 0) {
+                        bestMove.from = move.from;
+                        bestMove.to = move.to;
+                    }
                 }
                 beta = Math.min(beta, score);
             }
@@ -238,16 +424,16 @@ public class ChessLoader extends Loader {
     }
 
     private List<Move> generateAllLegalMoves(int side) {
-        List<Move> moves = new ArrayList<>();
+        List<Move> pseudoMoves = new ArrayList<>();
         for (int i = 0; i < 64; i++) {
             if (board[i] != EMPTY && (board[i] & side) != 0) {
-                generatePieceMoves(i, moves);
+                generatePieceMoves(i, pseudoMoves, true);
             }
         }
-        return moves;
+        return filterLegalMoves(pseudoMoves, side);
     }
 
-    private void generatePieceMoves(int from, List<Move> moves) {
+    private void generatePieceMoves(int from, List<Move> moves, boolean validateCastling) {
         int piece = board[from] & 7;
         int side = board[from] & (WHITE_PIECE | BLACK_PIECE);
         int opposingSide = (side == WHITE_PIECE) ? BLACK_PIECE : WHITE_PIECE;
@@ -260,17 +446,39 @@ public class ChessLoader extends Loader {
                 int nextRow = row + dir;
                 if (nextRow >= 0 && nextRow < 8) {
                     int straight = col + nextRow * 8;
-                    if (board[straight] == EMPTY)
+
+                    // 1-Square Forward Move
+                    if (board[straight] == EMPTY) {
                         moves.add(new Move(from, straight));
 
-                    if (col > 0 && board[(col - 1) + nextRow * 8] != EMPTY
-                            && (board[(col - 1) + nextRow * 8] & opposingSide) != 0)
-                        moves.add(new Move(from, (col - 1) + nextRow * 8));
-                    if (col < 7 && board[(col + 1) + nextRow * 8] != EMPTY
-                            && (board[(col + 1) + nextRow * 8] & opposingSide) != 0)
-                        moves.add(new Move(from, (col + 1) + nextRow * 8));
+                        // ---- NEW: Allow 2-Square Jump from Starting Ranks ----
+                        int startRank = (side == WHITE_PIECE) ? 6 : 1;
+                        int doubleStraight = col + (row + (dir * 2)) * 8;
+                        if (row == startRank && board[doubleStraight] == EMPTY) {
+                            moves.add(new Move(from, doubleStraight));
+                        }
+                    }
+
+                    // Normal Left Capture & En Passant Left Capture
+                    if (col > 0) {
+                        int leftCapture = (col - 1) + nextRow * 8;
+                        if ((board[leftCapture] != EMPTY && (board[leftCapture] & opposingSide) != 0)
+                                || (leftCapture == enPassantTargetSquare)) {
+                            moves.add(new Move(from, leftCapture));
+                        }
+                    }
+
+                    // Normal Right Capture & En Passant Right Capture
+                    if (col < 7) {
+                        int rightCapture = (col + 1) + nextRow * 8;
+                        if ((board[rightCapture] != EMPTY && (board[rightCapture] & opposingSide) != 0)
+                                || (rightCapture == enPassantTargetSquare)) {
+                            moves.add(new Move(from, rightCapture));
+                        }
+                    }
                 }
                 break;
+
             case KNIGHT:
                 int[][] kMoves = { { -2, -1 }, { -2, 1 }, { -1, -2 }, { -1, 2 }, { 1, -2 }, { 1, 2 }, { 2, -1 },
                         { 2, 1 } };
@@ -323,6 +531,32 @@ public class ChessLoader extends Loader {
                         }
                     }
                 }
+                if(validateCastling) {
+                boolean kingMoved = (side == WHITE_PIECE) ? whiteKingMoved : blackKingMoved;
+                if (!kingMoved && !isKingInCheck(side)) {
+                    int enemySide = (side == WHITE_PIECE) ? BLACK_PIECE : WHITE_PIECE;
+                    int rankOffset = (side == WHITE_PIECE) ? 56 : 0; // Row 7 for white, Row 0 for black
+
+                    // Kingside (Right) Castling
+                    boolean rightRookMoved = (side == WHITE_PIECE) ? whiteRightRookMoved : blackRightRookMoved;
+                    if (!rightRookMoved && board[rankOffset + 5] == EMPTY && board[rankOffset + 6] == EMPTY) {
+                        if (!isSquareAttacked(rankOffset + 5, enemySide)
+                                && !isSquareAttacked(rankOffset + 6, enemySide)) {
+                            moves.add(new Move(from, rankOffset + 6)); // King moves 2 squares right
+                        }
+                    }
+
+                    // Queenside (Left) Castling
+                    boolean leftRookMoved = (side == WHITE_PIECE) ? whiteLeftRookMoved : blackLeftRookMoved;
+                    if (!leftRookMoved && board[rankOffset + 1] == EMPTY && board[rankOffset + 2] == EMPTY
+                            && board[rankOffset + 3] == EMPTY) {
+                        if (!isSquareAttacked(rankOffset + 3, enemySide)
+                                && !isSquareAttacked(rankOffset + 2, enemySide)) {
+                            moves.add(new Move(from, rankOffset + 2)); // King moves 2 squares left
+                        }
+                    }
+                }
+            }
                 break;
         }
     }
@@ -346,9 +580,62 @@ public class ChessLoader extends Loader {
                 value += KNIGHT_TABLE[tableIdx];
             else if (piece == BISHOP)
                 value += BISHOP_TABLE[tableIdx];
+            else if (piece == ROOK)
+                value += ROOK_TABLE[tableIdx];
+            else if (piece == QUEEN)
+                value += QUEEN_TABLE[tableIdx];
             totalEval += value * sign;
         }
         return totalEval;
+    }
+
+    private boolean isKingInCheck(int side) {
+        int kingIdx = -1;
+        for (int i = 0; i < 64; i++) {
+            if (board[i] != EMPTY && (board[i] & 7) == KING && (board[i] & side) != 0) {
+                kingIdx = i;
+                break;
+            }
+        }
+        if (kingIdx == -1)
+            return true; // King was captured (shouldn't happen in legal games)
+
+        int opposingSide = (side == WHITE_PIECE) ? BLACK_PIECE : WHITE_PIECE;
+
+        // Generate all immediate enemy attacks
+        List<Move> enemyMoves = new ArrayList<>();
+        for (int i = 0; i < 64; i++) {
+            if (board[i] != EMPTY && (board[i] & opposingSide) != 0) {
+                generatePieceMoves(i, enemyMoves, false);
+            }
+        }
+
+        // See if any enemy move hits our King's square
+        for (Move m : enemyMoves) {
+            if (m.to == kingIdx)
+                return true;
+        }
+        return false;
+    }
+
+    private List<Move> filterLegalMoves(List<Move> pseudoLegalMoves, int side) {
+        List<Move> legalMoves = new ArrayList<>();
+        for (Move move : pseudoLegalMoves) {
+            // Simulating the move
+            int savedPiece = board[move.to];
+            board[move.to] = board[move.from];
+            board[move.from] = EMPTY;
+
+            // If our king is safe, the move is legal
+            if (!isKingInCheck(side)) {
+                legalMoves.add(move);
+            }
+
+            // Undoing the move
+            board[move.from] = board[move.to];
+            board[move.to] = savedPiece;
+        }
+        return legalMoves;
     }
 
     private void drawScene(String[] outputBuffer) {
@@ -489,4 +776,18 @@ public class ChessLoader extends Loader {
         return null; // Return null if out of book or position unrecognized
     }
 
+    private boolean isSquareAttacked(int squareIndex, int enemySide) {
+        List<Move> enemyMoves = new ArrayList<>();
+        for (int i = 0; i < 64; i++) {
+            if (board[i] != EMPTY && (board[i] & enemySide) != 0) {
+                // Use standard piece moves to check structural reach
+                generatePieceMoves(i, enemyMoves, false);
+            }
+        }
+        for (Move m : enemyMoves) {
+            if (m.to == squareIndex)
+                return true;
+        }
+        return false;
+    }
 }
