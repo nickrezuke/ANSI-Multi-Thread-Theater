@@ -1,4 +1,4 @@
-public class OctahedralMatrixLoader extends Loader { 
+public class PsychedelicOctahedronLoader extends Loader { 
     private static final StatusStage[] OCTAHEDRAL_STAGES = { 
         new StatusStage(25, "Assembling diamond vertex array:"), 
         new StatusStage(50, "Weaving diagonal line lattices:"), 
@@ -15,7 +15,7 @@ public class OctahedralMatrixLoader extends Loader {
     private double rotationX = 0.0; 
     private static final double CAMERA_DISTANCE = 3.5; 
 
-    public OctahedralMatrixLoader() { 
+    public PsychedelicOctahedronLoader() { 
         // This uses 80x22 specifically
         super(OCTAHEDRAL_STAGES, 80, 22); 
     } 

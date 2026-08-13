@@ -1,11 +1,11 @@
 // TODO: do something with this
 
-public class GyroidLoader extends Loader {
+public class GyroidLoaderA extends Loader {
     private static final StatusStage[] STAGES = { 
-        new StatusStage(25, "Assembling array:"), 
-        new StatusStage(50, "Weaving lattices:"), 
-        new StatusStage(75, "Rotating:"), 
-        new StatusStage(100, "Loop Engaged!") 
+        new StatusStage(30, "Condensing liquid vapor fields:"),
+        new StatusStage(60, "Solving periodic differential matrices:"),
+        new StatusStage(90, "Tracing isosurface depth bounds:"),
+        new StatusStage(100, "Gyroid Core Floating Perfectly!")
     }; 
 
     private int width;
@@ -15,13 +15,13 @@ public class GyroidLoader extends Loader {
     // Smooth character density ramp for depth shading
     private static final String DENSITY = ".,-~:;=!*#$@";
 
-    public GyroidLoader(StatusStage[] stages, int width, int height) {
+    public GyroidLoaderA(StatusStage[] stages, int width, int height) {
         super(stages, width, height);
         this.width = width;
         this.height = height;
     }
 
-    public GyroidLoader() {
+    public GyroidLoaderA() {
         // This uses 80x22 specifically
         super(STAGES, 80, 22);
         this.width = this.window_width;

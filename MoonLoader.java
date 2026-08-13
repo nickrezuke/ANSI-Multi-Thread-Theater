@@ -1,3 +1,5 @@
+// TODO: Improve the Moon Surface accuracy to real life crater map
+
 import java.util.Random;
 
 public class MoonLoader extends Loader {

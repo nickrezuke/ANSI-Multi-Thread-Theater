@@ -1,3 +1,5 @@
+// TODO: Do something with this basic one
+
 public class RingLoader extends Loader {
     private static final StatusStage[] RING_STAGES = {
         new StatusStage(15, "Initializing hyper-drive:"),

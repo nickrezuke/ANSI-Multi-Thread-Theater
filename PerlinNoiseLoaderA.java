@@ -1,6 +1,6 @@
 // TODO: Fix This Perlin Noise Loader It currently looks terrible.
 
-public class PerlinNoiseLoader extends Loader {
+public class PerlinNoiseLoaderA extends Loader {
     private static final StatusStage[] STAGES = {
             new StatusStage(25, "Generating cohesive gradient vectors:"),
             new StatusStage(55, "Interpolating multi-octave noise fields:"),
@@ -45,7 +45,7 @@ public class PerlinNoiseLoader extends Loader {
 
     private double cameraX = 0.0;
 
-    public PerlinNoiseLoader() {
+    public PerlinNoiseLoaderA() {
         // This uses 80x22 specifically
         super(STAGES, WIDTH, HEIGHT);
     }

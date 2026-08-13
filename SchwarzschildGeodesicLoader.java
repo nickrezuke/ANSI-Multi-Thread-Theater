@@ -1,6 +1,6 @@
 // TODO: Make this look better its hard to follow at the moment
 
-public class BlackHoleLoader extends Loader {
+public class SchwarzschildGeodesicLoader extends Loader {
     private static final StatusStage[] STAGES = {
             new StatusStage(30, "Generating singularity core:"),
             new StatusStage(60, "Collapsing localized space-time:"),
@@ -13,8 +13,8 @@ public class BlackHoleLoader extends Loader {
     private static final double HORIZON_RADIUS = 2.0;
     private static final double DISK_INNER = 3.2;
     private static final double DISK_OUTER = 13.0;
-    private static final int WIDTH = 80;
-    private static final int HEIGHT = 22;
+    private static final int WIDTH = 120;
+    private static final int HEIGHT = 32;
 
     // Simulation clocks
     private double timeClock = 0.0;
@@ -26,9 +26,9 @@ public class BlackHoleLoader extends Loader {
     private final double[] camUp = new double[3];
     private final double[] camRight = new double[3];
 
-    public BlackHoleLoader() {
+    public SchwarzschildGeodesicLoader() {
         // This uses 80x22 specifically
-        super(STAGES, 80, 22);
+        super(STAGES, WIDTH, HEIGHT);
     }
 
     @Override

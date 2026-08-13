@@ -1,7 +1,7 @@
 import java.util.Arrays;
 import java.util.Random;
 
-public class RocketLoader extends Loader {
+public class SpaceShuttleLoader extends Loader {
 
     private static final StatusStage[] SHUTTLE_STAGES = {
             new StatusStage(20, "Clearing the launch pad gantry..."),
@@ -28,13 +28,13 @@ public class RocketLoader extends Loader {
     private static final String C_FIRE_ORANGE= "\u001B[38;2;255;120;0m";  // Plume Core Flame
     private static final String C_FIRE_YELLOW= "\u001B[38;2;255;220;50m"; // Exhaust Plume Glow
 
-    public RocketLoader(StatusStage[] stages, int width, int height) {
+    public SpaceShuttleLoader(StatusStage[] stages, int width, int height) {
         super(stages, width, height);
         this.width = width;
         this.height = height;
     }
 
-    public RocketLoader() {
+    public SpaceShuttleLoader() {
         super(SHUTTLE_STAGES, 80, 22);
         this.width = 80;
         this.height = 22;

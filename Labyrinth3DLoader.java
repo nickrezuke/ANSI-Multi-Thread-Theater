@@ -1,47 +1,58 @@
 public class Labyrinth3DLoader extends InteractiveLoader {
-    private static final StatusStage[] MAZE_STAGES = {
-            new StatusStage(100, "[Arrow Keys to Control!]")
-    };
-
+    private static final StatusStage[] MAZE_STAGES = { new StatusStage(100, "[Arrow Keys to Control!]") };
     private static final int MAP_WIDTH = 9;
     private static final int MAP_HEIGHT = 9;
     private static final int[][] MAZE_MAP = {
-            { 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-            { 1, 0, 0, 0, 0, 0, 0, 0, 1 },
-            { 1, 0, 1, 1, 0, 1, 1, 0, 1 },
-            { 1, 0, 1, 0, 0, 0, 1, 0, 1 },
-            { 1, 0, 0, 0, 1, 0, 0, 0, 1 },
-            { 1, 0, 1, 0, 0, 0, 1, 0, 1 },
-            { 1, 0, 1, 1, 0, 1, 1, 0, 1 },
-            { 1, 0, 0, 0, 0, 0, 0, 0, 1 },
-            { 1, 1, 1, 1, 1, 1, 1, 1, 1 }
+        { 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+        { 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+        { 1, 0, 1, 1, 0, 1, 1, 0, 1 },
+        { 1, 0, 1, 0, 0, 0, 1, 0, 1 },
+        { 1, 0, 0, 0, 1, 0, 0, 0, 1 },
+        { 1, 0, 1, 0, 0, 0, 1, 0, 1 },
+        { 1, 0, 1, 1, 0, 1, 1, 0, 1 },
+        { 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+        { 1, 1, 1, 1, 1, 1, 1, 1, 1 }
     };
 
-    // Start at the absolute center of cell (1, 1)
     private volatile double posX = 1.5;
     private volatile double posY = 1.5;
-    
-    // Track explicit discrete target grid destinations
     private volatile int targetTileX = 1;
     private volatile int targetTileY = 1;
-
     private volatile double dirX = 1.0;
     private volatile double dirY = 0.0;
     private volatile double planeX = 0.0;
     private volatile double planeY = 0.66;
     private volatile double velTurn = 0.0;
     private volatile double targetAngle = 0.0;
-
-    private static final double FOG_MAX_DIST = 5.5;
+    private static final double FOG_MAX_DIST = 7.5; // It can handle it???
 
     private static final String COLOR_CEILING = "\u001B[38;2;25;30;45m";
     private static final String COLOR_FLOOR = "\u001B[38;2;50;55;60m";
     private static final String COLOR_WALL_Y = "\u001B[38;2;180;130;40m";
     private static final String COLOR_WALL_X = "\u001B[38;2;130;95;30m";
+    private static final String RESET = "\u001B[0m";
+
+    // 1. PRE-CACHED STRING POOLS (Eliminates runtime per-frame allocations)
+    private final String[] ceilingCache = new String[3]; // █, ▓, ▒
+    private final String[] floorCache = new String[2];   // ·, " "
+    private final String[][] wallCache = new String[2][3]; // [SideX/Y][CharType]
 
     public Labyrinth3DLoader() {
-        // This uses 80x22 specifically
         super(MAZE_STAGES, 80, 22);
+        
+        // Populate string cache targets once during program birth
+        ceilingCache[0] = COLOR_CEILING + '█' + RESET;
+        ceilingCache[1] = COLOR_CEILING + '▓' + RESET;
+        ceilingCache[2] = COLOR_CEILING + '▒' + RESET;
+
+        floorCache[0] = COLOR_FLOOR + '·' + RESET;
+        floorCache[1] = COLOR_FLOOR + ' ' + RESET;
+
+        char[] wallChars = {'█', '▓', '▒'};
+        for (int i = 0; i < 3; i++) {
+            wallCache[0][i] = COLOR_WALL_X + wallChars[i] + RESET; // Side 0
+            wallCache[1][i] = COLOR_WALL_Y + wallChars[i] + RESET; // Side 1
+        }
     }
 
     @Override
@@ -57,10 +68,8 @@ public class Labyrinth3DLoader extends InteractiveLoader {
     protected void handleKeyInput(int keyCode) {
         int lookStepX = (int) Math.round(dirX);
         int lookStepY = (int) Math.round(dirY);
-
         switch (keyCode) {
-            case 'A': // Arrow UP
-                // Advance target coordinates by 1
+            case 'A':
                 int nextX = targetTileX + lookStepX;
                 int nextY = targetTileY + lookStepY;
                 if (nextX >= 0 && nextX < MAP_WIDTH && nextY >= 0 && nextY < MAP_HEIGHT) {
@@ -70,9 +79,7 @@ public class Labyrinth3DLoader extends InteractiveLoader {
                     }
                 }
                 break;
-                
-            case 'B': // Arrow DOWN
-                // Retreat target coordinates backward by 1
+            case 'B':
                 int backX = targetTileX - lookStepX;
                 int backY = targetTileY - lookStepY;
                 if (backX >= 0 && backX < MAP_WIDTH && backY >= 0 && backY < MAP_HEIGHT) {
@@ -82,26 +89,17 @@ public class Labyrinth3DLoader extends InteractiveLoader {
                     }
                 }
                 break;
-                
-            case 'C': // Arrow RIGHT
-                targetAngle += Math.PI / 2.0;
-                break;
-                
-            case 'D': // Arrow LEFT
-                targetAngle -= Math.PI / 2.0;
-                break;
+            case 'C': targetAngle += Math.PI / 2.0; break;
+            case 'D': targetAngle -= Math.PI / 2.0; break;
         }
     }
 
     @Override
     protected void renderGeometry(String[] outputBuffer, double[] zBuffer) {
-        // Calculate rotation angle and smooth glide...
         double currentAngle = Math.atan2(dirY, dirX);
         double angleDelta = targetAngle - currentAngle;
-
         while (angleDelta < -Math.PI) angleDelta += 2.0 * Math.PI;
         while (angleDelta > Math.PI) angleDelta -= 2.0 * Math.PI;
-
         velTurn += angleDelta * 0.15;
         velTurn *= 0.65;
 
@@ -114,34 +112,26 @@ public class Labyrinth3DLoader extends InteractiveLoader {
             planeY = oldPlaneX * Math.sin(velTurn) + planeY * Math.cos(velTurn);
         }
 
-        // Find the absolute centers of our desired target tile coordinates
         double centerTargetX = targetTileX + 0.5;
         double centerTargetY = targetTileY + 0.5;
-
-        // Measure how far our floating position is from the true square center
         double deltaX = centerTargetX - posX;
         double deltaY = centerTargetY - posY;
-
-        // Spring-Damping interpolation: Pull coordinates toward target center points.
-        // This mirrors the rotational ease, creating a smooth gliding stride that stops perfectly centered.
         posX += deltaX * 0.18;
         posY += deltaY * 0.18;
 
-        // On to the ray casting...
         for (int x = 0; x < 80; x++) {
             double cameraX = 0.025 * x - 1.0;
             double rayDirX = dirX + planeX * cameraX;
             double rayDirY = dirY + planeY * cameraX;
-
             int mapX = (int) posX;
             int mapY = (int) posY;
 
-            double sideDistX, sideDistY;
-
-            double deltaDistX = (rayDirX == 0) ? 1e30 : Math.abs(1.0 / rayDirX);
-            double deltaDistY = (rayDirY == 0) ? 1e30 : Math.abs(1.0 / rayDirY);
+            // Protection against division-by-zero errors
+            double deltaDistX = (Math.abs(rayDirX) < 1e-6) ? 1e30 : Math.abs(1.0 / rayDirX);
+            double deltaDistY = (Math.abs(rayDirY) < 1e-6) ? 1e30 : Math.abs(1.0 / rayDirY);
+            
             double perpendicularWallDist = 0.0;
-
+            double sideDistX, sideDistY; 
             int stepX, stepY;
             int hit = 0;
             int side = 0;
@@ -161,7 +151,6 @@ public class Labyrinth3DLoader extends InteractiveLoader {
                 sideDistY = (mapY + 1.0 - posY) * deltaDistY;
             }
 
-            // DDA step sequence
             while (hit == 0) {
                 if (sideDistX < sideDistY) {
                     perpendicularWallDist = sideDistX;
@@ -175,12 +164,18 @@ public class Labyrinth3DLoader extends InteractiveLoader {
                     side = 1;
                 }
 
-                // Fog Optimization. Stop calculations immediately
-                // if the ray extends past our visual fog range limit.
+                // Bulletproof Boundary Checking (Forces a fog block instead of a thread crash)
+                if (mapX < 0 || mapX >= MAP_WIDTH || mapY < 0 || mapY >= MAP_HEIGHT) {
+                    perpendicularWallDist = FOG_MAX_DIST;
+                    hit = 1;
+                    side = -1;
+                    break;
+                }
+
                 if (perpendicularWallDist >= FOG_MAX_DIST) {
                     perpendicularWallDist = FOG_MAX_DIST;
                     hit = 1;
-                    side = -1; // Special flag value representing fog void
+                    side = -1;
                     break;
                 }
 
@@ -189,35 +184,28 @@ public class Labyrinth3DLoader extends InteractiveLoader {
                 }
             }
 
-            if (perpendicularWallDist < 0.01)
-                perpendicularWallDist = 0.01;
-
+            if (perpendicularWallDist < 0.01) perpendicularWallDist = 0.01;
             int lineHeight = (int) (22 / perpendicularWallDist);
             int drawStart = -lineHeight / 2 + 11;
             int drawEnd = lineHeight / 2 + 11;
             double inverseDepth = 1.0 / perpendicularWallDist;
 
-            String wallColor = (side == 1) ? COLOR_WALL_Y : COLOR_WALL_X;
-            char wallChar = (perpendicularWallDist < 1.8) ? '█' : (perpendicularWallDist < 3.2) ? '▓' : '▒';
-            String finishedWallBlock = wallColor + wallChar + RESET;
+            // Resolve wall texture indices safely from pre-cached fields
+            int wallCharIdx = (perpendicularWallDist < 1.8) ? 0 : (perpendicularWallDist < 3.2) ? 1 : 2;
+            String cachedWallBlock = (side >= 0) ? wallCache[side][wallCharIdx] : " ";
 
             for (int y = 0; y < 22; y++) {
                 int index = x + 80 * y;
                 zBuffer[index] = inverseDepth;
 
                 if (y < drawStart) {
-                    char ceilChar = (y < 4) ? '█' : (y < 8) ? '▓' : '▒';
-                    outputBuffer[index] = COLOR_CEILING + ceilChar + RESET;
+                    int ceilIdx = (y < 4) ? 0 : (y < 8) ? 1 : 2;
+                    outputBuffer[index] = ceilingCache[ceilIdx];
                 } else if (y >= drawStart && y <= drawEnd) {
-                    // If the ray hit the fog threshold (-1), paint void
-                    if (side == -1) {
-                        outputBuffer[index] = " ";
-                    } else {
-                        outputBuffer[index] = finishedWallBlock;
-                    }
+                    outputBuffer[index] = cachedWallBlock;
                 } else {
-                    char floorChar = (x % 6 == 0 || y % 4 == 0) ? '·' : ' ';
-                    outputBuffer[index] = COLOR_FLOOR + floorChar + RESET;
+                    int floorIdx = (x % 6 == 0 || y % 4 == 0) ? 0 : 1;
+                    outputBuffer[index] = floorCache[floorIdx];
                 }
             }
         }

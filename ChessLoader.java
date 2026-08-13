@@ -1,5 +1,3 @@
-// TODO: Check if players move back and forth when game is played for very very very long times...  should avoid stalemate after repeated boards??
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -36,6 +34,12 @@ public class ChessLoader extends Loader {
     private boolean gameOver = false;
     private String gameResultText = "";
 
+    // Draw detection state (for checking threefold repetition / 50-move rule)
+    private final java.util.Map<String, Integer> positionHistory = new java.util.HashMap<>();
+    private int halfmoveClock = 0;
+
+    private static final int REPETITION_PENALTY = 45;
+
     private static final String LIGHT_SQUARE = "\u001B[48;5;250m";
     private static final String DARK_SQUARE = "\u001B[48;5;238m";
     private static final String COLOR_WHITE_PIECE = "\u001B[38;5;231m";
@@ -43,6 +47,7 @@ public class ChessLoader extends Loader {
     private static final String COLOR_TEXT = "\u001B[38;5;244m";
     private static final String COLOR_TURN = "\u001B[38;5;82m";
     private static final String COLOR_OVER = "\u001B[38;5;196m";
+    private static final String COLOR_DRAW = "\u001B[38;5;220m";
 
     private static final String[] PIECE_SYMBOLS = {
             " ", "\u265F", "\u265E", "\u265D", "\u265C", "\u265B", "\u265A", " ",
@@ -154,6 +159,10 @@ public class ChessLoader extends Loader {
         whiteLeftRookMoved = false;
         whiteRightRookMoved = false;
 
+        positionHistory.clear();
+        halfmoveClock = 0;
+        positionHistory.put(getPositionKey(isWhiteTurn), 1);
+
         lastMoveTime = System.currentTimeMillis();
     }
 
@@ -197,7 +206,8 @@ public class ChessLoader extends Loader {
 
         String pStr = getPieceName(board[bestMove.from]);
         String notation = pStr + " " + indexToNotation(bestMove.from) + "→" + indexToNotation(bestMove.to);
-        if (board[bestMove.to] != EMPTY)
+        boolean wasCapture = board[bestMove.to] != EMPTY;
+        if (wasCapture)
             notation += " ⚔";
 
         moveHistory.add(notation);
@@ -213,7 +223,7 @@ public class ChessLoader extends Loader {
         board[bestMove.to] = board[bestMove.from];
         board[bestMove.from] = EMPTY;
 
-        // ---- NEW: EN PASSANT STATE TRACKING ----
+        // En Passant state tracking
         int previousEnPassantTarget = enPassantTargetSquare; // Save for capture handling
         enPassantTargetSquare = -1; // Reset by default every turn
 
@@ -229,8 +239,8 @@ public class ChessLoader extends Loader {
 
             // Check if this move was an actual En Passant capture execution
             if (bestMove.to == previousEnPassantTarget) {
-                // If a pawn moved diagonally to the target square, delete the victim pawn
-                // behind it
+                // If a pawn moved diagonally to the target square, 
+                // delete the victim pawn behind it
                 int victimSquare = isWhiteTurn ? (bestMove.to + 8) : (bestMove.to - 8);
                 board[victimSquare] = EMPTY;
             }
@@ -241,7 +251,7 @@ public class ChessLoader extends Loader {
             }
         }
 
-        // ---- NEW: CASTLING RIGHTS AND EXECUTION LOGIC ----
+        // Castling Logic
         if (movedPieceType == KING) {
             // If the king moved 2 squares, it's a castle! Jump the associated rook.
             if (bestMove.from == 60 && bestMove.to == 62) {
@@ -277,7 +287,56 @@ public class ChessLoader extends Loader {
         if (bestMove.from == 7 || bestMove.to == 7)
             blackRightRookMoved = true;
 
+        // 50 Move Rule tracking
+        // A pawn move or a capture (including en passant) resets the "no progress" clock.
+        if (movedPieceType == PAWN || wasCapture) {
+            halfmoveClock = 0;
+        } else {
+            halfmoveClock++;
+        }
+
         isWhiteTurn = !isWhiteTurn;
+
+        // Threefold Repetition & 50 Move Draw Detection
+        String positionKey = getPositionKey(isWhiteTurn);
+        int occurrences = positionHistory.merge(positionKey, 1, Integer::sum);
+
+        if (occurrences >= 3) {
+            gameOver = true;
+            gameResultText = "DRAW BY THREEFOLD REPETITION!";
+            lastMoveTime = System.currentTimeMillis();
+        } else if (halfmoveClock >= 100) {
+            gameOver = true;
+            gameResultText = "DRAW BY 50-MOVE RULE!";
+            lastMoveTime = System.currentTimeMillis();
+        }
+    }
+
+    /**
+     * Builds a compact string key that uniquely identifies the current board
+     * state for repetition purposes: piece placement, side to move, remaining
+     * castling rights, and the en passant square. Two positions with the same
+     * key are the same position for repetition purposes.
+     *
+     * Takes whiteToMoveNext explicitly (rather than reading the isWhiteTurn
+     * field) so it can also be called safely from inside minimax(), which
+     * simulates moves on the real board array without ever touching
+     * isWhiteTurn itself.
+     */
+    private String getPositionKey(boolean whiteToMoveNext) {
+        StringBuilder key = new StringBuilder(64 * 3);
+        for (int i = 0; i < 64; i++) {
+            key.append(board[i]).append(',');
+        }
+        key.append(whiteToMoveNext ? 'w' : 'b');
+        key.append(whiteKingMoved ? '1' : '0');
+        key.append(whiteLeftRookMoved ? '1' : '0');
+        key.append(whiteRightRookMoved ? '1' : '0');
+        key.append(blackKingMoved ? '1' : '0');
+        key.append(blackLeftRookMoved ? '1' : '0');
+        key.append(blackRightRookMoved ? '1' : '0');
+        key.append('#').append(enPassantTargetSquare);
+        return key.toString();
     }
 
     private Move minimax(int depth, boolean isMax, int alpha, int beta) {
@@ -359,6 +418,26 @@ public class ChessLoader extends Loader {
 
             // Call deeper search layer
             int score = minimax(depth - 1, !isMax, alpha, beta).score;
+
+            // ---- NEW: Repetition-aware scoring ----
+            // Check whether the position THIS move just created already occurred
+            // earlier in the real game. Board state, castling rights, and en
+            // passant square at this point in the loop all still reflect the
+            // post-move position (the undo below hasn't run yet), so the key
+            // built here is exactly the position this candidate move leads to.
+            // Because the actual current position is itself already recorded in
+            // positionHistory, this also catches the classic two-move shuffle:
+            // a 4-ply line that walks the board right back to where it started
+            // shows up as a match at the bottom of this search, letting the
+            // engine route around it instead of only noticing after the fact.
+            String simulatedKey = getPositionKey(!isMax);
+            int priorOccurrences = positionHistory.getOrDefault(simulatedKey, 0);
+            if (priorOccurrences > 0) {
+                int penalty = REPETITION_PENALTY * priorOccurrences;
+                // isMax's own move is what led here: make it look worse to the
+                // side that just moved, not the side about to reply.
+                score += isMax ? -penalty : penalty;
+            }
 
             board[move.from] = board[move.to];
             board[move.to] = savedPiece;
@@ -663,7 +742,8 @@ public class ChessLoader extends Loader {
         writeText(outputBuffer, textColumnX, 5, "│ ", COLOR_TEXT);
         if (gameOver) {
             String gameMsg = String.format("%-38s", "STATUS: " + gameResultText);
-            writeText(outputBuffer, textColumnX + 2, 5, gameMsg, COLOR_OVER);
+            String statusColor = gameResultText.startsWith("DRAW") ? COLOR_DRAW : COLOR_OVER;
+            writeText(outputBuffer, textColumnX + 2, 5, gameMsg, statusColor);
         } else {
             String turnMsg = String.format("%-38s",
                     "   ACTIVE MATCH TURN:  " + (isWhiteTurn ? "WHITE PLAYER" : "BLACK PLAYER"));

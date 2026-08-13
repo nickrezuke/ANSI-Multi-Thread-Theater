@@ -15,6 +15,18 @@ abstract public class TexelCubeLoader extends Loader {
         // Do nothing for now, but this can be overridden if needed
     }
 
+    /**
+     * The resolution (width and height, in texels) of the square texture space passed to
+     * {@link #getCubeTexel(int, int, int)}. Override this in a subclass to work in a
+     * higher-resolution texture space for finer detail (borders, symbols, etc.) — the x/y
+     * coordinates handed to getCubeTexel scale automatically with whatever you return here.
+     * Defaults to 16 so any existing subclass that doesn't override this keeps behaving
+     * exactly as before.
+     */
+    protected int getTextureResolution() {
+        return 16;
+    }
+
     @Override
     protected void renderGeometry(String[] outputBuffer, double[] zBuffer) {
         double rX = angle * 0.4;
@@ -24,6 +36,8 @@ abstract public class TexelCubeLoader extends Loader {
         double cosX = Math.cos(rX), sinX = Math.sin(rX);
         double cosY = Math.cos(rY), sinY = Math.sin(rY);
         double cosZ = Math.cos(rZ), sinZ = Math.sin(rZ);
+
+        int textureResolution = getTextureResolution();
 
         for (int face = 0; face < 6; face++) {
             double nx = 0, ny = 0, nz = 0;
@@ -147,11 +161,11 @@ abstract public class TexelCubeLoader extends Loader {
                                     break;
                             }
 
-                            int texX = (int) (texU * 16);
-                            int texY = (int) (texV * 16);
+                            int texX = (int) (texU * textureResolution);
+                            int texY = (int) (texV * textureResolution);
 
-                            texX = Math.max(0, Math.min(15, texX));
-                            texY = Math.max(0, Math.min(15, texY));
+                            texX = Math.max(0, Math.min(textureResolution - 1, texX));
+                            texY = Math.max(0, Math.min(textureResolution - 1, texY));
 
                             VoxelTexel texel = getCubeTexel(face, texX, texY);
 

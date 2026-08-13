@@ -46,8 +46,8 @@ public class TerminalConfig {
                 // Mac/Linux: Try regular stty size first
                 String output = runCommand("stty size 2>/dev/null");
 
-                // IDE Terminal Fallback: If regular stty fails, point explicitly to the tty
-                // device
+                // IDE Terminal Fallback: If regular stty fails, 
+                // point explicitly to the tty device
                 if (output.isEmpty()) {
                     output = runCommand("stty size < /dev/tty 2>/dev/null");
                 }
@@ -99,15 +99,17 @@ public class TerminalConfig {
                                 "[TC.Nat]::SetConsoleMode($h, $m)")
                         .start().waitFor();
             } else {
-                // Mac & Linux: Save current state, then strictly
-                // disable canonical mode AND echo
-                originalAttributes = runCommand("stty -g");
-                new ProcessBuilder("sh", "-c", "stty raw -echo isig < /dev/tty").inheritIO().start().waitFor();
+                // Mac & Linux: Save current state, then 
+                // strictly disable canonical mode AND echo
+                originalAttributes = runCommand("stty -g < /dev/tty");
+                
+                new ProcessBuilder("sh", "-c", "stty raw -echo isig < /dev/tty").start().waitFor();
             }
         } catch (Exception e) {
             // Fallback if system environment limits access
         }
     }
+
 
     public static void restoreMode() {
         try {
@@ -115,20 +117,14 @@ public class TerminalConfig {
                 // Restore the captured mode, or fall back to a sane default if
                 // we never managed to capture one (e.g. setRawMode() failed).
                 int modeToRestore = (originalWinMode != -1) ? originalWinMode : SANE_FALLBACK_MODE;
-                new ProcessBuilder("powershell", "-NoProfile", "-Command",
-                        WIN_HANDLE_PRELUDE +
-                                "[TC.Nat]::SetConsoleMode($h, " + modeToRestore + ")")
-                        .start().waitFor();
+                new ProcessBuilder("powershell", "-NoProfile", "-Command", WIN_HANDLE_PRELUDE + "[TC.Nat]::SetConsoleMode($h, " + modeToRestore + ")")
+                    .start().waitFor();
                 new ProcessBuilder("powershell", "-NoProfile", "-Command", "[System.Console]::ResetColor()")
-                        .start().waitFor();
+                    .start().waitFor();
             } else if (originalAttributes != null) {
-                // Mac & Linux: Re-apply original terminal attributes saved at startup
-                new ProcessBuilder("sh", "-c", "stty " + originalAttributes +
-                        " < /dev/tty").inheritIO().start().waitFor();
+                new ProcessBuilder("sh", "-c", "stty " + originalAttributes + " < /dev/tty").start().waitFor();
             } else {
-                // Fallback: If original attributes were lost due to
-                // a crash, force a standard sanity restore
-                new ProcessBuilder("sh", "-c", "stty sane < /dev/tty").inheritIO().start().waitFor();
+                new ProcessBuilder("sh", "-c", "stty sane < /dev/tty").start().waitFor();
             }
         } catch (Exception e) {
             // Fail silently

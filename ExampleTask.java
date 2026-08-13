@@ -6,14 +6,22 @@ public class ExampleTask {
     protected static final String SHOW_CURSOR = "\u001b[?25h";
 
     public static void main(String[] args) {
-        // This serves as an example file / code that would like to use a loader.
+        // This serves as an example file / existing code 
+        // segment that would like to use a loader.
         // Here are the steps to do so in your own code:
+
+        // ...
+        // ...
+        // ... ^ your existing code ^
+        // ...
 
         // 1. Evaluate the desired loader and create it
         String userPreference = (args.length > 0) ? args[0] : null;
-        // Here we pass one in, but you can do whatever you like, use a specific one,
-        // etc.
+        // Here we pass one in when we ran ExampleTask, but you can 
+        // do whatever you like, use a specific one, random one, etc.
         Loader loader = LoaderFactory.createLoaderInstance(userPreference); // Create it using our factory
+        //Loader loader = LoaderFactory.createLoaderInstance("Donut"); // Or do a specific one...
+        //Loader loader = LoaderFactory.createLoaderInstance(); // Or do a random one...
 
         // 2. Register an emergency thread that fires exclusively when Control+C is hit.
         // This acts as a bulletproof structural cleanup routine in case your users are

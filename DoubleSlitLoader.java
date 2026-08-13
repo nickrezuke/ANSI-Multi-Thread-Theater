@@ -1,4 +1,4 @@
-public class RippleTankAutomatonLoader extends Loader {
+public class DoubleSlitLoader extends Loader {
     private static final StatusStage[] STAGES = {
         new StatusStage(25, "Filling hydrodynamic pressure basin:"),
         new StatusStage(55, "Computing discrete height-field velocities:"),
@@ -8,29 +8,48 @@ public class RippleTankAutomatonLoader extends Loader {
 
     private static final char[] SHADE_RAMP = { ' ', '.', '-', '░', '▒', '▓', '█' };
     
-    // --- VERTICAL STRETCH FIX: DOUBLED CORE PHYSICS HEIGHT ---
-    // Doubling SIM_H to 88 allows us to squeeze 4 physics rows into 1 terminal row.
-    // This squashes vertical height by exactly 0.5 mathematically.
-    private static final int SIM_W = 160;
-    private static final int SIM_H = 88; 
-    private static final int OUT_W = 80;
-    private static final int OUT_H = 22;
-    private static final int WALL_X = 30;
+    private static int OUT_W; 
+    private static int OUT_H;  
 
-    private double[][] currentHeight = new double[SIM_H][SIM_W];
-    private double[][] previousHeight = new double[SIM_H][SIM_W];
-    private double[][] nextHeight = new double[SIM_H][SIM_W];
-    private final boolean[][] obstacles = new boolean[SIM_H][SIM_W];
-    private double[][] waveIntensity = new double[SIM_H][SIM_W];
+    private static int SIM_W;
+    private static int SIM_H;
+
+    private static int WALL_X;
+
+    private double[][] currentHeight;
+    private double[][] previousHeight;
+    private double[][] nextHeight;
+    private boolean[][] obstacles;
+    private double[][] waveIntensity;
     private double timeClock = 0.0;
 
-    public RippleTankAutomatonLoader() {
-        // This uses 80x22 specifically
-        super(STAGES, OUT_W, OUT_H);
+    public DoubleSlitLoader() {
+        // Default to 100x28
+        super(STAGES, 100, 22);
+        OUT_H = 22;
+        OUT_W = 100;
+    }
+
+    public DoubleSlitLoader(int width, int height) {
+        super(STAGES, width, height);
+        OUT_W = width;
+        OUT_H = height;
     }
 
     @Override
     protected void initialize() {
+        // Figure out where wall goes
+        SIM_H = OUT_H * 4;
+        SIM_W = OUT_W * 2;
+        WALL_X = (int) (SIM_W * 0.2 + 10);
+
+        // Define arrays
+        currentHeight = new double[SIM_H][SIM_W];
+        previousHeight = new double[SIM_H][SIM_W];
+        nextHeight = new double[SIM_H][SIM_W];
+        obstacles = new boolean[SIM_H][SIM_W];
+        waveIntensity = new double[SIM_H][SIM_W];
+
         timeClock = 0.0;
         for (int y = 0; y < SIM_H; y++) {
             for(int i = 0; i < currentHeight[y].length; i++) {
@@ -47,11 +66,9 @@ public class RippleTankAutomatonLoader extends Loader {
             }
         }
 
-        // Build the central barrier wall at WALL_X scaled up to the 88-row physics grid.
-        // Aperture slit gaps are proportionally scaled up to match the height profile.
         for (int y = 0; y < SIM_H; y++) {
-            if (y >= 27 && y <= 29) continue; // Slit 1 Aperture Channel
-            if (y >= 58 && y <= 60) continue; // Slit 2 Aperture Channel
+            if (y >= 27 && y <= 29) continue;
+            if (y >= 58 && y <= 60) continue;
             obstacles[y][WALL_X] = true;
         }
     }
@@ -60,16 +77,13 @@ public class RippleTankAutomatonLoader extends Loader {
     protected void renderGeometry(String[] outputBuffer, double[] zBuffer) {
         timeClock += 0.25; 
 
-        // --- STEP 1: WAVE ENGINE OSCILLATOR ---
         double waveFrequency = 1.35;
         double waveAmplitude = 3.5; 
         double currentPulse = Math.sin(timeClock * waveFrequency) * waveAmplitude;
         
-        // Driver source points updated to target the new mathematical center rows
         currentHeight[SIM_H / 2][2] = currentPulse;
         currentHeight[SIM_H / 2 + 1][2] = currentPulse;
 
-        // --- STEP 2: WAVE FIELD PROPAGATION ---
         double propagationForce = 0.45;
         double dampingFactor = 0.996; 
 
@@ -87,7 +101,6 @@ public class RippleTankAutomatonLoader extends Loader {
             }
         }
 
-        // --- STEP 3: NON-REFLECTING ABSORBING BOUNDARY CONDITIONS (ABC) ---
         double c = Math.sqrt(propagationForce); 
         
         for (int x = 1; x < SIM_W - 1; x++) {
@@ -100,13 +113,11 @@ public class RippleTankAutomatonLoader extends Loader {
             nextHeight[y][SIM_W - 1] = currentHeight[y][SIM_W - 2] + ((c - 1.0) / (c + 1.0)) * (nextHeight[y][SIM_W - 2] - currentHeight[y][SIM_W - 1]);
         }
 
-        // Corner nodes dampening overrides
         nextHeight[0][0] *= dampingFactor;
         nextHeight[0][SIM_W - 1] *= dampingFactor;
         nextHeight[SIM_H - 1][0] *= dampingFactor;
         nextHeight[SIM_H - 1][SIM_W - 1] *= dampingFactor;
 
-        // --- STEP 4: INTENSITY CALCULATION ---
         for (int y = 0; y < SIM_H; y++) {
             for (int x = 0; x < SIM_W; x++) {
                 double amp = nextHeight[y][x];
@@ -114,15 +125,11 @@ public class RippleTankAutomatonLoader extends Loader {
             }
         }
 
-        // Buffer Address Reference Pointer Swapping
         double[][] temp = previousHeight;
         previousHeight = currentHeight;
         currentHeight = nextHeight;
         nextHeight = temp;
 
-        // --- STEP 5: TRUE TRUE 4x2 COMPRESSION RENDERING WINDOW ---
-        // Squeezing exactly 4 vertical simulation cells down into 1 terminal character row
-        // forces the height to shrink by 0.5 relative to your horizontal sampling.
         for (int outY = 0; outY < OUT_H; outY++) {
             int simY1 = outY * 4;
             int simY2 = simY1 + 1;
@@ -134,9 +141,6 @@ public class RippleTankAutomatonLoader extends Loader {
                 int simX2 = simX1 + 1;
                 int offset = outX + OUT_W * outY;
 
-                // --- FIXED ADAPTIVE SUB-GRID SLIT DETECTOR ---
-                // For a macro-pixel to block the wave view, the wall must occupy the core of the 
-                // vertical sample window. If rows are open for the slit channel, we keep the pixel clear.
                 boolean isObstacle = (obstacles[simY1][simX1] || obstacles[simY1][simX2]) &&
                                      (obstacles[simY2][simX1] || obstacles[simY2][simX2]) &&
                                      (obstacles[simY3][simX1] || obstacles[simY3][simX2]) &&
@@ -147,20 +151,17 @@ public class RippleTankAutomatonLoader extends Loader {
                     continue;
                 }
 
-                // Average height calculated across the full 4x2 high-density downsample box
                 double avgHeight = (currentHeight[simY1][simX1] + currentHeight[simY1][simX2] + 
                                     currentHeight[simY2][simX1] + currentHeight[simY2][simX2] +
                                     currentHeight[simY3][simX1] + currentHeight[simY3][simX2] +
                                     currentHeight[simY4][simX1] + currentHeight[simY4][simX2]) / 8.0;
 
-                // --- LOGARITHMIC DISTANCE COMPENSATION ENGINE ---
                 double deltaX = (outX * 2) - WALL_X;
                 double distanceFactor = (deltaX > 0) ? Math.sqrt(deltaX * 0.55) : 1.0;
                 if (distanceFactor < 1.0) distanceFactor = 1.0;
 
                 double amplifiedHeight = avgHeight * distanceFactor * 1.8;
 
-                // Map amplitude values cleanly into shading index slots
                 int shadeIdx = (int) ((amplifiedHeight + 1.2) / 2.4 * (SHADE_RAMP.length - 1));
                 if (shadeIdx < 0) shadeIdx = 0; 
                 else if (shadeIdx > SHADE_RAMP.length - 1) shadeIdx = SHADE_RAMP.length - 1;
@@ -174,7 +175,6 @@ public class RippleTankAutomatonLoader extends Loader {
                 } else {
                     colorCode = (amplifiedHeight > 0.0) ? "\u001B[38;2;85;195;235m" : "\u001B[38;2;235;65;180m"; 
                 }
-
                 outputBuffer[offset] = colorCode + glyph + RESET;
             }
         }

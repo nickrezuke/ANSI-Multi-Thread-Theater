@@ -1,4 +1,4 @@
-public class TexelHighResMonochromeStaticLoader extends TexelCubeLoader {
+public class TexelMonochromeStaticLoader extends TexelCubeLoader {
     private static final StatusStage[] STATIC_STAGES = new StatusStage[] {
         new StatusStage(15, "Tuning cathode ray tube:"),
         new StatusStage(40, "Amplifying white noise:"),
@@ -8,7 +8,7 @@ public class TexelHighResMonochromeStaticLoader extends TexelCubeLoader {
         new StatusStage(100, "High-Res Static Online!")
     };
 
-    public TexelHighResMonochromeStaticLoader() {
+    public TexelMonochromeStaticLoader() {
         super(STATIC_STAGES, 80, 22);
     }
 

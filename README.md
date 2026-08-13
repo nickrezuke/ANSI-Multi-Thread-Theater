@@ -16,17 +16,22 @@ While the original concept proved that 3D geometries could be projected onto a f
 
 ---
 
-## 📐 The Geometric Library
+## 📐 The Loader Library
+This project comes packed with a ton of different variants, all derived from a common footprint:
 <!-- TODO: Elaborate on this section -->
-This Project comes packed with a suite of rendering targets, all derived from a common footprint:
+
 
 -> **Donut**: An expanded, color-customizable adaptation of Sloan's original code.  This was the first one I attempted, and after implementing I refined it with triginometric frosting, random variants, and a sprinkle map for extra style.
--> **CatHead**: <!-- TODO: Elaborate on this section -->
 -> **DNA**: <!-- TODO: Elaborate on this section -->
 -> **Ring**: <!-- TODO: Elaborate on this section -->
 
 -> **UtahTeapot**: <!-- TODO: Elaborate on this section -->
 -> **StanfordBunny**: <!-- TODO: Elaborate on this section -->
+-> **CornellBox**: <!-- TODO: Elaborate on this section -->
+-> **SuzanneTheMonkey**: <!-- TODO: Elaborate on this section -->
+-> **ChromeCheckerboardSphere**: <!-- TODO: Elaborate on this section -->
+-> **TriColorChromeSpheres**: <!-- TODO: Elaborate on this section -->
+-> **RefractiveMagnifier**: <!-- TODO: Elaborate on this section -->
 
 -> **TexelCube**: I made a cube that can have custom textures applied by texels
 -----> **TexelMinecraftGrassBlock**: <!-- TODO: Elaborate on this section -->
@@ -43,6 +48,7 @@ This Project comes packed with a suite of rendering targets, all derived from a 
 -----> **TexelRubixCube**: <!-- TODO: Elaborate on this section -->
 -----> **TexelGreyRubix**: <!-- TODO: Elaborate on this section -->
 -----> **TexelMCUTesseract**: <!-- TODO: Elaborate on this section -->
+-----> **TexelMuseumCube**: <!-- TODO: Elaborate on this section -->
 -----> **TexelMarioBricks**: <!-- TODO: Elaborate on this section -->
 -----> **TexelMarioCapBlock**: <!-- TODO: Elaborate on this section -->
 -----> **TexelMarioCoinBlock**: <!-- TODO: Elaborate on this section -->
@@ -50,47 +56,81 @@ This Project comes packed with a suite of rendering targets, all derived from a 
 -----> **TexelEldritchAetherCube**: <!-- TODO: Elaborate on this section -->
 -----> **TexelHyperspaceVoid**: <!-- TODO: Elaborate on this section -->
 -----> **TexelHyperchromaticKaleidoscope**: <!-- TODO: Elaborate on this section -->
------> **TexelJVMMemoryLoader**: <!-- TODO: Elaborate on this section -->
+-----> **TexelMonochromeStatic**: <!-- TODO: Elaborate on this section -->
 
--> **OctahedralMatrix**: <!-- TODO: Elaborate on this section -->
+-> **PsychedelicIcosahedron**: <!-- TODO: Elaborate on this section -->
+-> **PsychedelicOctahedron**: <!-- TODO: Elaborate on this section -->
 
+-> **Alphabet**: <!-- TODO: Elaborate on this section -->
 -> **EyeOfProvidence**: <!-- TODO: Elaborate on this section -->
 
--> **Mario64Cube**: <!-- TODO: Elaborate on this section -->
+-> **Nintendo64Logo**: <!-- TODO: Elaborate on this section -->
+-> **PlayStation1Logo**: <!-- TODO: Elaborate on this section -->
+-> **XboxLogo**: <!-- TODO: Elaborate on this section -->
+-> **HaloRing**: <!-- TODO: Elaborate on this section -->
+-> **MarioKart64ItemBox**: <!-- TODO: Elaborate on this section -->
 -> **PacManSphere**: <!-- TODO: Elaborate on this section -->
+-> **SonicRings**: <!-- TODO: Elaborate on this section -->
 
 -> **RainbowWhispPyramid**: <!-- TODO: Elaborate on this section -->
 -> **RainbowWhispSphere**: <!-- TODO: Elaborate on this section -->
 
 -> **WireframeSphere**: <!-- TODO: Elaborate on this section -->
 -> **WireframeCube**: <!-- TODO: Elaborate on this section -->
+-> **FisheyeGlobe**: <!-- TODO: Elaborate on this section -->
 
--> **Rocket**: <!-- TODO: Elaborate on this section -->
+-> **CatHead**: <!-- TODO: Elaborate on this section -->
+-> **Apple**: <!-- TODO: Elaborate on this section -->
+-> **IceCreamCone**: <!-- TODO: Elaborate on this section -->
+-> **Cupcake**: <!-- TODO: Elaborate on this section -->
+-> **Sushi**: <!-- TODO: Elaborate on this section -->
+-> **SnowGlobe**: <!-- TODO: Elaborate on this section -->
+-> **Butterfly**: <!-- TODO: Elaborate on this section -->
+-> **HotDog**: <!-- TODO: Elaborate on this section -->
+-> **CosmicBrownie**: <!-- TODO: Elaborate on this section -->
 
+-> **Sun**: <!-- TODO: Elaborate on this section -->
+-> **Mercury**: <!-- TODO: Elaborate on this section -->
+-> **Venus**: <!-- TODO: Elaborate on this section -->
 -> **Earth**: <!-- TODO: Elaborate on this section -->
+-> **SpaceShuttle**: <!-- TODO: Elaborate on this section -->
 -> **Moon**: <!-- TODO: Elaborate on this section -->
+-> **Mars**: <!-- TODO: Elaborate on this section -->
+-> **Jupiter**: <!-- TODO: Elaborate on this section -->
 -> **Saturn**: <!-- TODO: Elaborate on this section -->
+-> **Uranus**: <!-- TODO: Elaborate on this section -->
+-> **Neptune**: <!-- TODO: Elaborate on this section -->
+-> **Pluto**: <!-- TODO: Elaborate on this section -->
+-> **SolarSystem**: <!-- TODO: Elaborate on this section -->
 
 -> **Tesseract**: <!-- TODO: Elaborate on this section -->
 -> **Hypersphere**: <!-- TODO: Elaborate on this section -->
 -> **HopfFibration**: <!-- TODO: Elaborate on this section -->
+
+-> **GyroidA**: <!-- TODO: Elaborate on this section -->
+-> **GyroidB**: <!-- TODO: Elaborate on this section -->
 
 -> **ConwaysGameOfLife**: <!-- TODO: Elaborate on this section -->
 -> **BriansBrain**: <!-- TODO: Elaborate on this section -->
 -> **MandelbrotZoom**: <!-- TODO: Elaborate on this section -->
 -> **BarnsleyFernZoom**: <!-- TODO: Elaborate on this section -->
 -> **RockPaperScissors**: <!-- TODO: Elaborate on this section -->
+-> **SpiderWeb**: <!-- TODO: Elaborate on this section -->
 -> **GaltonBoard**: <!-- TODO: Elaborate on this section -->
--> **PerlinNoise**: <!-- TODO: Elaborate on this section -->
+-> **PerlinNoiseA**: <!-- TODO: Elaborate on this section -->
+-> **PerlinNoiseB**: <!-- TODO: Elaborate on this section -->
 -> **Aizawa**: <!-- TODO: Elaborate on this section -->
 -> **Lorenz**: <!-- TODO: Elaborate on this section -->
--> **QuantumOrbit**: <!-- TODO: Elaborate on this section -->
+-> **DoubleSlit**: <!-- TODO: Elaborate on this section -->
+-> **QuantumOrbital**: <!-- TODO: Elaborate on this section -->
+-> **QuantumDispersion**: <!-- TODO: Elaborate on this section -->
 -> **QuantumSpectrograph**: <!-- TODO: Elaborate on this section -->
+-> **CorridorWave**: <!-- TODO: Elaborate on this section -->
+-> **WavePropagation**: <!-- TODO: Elaborate on this section -->
 -> **ThreeBody**: <!-- TODO: Elaborate on this section -->
--> **BlackHole**: <!-- TODO: Elaborate on this section -->
+-> **SchwarzschildGeodesic**: <!-- TODO: Elaborate on this section -->
 -> **NavierStokes**: <!-- TODO: Elaborate on this section -->
 -> **GreyScottReactionDiffusion**: <!-- TODO: Elaborate on this section -->
--> **DoubleSlit**: <!-- TODO: Elaborate on this section -->
 -> **Boids**: <!-- TODO: Elaborate on this section -->
 -> **Chladni**: <!-- TODO: Elaborate on this section -->
 -> **IkedaRibbon**: <!-- TODO: Elaborate on this section -->
@@ -106,11 +146,16 @@ This Project comes packed with a suite of rendering targets, all derived from a 
 -> **NyanCat**: <!-- TODO: Elaborate on this section -->
 -> **Radar**: <!-- TODO: Elaborate on this section -->
 -> **HillTree**: <!-- TODO: Elaborate on this section -->
+-> **Waterfall**: <!-- TODO: Elaborate on this section -->
+-> **Tornado**: <!-- TODO: Elaborate on this section -->
+-> **RainyCityStreet**: <!-- TODO: Elaborate on this section -->
+-> **TropicalIsland**: <!-- TODO: Elaborate on this section -->
 -> **TextFall**: <!-- TODO: Elaborate on this section -->
 -> **VaporWave**: <!-- TODO: Elaborate on this section -->
 -> **SynthWave**: <!-- TODO: Elaborate on this section -->
 -> **FrudigerAero**: <!-- TODO: Elaborate on this section -->
 -> **DJTurntable**: <!-- TODO: Elaborate on this section -->
+-> **Campfire**: <!-- TODO: Elaborate on this section -->
 -> **DancingBanana**: <!-- TODO: Elaborate on this section -->
 
 -> **Pong**: <!-- TODO: Elaborate on this section -->
@@ -140,16 +185,22 @@ Some of these loaders extend this, and are also interactable by using the arrow 
 -> **Pendulum**: <!-- TODO: Elaborate on this section -->
 
 Note to self: Other ideas to consider:
-spider web
-butterfly
-2D Umbrella People walking in the rainy city and city night light recfection in the puddles
-Snow Globe
-Coveyer belt with Sushi & Ramen on it like at the resturaunts
-Campfire 
-Alphabet
-Waterfall
-Tornado
 Quantum Wavefunction Interference
+Satelite? ISS? Hubble Telescope?
+Comet / Meteor
+Asteroid Belt
+Cheeseburger
+Pizza Slice
+Taco
+Sunflower?
+Car / Truck
+Maze Generator / Solver (BFS, DFS, A*, etc.)
+Interactive Tanks-like Aiming & Shooting game w/ breakable ground
+Interactive DDR Game (Arrow Key Tap Tap?)
+Interactive Cube Rolling along a surface, painting a grid as it rolls
+Interactive Tile Sliding Puzzle (like pokemon ice dungeon)
+Interactive Sokoban game
+(MAKE SOME OF THE EXISTING GAMES PLAYABLE / INTERACTIVE????)
 
 ---
 
@@ -164,9 +215,9 @@ At the heart of the engine is an object-oriented rendering pipeline. All loaders
 
 ### Prerequisites
 * **Java Development Kit (JDK)**: 17 or higher recommended.
-* **Terminal Emulator**: A terminal emulator supporting **ANSI Escape Codes** and **TrueColor (24-bit RGB) characters**.  Most Loaders require a minimum of 80(w)x22(h) when viewing the terminal window, (although some do occasionally ask for different dimensions).  Base terminal reccomended, but this should also work with built in IDE terminal windows such as Eclipse or VS Code but please let me know if you find an instance of something not working as intended.
+* **Terminal**: A terminal emulator supporting **ANSI Escape Codes** and **TrueColor (24-bit RGB) characters**.  Most of these Loaders require a minimum of 80(w)x22(h) when viewing the terminal window, (although some do occasionally ask for different dimensions).  This should work on Mac / Linux with Windows Support coming soon...  NOTE: Your computer's native terminal recommended, and fullscreen if possible, but this should also work with built in IDE terminal windows, such as Eclipse or VS Code, but seriously let me know if you find an instance or environment where anything is not working as intended.
 
-### Running the Project
+### Running the Project Standalone
 ->1. Clone the repository to your local machine:
    ```bash
    git clone https://github.com/nickrezuke/Loading-Spinners.git
@@ -193,6 +244,6 @@ At the heart of the engine is an object-oriented rendering pipeline. All loaders
 
 ---
 
-### Thread Safe Inter-Process Synchronization (for use in your own project)
+### Running the Project as a Separate Process (for use in your own projects)
 
-These `Loader`s operate concurrently with whatever called it.  To use a loader, the calling method needs to pass down an active thread token, spin up the canvas lifecycle, and feed numeric ticks over thread pipelines.  An example of this is shown in the ExampleTask.java file.  
+These `Loader`s operate concurrently with whatever called it.  To use a loader, the calling method needs to pass down an active thread token, spin up the canvas lifecycle, and feed numeric ticks over thread pipelines.  An example of this is shown in the ExampleTask.java file, either use similar logic or even just edit that file out into working with your project's archetecture.  
