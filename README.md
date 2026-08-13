@@ -1,6 +1,8 @@
 # Loading Spinners: Advanced Real-Time ASCII Shading Engine
 
-Inspired by Andy Sloan’s legendary `donut.c`, these loaders are a collection of real-time 3D ASCII graphics able to be rendered with this rendering engine built entirely in vanilla Java. 
+<img width="1634" height="977" alt="LoaderSpinners" src="https://github.com/user-attachments/assets/e1518dbc-a493-4cf1-9bb0-5b938c9f6fb6" />
+
+Inspired by Andy Sloan’s `donut.c`, these loaders are a collection of real-time 3D ASCII graphics, able to be viewed with this rendering engine built entirely in vanilla Java. 
 
 While the original concept proved that 3D geometries could be projected onto a flat text grid, this project transforms that novelty into a loading-screen framework. Depending on the loading screen selected, it introduces full ANSI TrueColor ray-lit compositing, geometric abstractions, advanced math/physics simulations, and asynchronous thread messaging to serve as a functional, visually stunning spinner for active CLI background processes.
 
