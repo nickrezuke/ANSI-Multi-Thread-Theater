@@ -14,7 +14,7 @@ While the original concept proved that 3D geometries could be projected onto a f
 * **Asynchronous Threaded Loaders**: Designed to be invoked by worker threads. The loader safely operates on a dedicated graphics loop while your primary logic processes separately.
 * **Live Progress Bar Binding**: Real-time cross-thread communication loops allow your worker function to feed granular progress updates to the active `Loader`, updating a stylized ASCII progress bar dynamically by passing it a value (0-100 inclusive) for the percent complete.
 * **TrueColor Shading & Custom Palettes**: Features custom illumination models, specular glints, edge-glow, and per-pixel programmatic tint mapping utilizing raw terminal character sequences to bring style to an otherwise entirely mathematical endeveour.
-* **Expanded Library**: Includes the iconic Andy Sloan donut (torus), cubes, spheres, pyramids, and completely custom math meshes.  Simulations including a Mandelbrot Zoom, Conways Game of Life, the famous Double Slit Experiment, Fluid Mechanics, etc. are also available.  Also attempts to recreate a few real world recognizable locations such as the Lourve.
+* **Expanded Library**: Includes the iconic Andy Sloan donut (torus), cubes, spheres, pyramids, and completely custom math meshes.  Simulations, including a Mandelbrot Zoom, Conways Game of Life, the famous Double Slit Experiment, Fluid Mechanics, etc. are also available.  Also attempts to recreate a few real world recognizable locations such as the Lourve and Big Ben.
 
 ---
 
@@ -33,9 +33,9 @@ This project comes packed with a ton of different variants, all derived from a c
 -> **SuzanneTheMonkey**: <!-- TODO: Elaborate on this section -->
 -> **ChromeCheckerboardSphere**: <!-- TODO: Elaborate on this section -->
 -> **TriColorChromeSpheres**: <!-- TODO: Elaborate on this section -->
--> **RefractiveMagnifier**: <!-- TODO: Elaborate on this section -->
 
--> **TexelCube**: I made a cube that can have custom textures applied by texels
+-> **TexelCube**: I made an abstract cube loader that can have custom textures applied to each face by defining a grid of texels.  This texel definition function, which only needs the parameters x, y, and face (all ints) it returns the RGB that texel should be, making it extremely easy to make your own, which I highly encourage you to do.
+-----> **TexelMakeYourOwnCube**: Check out this file if you'd like to make your own
 -----> **TexelMinecraftGrassBlock**: <!-- TODO: Elaborate on this section -->
 -----> **TexelCompantionCube**: <!-- TODO: Elaborate on this section -->
 -----> **TexelKevinCube**: <!-- TODO: Elaborate on this section -->
@@ -79,7 +79,7 @@ This project comes packed with a ton of different variants, all derived from a c
 
 -> **WireframeSphere**: <!-- TODO: Elaborate on this section -->
 -> **WireframeCube**: <!-- TODO: Elaborate on this section -->
--> **FisheyeGlobe**: <!-- TODO: Elaborate on this section -->
+-> **WireframeFisheyeGlobe**: <!-- TODO: Elaborate on this section -->
 
 -> **CatHead**: <!-- TODO: Elaborate on this section -->
 -> **Apple**: <!-- TODO: Elaborate on this section -->
@@ -112,6 +112,10 @@ This project comes packed with a ton of different variants, all derived from a c
 -> **GyroidA**: <!-- TODO: Elaborate on this section -->
 -> **GyroidB**: <!-- TODO: Elaborate on this section -->
 
+-> **DFSMazeSolver**: <!-- TODO: Elaborate on this section -->
+-> **BFSMazeSolver**: <!-- TODO: Elaborate on this section -->
+-> **AStarMazeSolver**: <!-- TODO: Elaborate on this section -->
+-> **DeadEndFillingMazeSolver**: <!-- TODO: Elaborate on this section -->
 -> **ConwaysGameOfLife**: <!-- TODO: Elaborate on this section -->
 -> **BriansBrain**: <!-- TODO: Elaborate on this section -->
 -> **MandelbrotZoom**: <!-- TODO: Elaborate on this section -->
@@ -148,6 +152,7 @@ This project comes packed with a ton of different variants, all derived from a c
 -> **NyanCat**: <!-- TODO: Elaborate on this section -->
 -> **Radar**: <!-- TODO: Elaborate on this section -->
 -> **HillTree**: <!-- TODO: Elaborate on this section -->
+-> **RefractiveMagnifierLake**: <!-- TODO: Elaborate on this section -->
 -> **Waterfall**: <!-- TODO: Elaborate on this section -->
 -> **Tornado**: <!-- TODO: Elaborate on this section -->
 -> **RainyCityStreet**: <!-- TODO: Elaborate on this section -->
@@ -173,6 +178,9 @@ This project comes packed with a ton of different variants, all derived from a c
 -> **BrickBreakout**: <!-- TODO: Elaborate on this section -->
 -> **Slitherio**: <!-- TODO: Elaborate on this section -->
 
+-> **GifPlayer**: <!-- TODO: Elaborate on this section -->
+
+
 I also have a sub subclass called InteractiveLoader which allows interactivity
 Some of these loaders extend this, and are also interactable by using the arrow keys:
 
@@ -190,13 +198,14 @@ Note to self: Other ideas to consider:
 Quantum Wavefunction Interference
 Satelite? ISS? Hubble Telescope?
 Comet / Meteor
+Tower of Hanoi Solver?
 Asteroid Belt
 Cheeseburger
 Pizza Slice
 Taco
+Toy Boat
 Sunflower?
 Car / Truck
-Maze Generator / Solver (BFS, DFS, A*, etc.)
 Interactive Tanks-like Aiming & Shooting game w/ breakable ground
 Interactive DDR Game (Arrow Key Tap Tap?)
 Interactive Cube Rolling along a surface, painting a grid as it rolls

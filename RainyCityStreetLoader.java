@@ -1,5 +1,3 @@
-// TODO: The rain / reflection is too fast and jittery at times, fix that
-
 public class RainyCityStreetLoader extends Loader {
     private static final StatusStage[] RAIN_STAGES = {
             new StatusStage(20, "Erecting neon skyscraper outlines:"),
@@ -12,23 +10,26 @@ public class RainyCityStreetLoader extends Loader {
     private final int width = 120;
     private final int height = 36;
 
-    // Meticulously matched low-saturation urban neon color registers
-    private static final int[] RGB_SKY = { 12, 10, 22 }; // Dark Cyberpunk Indigo
-    private static final int[] RGB_BUILDING = { 22, 18, 32 }; // Clean Skyscraper Concrete
-    private static final int[] RGB_NEON_A = { 235, 35, 110 }; // Soft Cyberpunk Magenta
-    private static final int[] RGB_NEON_B = { 35, 185, 225 }; // Muted Neon Cyan
-    private static final int[] RGB_NEON_C = { 230, 160, 25 }; // Warm Amber Window Glow
-    private static final int[] RGB_ASPHALT = { 16, 14, 24 }; // Deep Wet Asphalt
-    private static final int[] RGB_PEDESTRIAN = { 8, 8, 12 }; // Deep Ambient Silhouette Shield
+    private static final int[] RGB_SKY = { 12, 10, 22 }; 
+    private static final int[] RGB_BUILDING = { 22, 18, 32 }; 
+    private static final int[] RGB_NEON_A = { 235, 35, 110 }; 
+    private static final int[] RGB_NEON_B = { 35, 185, 225 }; 
+    private static final int[] RGB_NEON_C = { 230, 160, 25 }; 
+    private static final int[] RGB_ASPHALT = { 16, 14, 24 }; 
+    private static final int[] RGB_PEDESTRIAN = { 8, 8, 12 }; 
 
-    // Entity tracking structure to cache walking pedestrians for reflection
-    // calculations
+    private static final double RAIN_PRIMARY_TIME_SPEED = 22.0; 
+    private static final double RAIN_SECONDARY_TIME_SPEED = 14.0; 
+    private static final double WAVE_WARP_TIME_SPEED = 1.8; 
+    private static final double SPLASH_TIME_SPEED = 0.9; 
+
     private static final int MAX_PEDESTRIANS = 3;
     private final int[] cachedPedX = new int[MAX_PEDESTRIANS];
     private final int[] cachedPedColorIdx = new int[MAX_PEDESTRIANS]; // 0=A, 1=B, 2=C
     private final int[] cachedPedDirection = new int[MAX_PEDESTRIANS];
 
     public RainyCityStreetLoader() {
+        // This one is specific
         super(RAIN_STAGES, 120, 36);
     }
 
@@ -39,11 +40,10 @@ public class RainyCityStreetLoader extends Loader {
 
     @Override
     protected void renderGeometry(String[] outputBuffer, double[] zBuffer) {
-        timeClock += 0.05; // Deliberate speed tracking for smooth cinemagraph fluid movement
+        timeClock += 0.05; 
 
-        int groundY = 24; // Horizon boundary line split separating street surface from sky architecture
+        int groundY = 24;
 
-        // --- PRE-CALCULATE AND CACHE DYNAMIC PEDESTRIAN POSITION MATRICES ---
         for (int pId = 0; pId < MAX_PEDESTRIANS; pId++) {
             double speed = 3.2 + pId * 1.2;
             double direction = (pId % 2 == 0) ? 1.0 : -1.0;
@@ -67,15 +67,16 @@ public class RainyCityStreetLoader extends Loader {
                 if (y < groundY) {
                     pixelRGB = getSkySceneRGB(x, y);
 
-                    // Scrolling rain sheet noise mask overlay
-                    double rainMask = Math.sin((x * 0.75 + y * 1.5) - timeClock * 22.0)
-                            * Math.cos((x * 0.25 - y * 1.2) + timeClock * 14.0);
+                    double rainMask = Math.sin((x * 0.75 + y * 1.5) - timeClock * RAIN_PRIMARY_TIME_SPEED)
+                            * Math.cos((x * 0.25 - y * 1.2) + timeClock * RAIN_SECONDARY_TIME_SPEED);
 
-                    if (rainMask > 0.62) {
+                    double rainIntensity = smoothstep(0.50, 0.72, rainMask);
+                    if (rainIntensity > 0.0) {
+                        double blend = 0.20 * rainIntensity;
                         pixelRGB = new int[] {
-                                Math.min(255, (int) (pixelRGB[0] * 0.80 + 110 * 0.20)),
-                                Math.min(255, (int) (pixelRGB[1] * 0.80 + 130 * 0.20)),
-                                Math.min(255, (int) (pixelRGB[2] * 0.80 + 160 * 0.20))
+                                Math.min(255, (int) (pixelRGB[0] * (1.0 - blend) + 110 * blend)),
+                                Math.min(255, (int) (pixelRGB[1] * (1.0 - blend) + 130 * blend)),
+                                Math.min(255, (int) (pixelRGB[2] * (1.0 - blend) + 160 * blend))
                         };
                     }
                 }
@@ -86,26 +87,21 @@ public class RainyCityStreetLoader extends Loader {
                 if (y >= groundY) {
                     zDepth = 0.50;
 
-                    // Reverse ray projection lookup: flip coordinates back up into storefront sky
-                    // space
                     int reflectedY = groundY - (y - groundY) - 1;
                     reflectedY = Math.max(0, Math.min(groundY - 1, reflectedY));
 
-                    // Continuous horizontal warp creates liquid ripples on the puddle surface
-                    double waveWarp = 2.2 * Math.sin(y * 1.2 - timeClock * 5.5) * Math.cos(x * 0.35);
-                    int sampleX = Math.max(0, Math.min(width - 1, x + (int) waveWarp));
+                    double waveWarp = 2.2 * Math.sin(y * 1.2 - timeClock * WAVE_WARP_TIME_SPEED) * Math.cos(x * 0.35);
+                    int sampleX = Math.max(0, Math.min(width - 1, x + (int) Math.round(waveWarp)));
 
-                    // Gather underlying sky backdrop structure color index
                     int[] reflectRGB = getSkySceneRGB(sampleX, reflectedY);
 
-                    // --- NEW RULE: EVALUATE WALKWAY PEDESTRIAN INVERSE BILLBOARD REFLECTIONS ---
                     boolean hitPedestrianReflection = false;
                     int pBaseY = groundY + 2;
-                    int reflectedPedY = pBaseY + (pBaseY - y) - 4; // Map height reflection axis accurately
+                    int reflectedPedY = pBaseY + (pBaseY - y) - 4;
 
                     for (int pId = 0; pId < MAX_PEDESTRIANS; pId++) {
                         int pBaseX = cachedPedX[pId];
-                        int dx = sampleX - pBaseX; // Evaluates tracking relative to warped ripple coordinates
+                        int dx = sampleX - pBaseX;
                         int dy = pBaseY - reflectedPedY;
 
                         boolean inReflectedUmbrella = (dy == 7 && Math.abs(dx) <= 3) ||
@@ -120,7 +116,6 @@ public class RainyCityStreetLoader extends Loader {
 
                         if (inReflectedUmbrella) {
                             int[] uRGB = (pId == 0) ? RGB_NEON_A : (pId == 1) ? RGB_NEON_B : RGB_NEON_C;
-                            // Inject muted transmissive values for reflection distortion clarity
                             reflectRGB = new int[] { (int) (uRGB[0] * 0.7), (int) (uRGB[1] * 0.7),
                                     (int) (uRGB[2] * 0.7) };
                             hitPedestrianReflection = true;
@@ -132,21 +127,20 @@ public class RainyCityStreetLoader extends Loader {
                         }
                     }
 
-                    // Multiplicative blending ties elements down into the deep asphalt floor layers
-                    double mixRatio = hitPedestrianReflection ? 0.65 : 0.40; // Emphasize coat shapes slightly
+                    double mixRatio = hitPedestrianReflection ? 0.65 : 0.40;
                     pixelRGB = new int[] {
                             Math.max(0, (int) (reflectRGB[0] * mixRatio + RGB_ASPHALT[0] * (1.0 - mixRatio))),
                             Math.max(0, (int) (reflectRGB[1] * mixRatio + RGB_ASPHALT[1] * (1.0 - mixRatio))),
                             Math.max(0, (int) (reflectRGB[2] * mixRatio + RGB_ASPHALT[2] * (1.0 - mixRatio)))
                     };
 
-                    // Sub-pixel ground impact splash ring points catch
-                    double splashNoise = Math.sin(x * 9.3 + y * 6.4 + timeClock * 18.0);
-                    if (splashNoise > 0.93) {
+                    double splashNoise = Math.sin(x * 9.3 + y * 6.4 + timeClock * SPLASH_TIME_SPEED);
+                    double splashIntensity = smoothstep(0.88, 0.97, splashNoise);
+                    if (splashIntensity > 0.0) {
                         pixelRGB = new int[] {
-                                Math.min(255, pixelRGB[0] + 45),
-                                Math.min(255, pixelRGB[1] + 50),
-                                Math.min(255, pixelRGB[2] + 65)
+                                Math.min(255, pixelRGB[0] + (int) (45 * splashIntensity)),
+                                Math.min(255, pixelRGB[1] + (int) (50 * splashIntensity)),
+                                Math.min(255, pixelRGB[2] + (int) (65 * splashIntensity))
                         };
                     }
                 }
@@ -193,7 +187,6 @@ public class RainyCityStreetLoader extends Loader {
                     outputBuffer[index] = colorString + "█" + RESET;
                     continue;
                 }
-                // Render the finalized canvas data directly down to the screen text buffer
                 if (zDepth > zBuffer[index]) {
                     zBuffer[index] = zDepth;
                     String colorString = String.format("\u001B[38;2;%d;%d;%dm", pixelRGB[0], pixelRGB[1], pixelRGB[2]);
@@ -204,8 +197,6 @@ public class RainyCityStreetLoader extends Loader {
     }
 
     private int[] getSkySceneRGB(int x, int y) {
-        // FIXED COORDINATES: Moved buildings inward slightly (e.g. 14 -> 20) to fix
-        // edge reflection clipping
         boolean neonSignA = (x >= 20 && x <= 29) && (y >= 7 && y <= 22);
         boolean neonSignB = (x >= 56 && x <= 62) && (y >= 4 && y <= 23);
         boolean neonSignC = (x >= 92 && x <= 100) && (y >= 10 && y <= 21);
@@ -218,8 +209,6 @@ public class RainyCityStreetLoader extends Loader {
         if (neonSignC) {
             return (x % 3 == 0 && y % 3 == 0) ? RGB_BUILDING : RGB_NEON_C;
         }
-        // Mid-ground structural background tower blocks (Also shifted away from
-        // boundaries)
         boolean buildingLeft = (x >= 8 && x <= 40) && y >= 6;
         boolean buildingCenter = (x >= 48 && x <= 78) && y >= 2;
         boolean buildingRight = (x >= 86 && x <= 114) && y >= 9;
@@ -233,5 +222,20 @@ public class RainyCityStreetLoader extends Loader {
             return RGB_BUILDING;
         }
         return RGB_SKY;
+    }
+
+    private static double clamp01(double v) {
+        if (v < 0.0) {
+            return 0.0;
+        }
+        if (v > 1.0) {
+            return 1.0;
+        }
+        return v;
+    }
+
+    private static double smoothstep(double edge0, double edge1, double x) {
+        double t = clamp01((x - edge0) / (edge1 - edge0));
+        return t * t * (3.0 - 2.0 * t);
     }
 }

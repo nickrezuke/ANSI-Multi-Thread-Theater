@@ -1,21 +1,19 @@
-// TODO: fix the gala, fuju, cosmic crisp variants.  maybe zoom in?
-
 public class AppleLoader extends Loader {
     private static final StatusStage[] APPLE_STAGES = {
-        new StatusStage(25, "Growing apple orchard:"),
-        new StatusStage(50, "Ripening under the sun:"),
-        new StatusStage(75, "Polishing apple skin:"),
-        new StatusStage(100, "Freshly Picked!")
+            new StatusStage(25, "Growing apple orchard:"),
+            new StatusStage(50, "Ripening under the sun:"),
+            new StatusStage(75, "Polishing apple skin:"),
+            new StatusStage(100, "Freshly Picked!")
     };
 
     // --- Skin pattern styles used to distinguish varieties beyond flat color ---
     private enum SkinPattern {
-        SOLID,              // near-uniform color (very subtle noise only)
-        STRIPED,            // vertical candy-stripe bands (Gala, Fuji, faint on Red Delicious)
-        MOTTLED,            // soft irregular blotches (Honeycrisp)
-        FRECKLED_RUSSET,    // fine dark freckling + rough russet cap near the stem (Golden Delicious)
-        SPECKLED_LENTICEL,  // scattered light lenticel dots over a dark base (Granny Smith, Cosmic Crisp)
-        ONE_SIDED_BLUSH     // sun-facing cheek blush fading to the base color (Pink Lady)
+        SOLID, // near-uniform color (very subtle noise only)
+        STRIPED, // vertical candy-stripe bands (Gala, Fuji, faint on Red Delicious)
+        MOTTLED, // soft irregular blotches (Honeycrisp)
+        FRECKLED_RUSSET, // fine dark freckling + rough russet cap near the stem (Golden Delicious)
+        SPECKLED_LENTICEL, // scattered light lenticel dots over a dark base (Granny Smith, Cosmic Crisp)
+        ONE_SIDED_BLUSH // sun-facing cheek blush fading to the base color (Pink Lady)
     }
 
     // Randomized configuration attributes (per-variety)
@@ -27,30 +25,33 @@ public class AppleLoader extends Loader {
 
     private double baseRadius;
     private double heightScale;
-    private double skew;          // >0 shifts the widest point up toward the stem (conical taper)
-    private double shapeExponent; // controls how quickly the profile rounds off vs. flattens
-    private double ribAmplitude;  // strength of the 5-point calyx "crown" bumps
-    private static final int RIB_COUNT = 5; // apples botanically have a 5-point calyx
+    private double skew;
+    private double shapeExponent;
+    private double ribAmplitude;
+    private static final int RIB_COUNT = 5;
 
-    private int[] stemColorRGB = {101, 67, 33};
-    private int[] leafColorRGB = {45, 125, 55};
+    private int[] stemColorRGB = { 101, 67, 33 };
+    private int[] leafColorRGB = { 45, 125, 55 };
 
-    private double A = 0; // Rotation around X-axis (Pitch)
-    private double B = 0; // Rotation around Z-axis (Yaw)
+    private double A = 0;
+    private double B = 0;
 
     public AppleLoader() {
         super(APPLE_STAGES, 80, 22);
     }
 
+    public AppleLoader(int w, int h) {
+        super(APPLE_STAGES, w, h);
+    }
+
     @Override
     protected void initialize() {
-        // Choose a unique, recognizable variety at runtime (1 to 8)
-        int variant = (int) (Math.random() * 8) + 1;
-        variant = 8; //TODO REMOVE THIS TEST LINE
+        // Choose a unique variety at runtime (1 to 9)
+        int variant = (int) (Math.random() * 9) + 1;
         switch (variant) {
-            case 1: // --- RED DELICIOUS: deep uniform red, tall & conical, 5-point calyx crown ---
-                baseColor = new int[]{140, 15, 20};
-                accentColor = new int[]{92, 10, 15};
+            case 1: // --- RED DELICIOUS ---
+                baseColor = new int[] { 140, 15, 20 };
+                accentColor = new int[] { 92, 10, 15 };
                 pattern = SkinPattern.STRIPED;
                 patternIntensity = 0.18;
                 stripeCount = 7;
@@ -60,9 +61,9 @@ public class AppleLoader extends Loader {
                 shapeExponent = 0.85;
                 ribAmplitude = 0.14;
                 break;
-            case 2: // --- GRANNY SMITH: bright crisp green, round, smooth with faint pale lenticels ---
-                baseColor = new int[]{112, 178, 58};
-                accentColor = new int[]{232, 236, 195};
+            case 2: // --- GRANNY SMITH ---
+                baseColor = new int[] { 112, 178, 58 };
+                accentColor = new int[] { 232, 236, 195 };
                 pattern = SkinPattern.SPECKLED_LENTICEL;
                 patternIntensity = 0.05; // dot chance
                 baseRadius = 1.85;
@@ -71,9 +72,9 @@ public class AppleLoader extends Loader {
                 shapeExponent = 1.0;
                 ribAmplitude = 0.03;
                 break;
-            case 3: // --- GOLDEN DELICIOUS: elongated golden yellow, russet cap near stem, fine freckles ---
-                baseColor = new int[]{219, 186, 64};
-                accentColor = new int[]{124, 88, 46};
+            case 3: // --- GOLDEN DELICIOUS ---
+                baseColor = new int[] { 219, 186, 64 };
+                accentColor = new int[] { 124, 88, 46 };
                 pattern = SkinPattern.FRECKLED_RUSSET;
                 patternIntensity = 0.5;
                 baseRadius = 1.55;
@@ -82,9 +83,10 @@ public class AppleLoader extends Loader {
                 shapeExponent = 0.95;
                 ribAmplitude = 0.02;
                 break;
-            case 4: default: // --- COSMIC CRISP: large dark maroon-red with bright cream "starry" lenticels ---
-                baseColor = new int[]{112, 18, 28};
-                accentColor = new int[]{234, 216, 184};
+            case 4:
+            default: // --- COSMIC CRISP ---
+                baseColor = new int[] { 112, 18, 28 };
+                accentColor = new int[] { 234, 216, 184 };
                 pattern = SkinPattern.SPECKLED_LENTICEL;
                 patternIntensity = 0.09;
                 baseRadius = 1.9;
@@ -93,9 +95,9 @@ public class AppleLoader extends Loader {
                 shapeExponent = 1.0;
                 ribAmplitude = 0.05;
                 break;
-            case 5: // --- GALA: round-conical, bold red-orange candy stripes over yellow ---
-                baseColor = new int[]{226, 178, 72};
-                accentColor = new int[]{196, 64, 42};
+            case 5: // --- GALA ---
+                baseColor = new int[] { 226, 178, 72 };
+                accentColor = new int[] { 196, 64, 42 };
                 pattern = SkinPattern.STRIPED;
                 patternIntensity = 0.55;
                 stripeCount = 10;
@@ -105,9 +107,9 @@ public class AppleLoader extends Loader {
                 shapeExponent = 0.9;
                 ribAmplitude = 0.04;
                 break;
-            case 6: // --- HONEYCRISP: large & round, blotchy red-orange mottling over pale yellow-green ---
-                baseColor = new int[]{198, 202, 118};
-                accentColor = new int[]{188, 58, 48};
+            case 6: // --- HONEYCRISP ---
+                baseColor = new int[] { 228, 48, 48 };
+                accentColor = new int[] { 198, 252, 108 };
                 pattern = SkinPattern.MOTTLED;
                 patternIntensity = 0.6;
                 baseRadius = 1.95;
@@ -116,9 +118,9 @@ public class AppleLoader extends Loader {
                 shapeExponent = 1.0;
                 ribAmplitude = 0.03;
                 break;
-            case 7: // --- FUJI: round, dense pink-red striping over yellow-green ---
-                baseColor = new int[]{206, 196, 128};
-                accentColor = new int[]{188, 78, 88};
+            case 7: // --- FUJI ---
+                baseColor = new int[] { 206, 196, 128 };
+                accentColor = new int[] { 188, 78, 88 };
                 pattern = SkinPattern.STRIPED;
                 patternIntensity = 0.7;
                 stripeCount = 14;
@@ -128,9 +130,20 @@ public class AppleLoader extends Loader {
                 shapeExponent = 1.0;
                 ribAmplitude = 0.03;
                 break;
-            case 8: // --- PINK LADY: elongated & conical, sun-facing pink-red cheek over green-yellow ---
-                baseColor = new int[]{178, 196, 96};
-                accentColor = new int[]{214, 86, 118};
+            case 8: // --- PINK LADY ---
+                baseColor = new int[] { 178, 196, 96 };
+                accentColor = new int[] { 214, 86, 118 };
+                pattern = SkinPattern.ONE_SIDED_BLUSH;
+                patternIntensity = 1.0;
+                baseRadius = 1.6;
+                heightScale = 1.2;
+                skew = 0.18;
+                shapeExponent = 0.88;
+                ribAmplitude = 0.06;
+                break;
+            case 9: // --- MCINTOSH ---
+                baseColor = new int[] { 228, 48, 48 };
+                accentColor = new int[] { 158, 176, 86 };
                 pattern = SkinPattern.ONE_SIDED_BLUSH;
                 patternIntensity = 1.0;
                 baseRadius = 1.6;
@@ -155,13 +168,13 @@ public class AppleLoader extends Loader {
 
                 // Meridian profile: radial distance from the core axis and height are computed
                 // independently (unlike a plain sphere) so shape (skew/taper) and height don't
-                // fight each other. Both naturally taper to ~0 at the calyx pole (phi=0) and the
-                // stem pole (phi=pi).
+                // fight each other. Both naturally taper to ~0 at the calyx pole (phi=0) and
+                // the stem pole (phi=pi).
                 double radial = baseRadius * Math.pow(Math.max(0, sinPhi), shapeExponent)
                         * (1.0 - skew * cosPhi);
 
-                // Five-point calyx "crown": real apples show faint pentagonal ribbing flaring out
-                // near the blossom end (phi -> 0, opposite the stem at phi -> pi).
+                // Five-point calyx "crown": real apples show faint pentagonal ribbing flaring
+                // out near the blossom end (phi -> 0, opposite the stem at phi -> pi).
                 double ribWeight = Math.pow(Math.max(0, cosPhi), 2.0);
                 radial += ribAmplitude * ribWeight * Math.cos(RIB_COUNT * theta);
                 radial = Math.max(radial, 0.02);
@@ -212,21 +225,15 @@ public class AppleLoader extends Loader {
         B += 0.02;
     }
 
-    // Determines the unshaded skin RGB at a given surface coordinate based on the variety's pattern.
+    // Determines the unshaded skin RGB at a given surface
+    // coordinate based on the variety's pattern.
     private int[] computeSkinColor(double theta, double phi, double sinPhi, double cosPhi) {
         switch (pattern) {
             case STRIPED: {
-                double raw = 0.5 + 0.5 * Math.sin(theta * stripeCount + Math.sin(phi * 3.0) * 0.6);
-                double t = clamp01((raw - 0.4) / 0.2) * patternIntensity;
-                return lerp(baseColor, accentColor, t);
+                return computeStripedSkin(theta, phi);
             }
             case MOTTLED: {
-                double n = Math.sin(theta * 3.1 + 0.7) * Math.cos(phi * 4.3 + 1.3)
-                        + 0.5 * Math.sin(theta * 7.7 + 2.1) * Math.cos(phi * 2.6 + 0.4)
-                        + 0.3 * Math.sin(theta * 1.3) * Math.cos(phi * 6.1);
-                double norm = clamp01((n + 1.8) / 3.6);
-                double t = smoothstep(0.5, 0.78, norm) * patternIntensity;
-                return lerp(baseColor, accentColor, t);
+                return computeMottledSkin(theta, phi);
             }
             case FRECKLED_RUSSET: {
                 int[] c = baseColor;
@@ -245,12 +252,7 @@ public class AppleLoader extends Loader {
                 return c;
             }
             case SPECKLED_LENTICEL: {
-                double dot = hash(theta * 60.0, phi * 60.0);
-                if (dot > (1.0 - patternIntensity)) {
-                    double size = hash(theta * 13.0 + 5.0, phi * 13.0 + 9.0);
-                    return lerp(baseColor, accentColor, 0.6 + 0.4 * size);
-                }
-                return baseColor;
+                return computeLenticelSkin(theta, phi, sinPhi);
             }
             case ONE_SIDED_BLUSH: {
                 double sunAzimuth = Math.PI * 0.25;
@@ -264,8 +266,148 @@ public class AppleLoader extends Loader {
         }
     }
 
+    // Renders irregular, narrow color streaks running roughly pole-to-pole. Real
+    // striped varieties (Gala, Fuji) show thin, uneven streaks over a lighter base
+    // rather than bold, evenly-spaced bands -- evenly-spaced full-intensity bands
+    // is what reads as a beach ball. Each "sector" (there are `stripeCount` of them
+    // around the circumference) gets its own randomized streak
+    // offset/width/brightness so the pattern feels organic instead of mechanically
+    // regular, and neighboring sectors are checked so streaks aren't clipped at
+    // sector boundaries.
+    private int[] computeStripedSkin(double theta, double phi) {
+        int stripeCountInt = Math.max(1, (int) Math.round(stripeCount));
+        double sectorWidth = (2 * Math.PI) / stripeCountInt;
+        double pos = theta / sectorWidth;
+        int sector = (int) Math.floor(pos);
+
+        double bestAccent = 0.0;
+        for (int d = -1; d <= 1; d++) {
+            int s = sector + d;
+            int wrappedS = ((s % stripeCountInt) + stripeCountInt) % stripeCountInt;
+
+            double offset = hash(wrappedS * 4.3 + 1.1, 0.0); // streak position within its sector
+            double width = 0.10 + 0.16 * hash(wrappedS * 7.9 + 2.7, 0.0); // narrow streak, not a half-sector band
+            double strength = 0.55 + 0.45 * hash(wrappedS * 2.1 + 5.3, 0.0);
+
+            // A gentle wave keeps streaks from being ruler-straight, and per-band noise
+            // along phi breaks each streak into shorter, discontinuous segments (real apple
+            // streaks rarely run the full stem-to-calyx length unbroken).
+            double wave = 0.15 * Math.sin(phi * 4.0 + wrappedS * 2.6);
+            double band = Math.floor(phi * 5.0);
+            double lengthNoise = hash(wrappedS * 6.1 + 3.3, band);
+            double lengthFade = smoothstep(0.15, 0.45, lengthNoise);
+
+            double center = s + offset + wave; // unwrapped `s` keeps distance continuous across the theta seam
+            double dist = Math.abs(pos - center);
+            double edge = 1.0 - smoothstep(width * 0.5, width, dist);
+
+            double accent = edge * strength * lengthFade;
+            if (accent > bestAccent)
+                bestAccent = accent;
+        }
+
+        double t = clamp01(bestAccent) * patternIntensity;
+        return lerp(baseColor, accentColor, t);
+    }
+
+    // Blotchy, irregular mottling (Honeycrisp). Plain layered sin/cos noise reads
+    // as "wavy" because every octave shares the same theta/phi grid, so their
+    // zero-crossings line up into a visible interference pattern. Warping the
+    // sampling coordinates with a coarser, incommensurate noise field first breaks
+    // that alignment; a handful of randomly placed, irregularly-sized soft-edged
+    // "blotch" kernels then give the fadey, splotchy look real mottling has, rather
+    // than a mathematical ripple.
+    private int[] computeMottledSkin(double theta, double phi) {
+        double warpT = 0.35 * Math.sin(phi * 2.3 + 0.6) + 0.25 * Math.sin(theta * 1.7 - phi * 1.1 + 2.0);
+        double warpP = 0.30 * Math.sin(theta * 2.1 + 1.4) + 0.20 * Math.sin(phi * 1.3 + theta * 0.9 - 0.7);
+        double wTheta = theta + warpT;
+        double wPhi = phi + warpP;
+
+        double accum = 0.0;
+        final int BLOTCHES = 9;
+        for (int i = 0; i < BLOTCHES; i++) {
+            double seed = i * 17.13;
+            double cTheta = hash(seed, 1.0) * 2 * Math.PI;
+            double cPhi = 0.15 * Math.PI + hash(seed, 2.0) * 0.7 * Math.PI;
+            double size = 0.55 + 0.65 * hash(seed, 3.0); // irregular blotch radius
+
+            double dt = wTheta - cTheta;
+            if (dt > Math.PI)
+                dt -= 2 * Math.PI;
+            if (dt < -Math.PI)
+                dt += 2 * Math.PI;
+            double dp = (wPhi - cPhi) * 1.6; // slight vertical stretch
+
+            double dist = Math.sqrt(dt * dt + dp * dp) / size;
+            double falloff = 1.0 - smoothstep(0.4, 1.0, dist); // soft, fadey edge
+            accum += falloff;
+        }
+
+        double t = clamp01(accum * 0.55) * patternIntensity;
+        t = t * t * (3 - 2 * t); // extra smoothing so blotches blend rather than threshold sharply
+        return lerp(baseColor, accentColor, t);
+    }
+
+    // Renders small, roughly circular lenticel dots on a coarse jittered grid with
+    // a soft radial falloff. A coherent dot footprint (several adjacent samples) is
+    // what makes these read as scattered dots; thresholding an independent random
+    // value per surface sample (the old approach) has no spatial coherence and
+    // aliases into flickering "confetti" noise at this render resolution.
+    private int[] computeLenticelSkin(double theta, double phi, double sinPhi) {
+        final int cellsTheta = 16;
+        final int cellsPhi = 11;
+        double cellTheta = (2 * Math.PI) / cellsTheta;
+        double cellPhi = Math.PI / cellsPhi;
+
+        int baseCti = (int) Math.floor(theta / cellTheta);
+        int baseCpi = (int) Math.floor(phi / cellPhi);
+
+        double best = 1.0; // smallest normalized distance to any nearby lenticel center found
+
+        for (int dCti = -1; dCti <= 1; dCti++) {
+            for (int dCpi = -1; dCpi <= 1; dCpi++) {
+                int cti = baseCti + dCti;
+                int cpi = baseCpi + dCpi;
+                if (cpi < 0 || cpi >= cellsPhi)
+                    continue; // no wrap at the poles
+                int wrappedCti = ((cti % cellsTheta) + cellsTheta) % cellsTheta;
+
+                double seedRoll = hash(wrappedCti * 3.7 + 0.5, cpi * 5.3 + 1.5);
+                if (seedRoll <= (1.0 - patternIntensity))
+                    continue; // this cell has no lenticel
+
+                double jitterT = hash(wrappedCti * 9.1 + 4.0, cpi * 2.3 + 7.0);
+                double jitterP = hash(wrappedCti * 2.9 + 8.0, cpi * 6.7 + 1.0);
+                double centerTheta = (cti + 0.15 + 0.7 * jitterT) * cellTheta;
+                double centerPhi = (cpi + 0.15 + 0.7 * jitterP) * cellPhi;
+
+                double dt = theta - centerTheta;
+                if (dt > Math.PI)
+                    dt -= 2 * Math.PI;
+                if (dt < -Math.PI)
+                    dt += 2 * Math.PI;
+                // Scale the theta component by sinPhi so dots stay round instead of stretching
+                // near the poles, where a fixed angular width covers less physical distance.
+                double dtPhysical = dt * Math.max(sinPhi, 0.15);
+                double dp = phi - centerPhi;
+
+                double size = 0.06 + 0.05 * hash(wrappedCti * 1.3 + cpi * 7.1, cpi * 4.4 + cti * 0.7);
+                double dist = Math.sqrt(dtPhysical * dtPhysical + dp * dp) / size;
+
+                if (dist < best)
+                    best = dist;
+            }
+        }
+
+        if (best < 1.0) {
+            double edge = 1.0 - smoothstep(0.55, 1.0, best);
+            return lerp(baseColor, accentColor, clamp01(edge));
+        }
+        return baseColor;
+    }
+
     private void projectAndBufferPoint(double x0, double y0, double z0, double theta, double phi,
-                                        int[] colorRGB, String[] outputBuffer, double[] zBuffer, boolean isAccessory) {
+            int[] colorRGB, String[] outputBuffer, double[] zBuffer, boolean isAccessory) {
         double sinA = Math.sin(A), cosA = Math.cos(A);
         double sinB = Math.sin(B), cosB = Math.cos(B);
 
@@ -280,7 +422,7 @@ public class AppleLoader extends Loader {
         double z2 = z1;
 
         // Depth projection matrix calculations
-        double D = 1.0 / (z2 + 7.0);
+        double D = 1.0 / (z2 + 5.0);
         int x = (int) (40 + 36 * D * x2); // Terminal cell aspect compensation (cells ~1.8x taller than wide)
         int y = (int) (11 + 20 * D * y2);
         int o = x + window_width * y;
@@ -288,9 +430,9 @@ public class AppleLoader extends Loader {
         // Vector calculations for lighting
         double nx2, ny2, nz1;
         if (!isAccessory) {
-            // Approximate outward surface normal (standard rounded-fruit normal; the shape's
-            // skew/ribbing perturbations are subtle enough that this reads correctly at this
-            // resolution without a full analytic derivative).
+            // Approximate outward surface normal (standard rounded-fruit normal; the
+            // shape's skew/ribbing perturbations are subtle enough that this reads
+            // correctly at this resolution without a full analytic derivative).
             double nx = Math.sin(phi) * Math.cos(theta);
             double ny = Math.cos(phi);
             double nz = Math.sin(phi) * Math.sin(theta);
@@ -300,7 +442,9 @@ public class AppleLoader extends Loader {
             nx2 = nx * cosB - ny1 * sinB;
             ny2 = nx * sinB + ny1 * cosB;
         } else {
-            nx2 = 0.0; ny2 = 1.0; nz1 = 0.0;
+            nx2 = 0.0;
+            ny2 = 1.0;
+            nz1 = 0.0;
         }
 
         // Fixed overhead illumination vector
@@ -310,8 +454,8 @@ public class AppleLoader extends Loader {
             zBuffer[o] = D;
 
             double Lc = clamp01((L + 1.0) / 2.0);
-            // Modulate the true color by lighting (not just the ASCII density ramp) so shading
-            // reads as real 3D shading rather than a flat-colored silhouette.
+            // Modulate the true color by lighting (not just the ASCII density ramp) so
+            // shading reads as real 3D shading rather than a flat-colored silhouette.
             double shade = 0.45 + 0.65 * Lc;
             int r = (int) clampByte(colorRGB[0] * shade);
             int g = (int) clampByte(colorRGB[1] * shade);
@@ -319,8 +463,10 @@ public class AppleLoader extends Loader {
             String colorCode = "\u001B[38;2;" + r + ";" + g + ";" + b + "m";
 
             int charIndex = (int) (Math.round(Lc * 11));
-            if (charIndex < 0) charIndex = 0;
-            if (charIndex > 11) charIndex = 11;
+            if (charIndex < 0)
+                charIndex = 0;
+            if (charIndex > 11)
+                charIndex = 11;
 
             String lString = ".,-~:;=!*#$@";
             char asciiChar = lString.charAt(charIndex);
@@ -344,7 +490,7 @@ public class AppleLoader extends Loader {
 
     private static int[] lerp(int[] a, int[] b, double t) {
         t = clamp01(t);
-        return new int[]{
+        return new int[] {
                 (int) (a[0] + (b[0] - a[0]) * t),
                 (int) (a[1] + (b[1] - a[1]) * t),
                 (int) (a[2] + (b[2] - a[2]) * t)

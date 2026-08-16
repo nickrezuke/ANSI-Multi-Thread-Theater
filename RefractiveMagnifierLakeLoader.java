@@ -1,8 +1,6 @@
-// TODO: Give the Magnifying Glass a "Handle" and maybe a little lens white reflection?  Like the classic magnifying glass look
-// TODO: Improve the background, more things to zoom in on?
 // TODO: Perhaps also apply this magnifying glass to other 2D environment loaders?
 
-public class RefractiveMagnifierLoader extends Loader {
+public class RefractiveMagnifierLakeLoader extends Loader {
     private static final StatusStage[] INTENSE_MAG_STAGES = {
         new StatusStage(25, "Rendering procedural photograph:"),
         new StatusStage(50, "Molding extreme convex glass curvature:"),
@@ -28,7 +26,7 @@ public class RefractiveMagnifierLoader extends Loader {
         {45, 18, 80}, {110, 35, 120}, {200, 70, 95}, {240, 120, 60}, {250, 180, 90}, {255, 215, 140}
     };
 
-    public RefractiveMagnifierLoader() {
+    public RefractiveMagnifierLakeLoader() {
         super(INTENSE_MAG_STAGES, 80, 22);
     }
 
@@ -52,6 +50,16 @@ public class RefractiveMagnifierLoader extends Loader {
         double lensRadius = 0.56;
         double rimThickness = 0.035;
         double lightX = 0.577, lightY = -0.707, lightZ = -0.408;
+
+        // Handle geometry: fixed grip angle relative to the screen (as if
+        // someone is holding the glass steady while panning it across the
+        // scene), extending outward from the rim.
+        double handleAngle = Math.PI / 4.0; // down-and-right
+        double handleDirX = Math.cos(handleAngle);
+        double handleDirY = Math.sin(handleAngle);
+        double handleStart = lensRadius + rimThickness;
+        double handleLength = 0.62;
+        double handleEnd = handleStart + handleLength;
 
         for (int y = 0; y < height; y++) {
             double screenY = ((double) y / height) * 2.0 - 1.0;
@@ -146,12 +154,66 @@ public class RefractiveMagnifierLoader extends Loader {
                         g = clamp(g + (int) (glint * 190) + (int) (fresnel * 40));
                         b = clamp(b + (int) (glint * 190) + (int) (fresnel * 45));
 
+                        // Soft white highlight blob near the upper-left of the
+                        // dome - a deliberately drawn "classic magnifying
+                        // glass" reflection, distinct from the light-driven
+                        // specular glint above.
+                        double hlOffX = -0.32, hlOffY = -0.36;
+                        double hdx = (dx / lensRadius) - hlOffX;
+                        double hdy = ((dy / lensRadius) - hlOffY) * 1.3; // slight elongation
+                        double hlDist = Math.sqrt(hdx * hdx + hdy * hdy);
+                        double hlStrength = Math.max(0.0, 1.0 - hlDist / 0.30);
+                        hlStrength = hlStrength * hlStrength * 0.65; // soften, cap opacity
+
+                        r = clamp((int) (r + hlStrength * (255 - r)));
+                        g = clamp((int) (g + hlStrength * (255 - g)));
+                        b = clamp((int) (b + hlStrength * (255 - b)));
+                        if (hlStrength > 0.4) {
+                            renderChar = '˚';
+                        }
+
                         if (glint > 0.55) {
                             renderChar = '*'; // bright glass sparkle
                         }
 
                         outputBuffer[idx] = ansi(r, g, b) + renderChar + RESET;
                         continue;
+                    }
+                }
+
+                // -------------------------------------------------------------
+                // OBJECT C: HANDLE
+                // -------------------------------------------------------------
+                double along = dx * handleDirX + dy * handleDirY;
+                if (along >= handleStart && along <= handleEnd) {
+                    double perp = -dx * handleDirY + dy * handleDirX;
+                    double s = (along - handleStart) / handleLength; // 0 at rim .. 1 at tip
+                    double halfWidth = 0.05 * (1.0 - 0.35 * s); // slight taper toward the tip
+
+                    if (Math.abs(perp) < halfWidth) {
+                        double depthZ = 1.0 / (-glassCenterZ);
+                        if (depthZ > zBuffer[idx]) {
+                            zBuffer[idx] = depthZ;
+
+                            // Wrapped-grip banding along the shaft.
+                            boolean wrap = Math.sin(s * 26.0) > 0.15;
+                            double edgeShade = 1.0 - Math.abs(perp) / halfWidth; // 0 at edge, 1 at core
+
+                            int r, g, b;
+                            if (wrap) {
+                                r = clamp((int) (120 + edgeShade * 60));
+                                g = clamp((int) (75 + edgeShade * 45));
+                                b = clamp((int) (40 + edgeShade * 25));
+                            } else {
+                                r = clamp((int) (90 + edgeShade * 40));
+                                g = clamp((int) (55 + edgeShade * 30));
+                                b = clamp((int) (28 + edgeShade * 18));
+                            }
+
+                            char renderChar = edgeShade > 0.6 ? '█' : (edgeShade > 0.3 ? '▓' : '▒');
+                            outputBuffer[idx] = ansi(r, g, b) + renderChar + RESET;
+                            continue;
+                        }
                     }
                 }
 

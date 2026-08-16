@@ -84,9 +84,6 @@ public class TexelMario64CapBlockLoader extends TexelCubeLoader {
         return bounds.length - 2;
     }
 
-    // Single cap color per block type - the checkerboard border, black frame, and inner panel
-    // are now white/black/base-color respectively (see getCubeTexel), so one color is all each
-    // palette entry needs.
     private int baseR, baseG, baseB;
 
     public TexelMario64CapBlockLoader() {
@@ -100,7 +97,6 @@ public class TexelMario64CapBlockLoader extends TexelCubeLoader {
 
     @Override
     protected void initialize() {
-        // Correct initialization hook to safely seed the block color variables
         initializePalette();
     }
 

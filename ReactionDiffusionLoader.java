@@ -1,4 +1,4 @@
-// TODO: Improve the accuracy of these reactions to look more like the animal prints they represent
+// TODO: Increase accuracy of this simulation / viewing resolution of Leopard, Cheetah, Giraffe, to be larger to see details???  Changing the simulation will affect the patterns but find some way to "zoom in" over time??
 
 import java.util.Random;
 
@@ -33,7 +33,7 @@ public class ReactionDiffusionLoader extends Loader {
     // measuring actual coverage/connectivity rather than guessing).
     private static final double DV_STRIPE = 0.45; // Zebra - thin elongated stripes
     private static final double DV_ROSETTE = 0.50; // Leopard - soft, rounded rosette blobs
-    private static final double DV_SPOT = 0.38; // Cheetah - compact, sharp-edged small spots
+    private static final double DV_SPOT = 0.35; // Cheetah - compact, sharp-edged small spots
     private static final double DV_CORAL = 0.50; // Giraffe - reticulated network
 
     // Re-balanced isotropic weights for high-res mesh grid tracking
@@ -70,23 +70,28 @@ public class ReactionDiffusionLoader extends Loader {
                 activeDv = DV_STRIPE;
                 seedStripeBands(rand, 7);
                 break;
-            case 1: // LEOPARD ROSETTES - soft self-spreading blobs, varied cluster size
-                activeFeed = 0.018;
-                activeKill = 0.051;
+            case 1: // LEOPARD ROSETTES - Pearson type lambda: mitotic spots that
+                     // pack into a steady state with dark grain-boundary rings
+                activeFeed = 0.030;
+                activeKill = 0.062;
                 activeDv = DV_ROSETTE;
-                seedClusters(rand, 34, 2, 5);
+                seedClusters(rand, 22, 3, 7);
                 break;
-            case 2: // CHEETAH SPOTS - small, numerous, discrete (non-merging) spots
-                activeFeed = 0.026;
-                activeKill = 0.056;
+            case 2: // CHEETAH SPOTS - same stable type-lambda family as leopard,
+                     // just denser/smaller seeding so spots stay solid dots
+                     // instead of growing large enough to hollow out into rings
+                activeFeed = 0.030;
+                activeKill = 0.063;
                 activeDv = DV_SPOT;
                 seedClusters(rand, 140, 1, 1);
                 break;
-            case 3: // GIRAFFE VEINS - reticulated patch network
-                activeFeed = 0.030;
-                activeKill = 0.058;
+            case 3: // GIRAFFE VEINS - Pearson type delta: reinforces the seeded
+                     // Voronoi cell walls into a stable network instead of
+                     // reorganizing them into zebra-style stripes
+                activeFeed = 0.042;
+                activeKill = 0.059;
                 activeDv = DV_CORAL;
-                seedVoronoiNetwork(rand, 24);
+                seedVoronoiNetwork(rand, 18);
                 break;
         }
 
@@ -163,9 +168,12 @@ public class ReactionDiffusionLoader extends Loader {
                     }
                 }
                 // Points where the nearest and second-nearest cell seeds are
-                // almost equidistant sit right on a Voronoi cell wall.
+                // almost equidistant sit right on a Voronoi cell wall. 2.0
+                // (vs. the previous 1.6) draws a thicker starter wall so the
+                // type-delta reaction below has a clear seam to lock onto
+                // rather than letting thin single-pixel walls dissolve.
                 double margin = Math.sqrt(second) - Math.sqrt(best);
-                if (margin < 1.6) {
+                if (margin < 2.0) {
                     gridU[y][x] = 0.50;
                     gridV[y][x] = 0.25 + rand.nextDouble() * 0.05;
                 }
