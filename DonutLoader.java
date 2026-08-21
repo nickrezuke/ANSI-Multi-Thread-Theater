@@ -18,17 +18,38 @@ public class DonutLoader extends Loader {
             { 2.3, 1.6, 2 }, { 3.5, 1.5, 0 }, { 4.2, 1.7, 1 }, { 4.9, 1.6, 2 }, { 5.7, 1.5, 0 }
     };
 
-    private final int[][] sprinkleMap = new int[180][524];
+    private static final String LUMINANCE_CHARS = ".,-~:;=!*#$@";
+
+    private static final double ONE_PI = Math.PI;
+    private static final double TWO_PI = 2.0 * ONE_PI;
+    private static final double THETA_STEP = 0.035;
+    private static final double PHI_STEP = 0.012;
+    private static final int THETA_STEPS = (int) Math.ceil(TWO_PI / THETA_STEP);
+    private static final int PHI_STEPS = (int) Math.ceil(TWO_PI / PHI_STEP);
+
+    private final int[][] sprinkleMap = new int[THETA_STEPS][PHI_STEPS];
     private String glazedIcing;
     private String donutCake;
     private String[] sprinkleColors;
+
+    // Precomputed "color + char + RESET" strings for every (color, luminance-char)
+    // combination this loader can ever draw. Palette layout: [0]=donutCake,
+    // [1]=glazedIcing, [2..4]=sprinkleColors[0..2]. Built once in initialize();
+    // renderGeometry() then does a pure array lookup instead of allocating a new
+    // String on every one of the ~1,700 pixels it writes, every frame, at 60fps.
+    private String[][] cellCache;
 
     private double A = 0;
     private double B = 0;
 
     public DonutLoader() {
-        // Donut uses 80x22
+        // This uses 80x22 by default
         super(DONUT_STAGES, 80, 22);
+    }
+
+    public DonutLoader(int w, int h) {
+        // Donut uses 80x22
+        super(DONUT_STAGES, w, h);
     }
 
     @Override
@@ -99,6 +120,15 @@ public class DonutLoader extends Loader {
 
         }
 
+        // Build the color/char lookup cache now that this run's flavor palette is known
+        String[] palette = { donutCake, glazedIcing, sprinkleColors[0], sprinkleColors[1], sprinkleColors[2] };
+        cellCache = new String[palette.length][LUMINANCE_CHARS.length()];
+        for (int c = 0; c < palette.length; c++) {
+            for (int ch = 0; ch < LUMINANCE_CHARS.length(); ch++) {
+                cellCache[c][ch] = palette[c] + LUMINANCE_CHARS.charAt(ch) + RESET;
+            }
+        }
+
         // Generate sprinkle map mapping logic
         for (int[] row : sprinkleMap) {
             for(int i = 0; i < row.length; i++) {
@@ -106,14 +136,14 @@ public class DonutLoader extends Loader {
             }
         }
         int tMapIndex = 0;
-        for (double theta = 0; theta < 6.28; theta += 0.035) {
+        for (double theta = 0; theta < TWO_PI; theta += THETA_STEP) {
             int pMapIndex = 0;
-            for (double phi = 0; phi < 6.28; phi += 0.012) {
+            for (double phi = 0; phi < TWO_PI; phi += PHI_STEP) {
                 for (int i = 0; i < SPRINKLES.length; i++) {
                     double dTheta = Math.abs(theta - SPRINKLES[i][0]);
                     double dPhi = Math.abs(phi - SPRINKLES[i][1]);
-                    if (dTheta > 3.14)
-                        dTheta = 6.28 - dTheta;
+                    if (dTheta > ONE_PI)
+                        dTheta = TWO_PI - dTheta;
 
                     if (dTheta < 0.15 && dPhi < 0.15) {
                         sprinkleMap[tMapIndex][pMapIndex] = (int) SPRINKLES[i][2];
@@ -128,10 +158,10 @@ public class DonutLoader extends Loader {
 
     @Override
     protected void renderGeometry(String[] outputBuffer, double[] zBuffer) {
-        for (int tIndex = 0; tIndex < 180; tIndex++) {
-            double theta = tIndex * 0.035;
-            for (int pIndex = 0; pIndex < 524; pIndex++) {
-                double phi = pIndex * 0.012;
+        for (int tIndex = 0; tIndex < THETA_STEPS; tIndex++) {
+            double theta = tIndex * THETA_STEP;
+            for (int pIndex = 0; pIndex < PHI_STEPS; pIndex++) {
+                double phi = pIndex * PHI_STEP;
                 double sinTheta = Math.sin(theta), cosTheta = Math.cos(theta);
                 double sinPhi = Math.sin(phi), cosPhi = Math.cos(phi);
                 double sinA = Math.sin(A), cosA = Math.cos(A);
@@ -151,24 +181,24 @@ public class DonutLoader extends Loader {
                 if (this.window_height > y && y > 0 && x > 0 && this.window_width > x && D > (zBuffer[o] + 0.0001)) {
                     zBuffer[o] = D;
                     int charIndex = (int) Math.round(N_double);
-                    if (charIndex < 0)
+                    if (charIndex < 0) {
                         charIndex = 0;
-
-                    String lString = ".,-~:;=!*#$@";
-                    char asciiChar = lString.charAt(charIndex >= lString.length() ? lString.length() - 1 : charIndex);
+                    } else if (charIndex >= LUMINANCE_CHARS.length()) {
+                        charIndex = LUMINANCE_CHARS.length() - 1;
+                    }
 
                     double dripThreshold = -0.15 + 0.15 * Math.sin(3 * theta) + 0.08 * Math.cos(7 * theta)
                             + 0.04 * Math.sin(11 * theta);
                     boolean isFrosting = sinPhi > dripThreshold;
-                    String chosenColor = isFrosting ? glazedIcing : donutCake;
+                    int colorIndex = isFrosting ? 1 : 0; // 1 = glazedIcing, 0 = donutCake
 
                     if (isFrosting) {
                         int sprinkleColorIndex = sprinkleMap[tIndex][pIndex];
                         if (sprinkleColorIndex != -1) {
-                            chosenColor = sprinkleColors[sprinkleColorIndex];
+                            colorIndex = 2 + sprinkleColorIndex; // maps into sprinkleColors[0..2]
                         }
                     }
-                    outputBuffer[o] = chosenColor + asciiChar + RESET;
+                    outputBuffer[o] = cellCache[colorIndex][charIndex];
                 }
             }
         }

@@ -1,3 +1,5 @@
+// TODO: Test this on Windows!!
+
 import java.io.IOException;
 
 public class TerminalConfig {

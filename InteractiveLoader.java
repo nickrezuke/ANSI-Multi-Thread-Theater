@@ -29,13 +29,27 @@ public abstract class InteractiveLoader extends Loader {
 
                     // Standard escape sequences for arrow keys start with 27 (\u001B)
                     if (firstByte == 27) {
-                        // Check if bytes are following for the arrow key sequence
-                        if (System.in.available() >= 2) {
-                            int secondByte = System.in.read();
-                            int thirdByte = System.in.read();
-                            if (secondByte == '[' || secondByte == 'O') {
+                        // Poll briefly for the rest of the sequence rather than checking
+                        // available() exactly once: on a laggy terminal (SSH, high load)
+                        // the follow-up bytes can arrive a beat late, which previously
+                        // meant they'd get silently dropped on the next loop iteration.
+                        int secondByte = waitForNextByte(50);
+                        if (secondByte == '[' || secondByte == 'O') {
+                            int thirdByte = waitForNextByte(50);
+                            if (thirdByte != -1) {
                                 handleKeyInput(thirdByte);
                             }
+                        } else if (secondByte == -1) {
+                            // Nothing followed within the timeout: this was a genuine,
+                            // standalone Escape keypress, not the start of a sequence.
+                            // (Previously this case was silently swallowed entirely.)
+                            handleKeyInput(27);
+                        } else {
+                            // Some other byte followed 27 that isn't a recognized
+                            // CSI/SS3 lead-in ('[' or 'O'); deliver the Escape and let
+                            // the byte that followed it be handled as its own keypress.
+                            handleKeyInput(27);
+                            handleKeyInput(secondByte);
                         }
                     } else {
                         // Pass standard character keys (like letters, space, or numbers) directly
@@ -53,6 +67,27 @@ public abstract class InteractiveLoader extends Loader {
 
         // Allow child classes to run their own custom initialization if needed
         onInitialize();
+    }
+
+    // Waits up to timeoutMillis for another byte to become available, polling in
+    // short slices instead of either checking available() a single time or doing
+    // a naive blocking read. Returns the byte read, or -1 if the timeout elapses
+    // with nothing arriving (e.g. a standalone Escape keypress with no sequence
+    // behind it).
+    private static int waitForNextByte(int timeoutMillis) throws IOException {
+        long deadline = System.currentTimeMillis() + timeoutMillis;
+        while (System.currentTimeMillis() < deadline) {
+            if (System.in.available() > 0) {
+                return System.in.read();
+            }
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return -1;
+            }
+        }
+        return -1;
     }
 
     // Subclasses override this to respond to raw keystrokes in real-time.

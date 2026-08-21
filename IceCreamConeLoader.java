@@ -8,19 +8,86 @@ public class IceCreamConeLoader extends Loader {
         new StatusStage(100, "Three-Scoop Stack Ready!")
     };
 
-    private final int[][] scoop1SprinkleMap = new int[180][180];
-    private final int[][] scoop2SprinkleMap = new int[180][180];
-    private final int[][] scoop3SprinkleMap = new int[180][180];
+    private static final int THETA_STEPS = 180;
+    private static final int PHI_STEPS = 180;
 
-    // Neapolitan color palette directly matching your image
+    // ---- Cone geometry -------------------------------------------------
+    // A molded "cake cone" profile instead of a mathematically perfect
+    // frustum: a flared, rolled rim lip at the top, a gently concave taper
+    // through the body, and a small blunt tip instead of a razor point.
+    // See coneRadiusAt() for the actual curve.
+    private static final double CONE_RIM_Y = 2.0;
+    private static final double CONE_TIP_Y = 5.6;
+    private static final double CONE_RIM_RADIUS = 1.28;
+    private static final double RIM_LIP_FRACTION = 0.05; // fraction of cone height that's the rolled lip
+    private static final double RIM_FLARE_AMOUNT = 0.18;  // how much wider the lip flares vs. the body
+    private static final double CONE_TIP_MIN_RADIUS = 0.06; // blunt tip floor, not a perfect point
+
+    // ---- Scoop geometry --------------------------------------------------
+    // Each scoop is a vertically squashed sphere (an ellipsoid "dollop"),
+    // which reads as a rounded ice-cream mound instead of a beach ball.
+    // All three share the SAME radius -- three uneven blobs read as a Kong
+    // dog toy, not a triple-scoop stack -- and are spaced with deliberate
+    // overlap so each one nestles into the one below it (the classic
+    // cartoon snowman silhouette), with the bottom scoop nestling down
+    // into the cone's rim the same way.
+    private static final double SCOOP_SQUASH = 0.82;
+    private static final double SCOOP_R = 1.18;
+    private static final double SCOOP_SPACING = 2.0;
+
+    private static final double SCOOP_BOTTOM_Y = 1.55;
+    private static final double SCOOP_MID_Y = SCOOP_BOTTOM_Y - SCOOP_SPACING;
+    private static final double SCOOP_TOP_Y = SCOOP_MID_Y - SCOOP_SPACING;
+
+    // ---- Sprinkles (Donut-style) -----------------------------------------
+    // A fixed, hand-placed field of {theta, phi, colorIdx} triples, exactly
+    // like DonutLoader.SPRINKLES -- a curated scatter instead of a fresh
+    // random roll every run. theta wraps all the way around the scoop
+    // (0..2*PI). phi is the sphere's polar angle as measured by
+    // renderIceCreamScoop below, where phi=0 is the UNDERSIDE (tucked
+    // against the scoop/cone below) and phi=PI is the visible TOP peak --
+    // so these sit close to PI to land on top of the dome, not buried in
+    // the seam.
+    private static final double[][] SPRINKLES = {
+        { 0.20, 2.79, 0 }, { 0.60, 2.59, 1 }, { 1.00, 2.84, 2 }, { 1.35, 2.54, 3 }, { 1.70, 2.72, 0 },
+        { 2.10, 2.56, 1 }, { 2.50, 2.81, 2 }, { 2.90, 2.64, 3 }, { 3.30, 2.74, 0 }, { 3.70, 2.54, 1 },
+        { 4.10, 2.82, 2 }, { 4.50, 2.59, 3 }, { 4.90, 2.69, 0 }, { 5.30, 2.54, 1 }, { 5.70, 2.79, 2 },
+        { 6.10, 2.64, 3 }, { 0.40, 2.29, 0 }, { 0.90, 2.19, 1 }, { 1.50, 2.34, 2 }, { 2.00, 2.14, 3 },
+        { 2.60, 2.32, 0 }, { 3.20, 2.22, 1 }, { 3.80, 2.36, 2 }, { 4.40, 2.09, 3 }, { 5.00, 2.29, 0 },
+        { 5.60, 2.19, 1 }, { 0.10, 1.99, 2 }, { 1.90, 1.94, 3 }
+    };
+    private static final double SPRINKLE_THETA_TOL = 0.15;
+    private static final double SPRINKLE_PHI_TOL = 0.12;
+    private static final double ONE_PI = Math.PI;
+    private static final double TWO_PI = 2.0 * ONE_PI;
+
+    // Shared by all three scoops, exactly the way DonutLoader uses one
+    // sprinkleMap for its one surface.
+    private final int[][] sprinkleMap = new int[PHI_STEPS][THETA_STEPS];
+
+    // Neapolitan color palette
     private final String scoopTopColor = "\u001B[38;5;211m";    // Strawberry Pink
     private final String scoopMidColor = "\u001B[38;5;255m";    // Vanilla White
     private final String scoopBottomColor = "\u001B[38;5;130m"; // Chocolate Brown
     private String[] sprinkleColors;
 
-    // Fixed viewing pitch angle so we look slightly down onto the spinning stack
-    private final double CAMERA_TILT = 0.25; 
     private double rotationAngle = 0; // Continuous spin around central vertical axis
+
+    // ---- Zoom-in dwell (same rotation-synced strategy as BigBenLoader) ---
+    // Once per lap, rotation slows and the camera punches in on the seam
+    // where the bottom scoop meets the cone rim -- the one spot where the
+    // waffle crosshatch and the sprinkles are both on screen together.
+    private static final double CAMERA_DISTANCE_FAR = 9.8;
+    private static final double CAMERA_DISTANCE_NEAR = 6.1;
+    private static final double TILT_FAR = 0.22;
+    private static final double TILT_NEAR = 0.36;
+    private static final double Y_OFFSET_FAR = 0.0;
+    private static final double Y_OFFSET_NEAR = 1.8; // centers the rim/sprinkle seam on screen
+
+    // Set once per frame in renderGeometry, read by projectPoint.
+    private double cameraDistance = CAMERA_DISTANCE_FAR;
+    private double cameraTilt = TILT_FAR;
+    private double cameraYOffset = Y_OFFSET_FAR;
 
     public IceCreamConeLoader() {
         super(ICE_CREAM_STAGES, 80, 22);
@@ -32,114 +99,166 @@ public class IceCreamConeLoader extends Loader {
             "\u001B[38;5;206m", "\u001B[38;5;51m", "\u001B[38;5;220m", "\u001B[38;5;46m"
         };
 
-        for (int i = 0; i < 180; i++) {
-            for (int j = 0; j < 180; j++) {
-                scoop1SprinkleMap[i][j] = -1;
-                scoop2SprinkleMap[i][j] = -1;
-                scoop3SprinkleMap[i][j] = -1;
-            }
+        for (int[] row : sprinkleMap) {
+            java.util.Arrays.fill(row, -1);
         }
 
-        // Populate independent sprinkle coordinate configurations
-        for (int s = 0; s < 25; s++) {
-            int tIdx = (int)(Math.random() * 100) + 20; // Keep sprinkles on upper dome surface
-            int pIdx = (int)(Math.random() * 180);
-            int colorIdx = (int)(Math.random() * sprinkleColors.length);
-            markSprinkleRadius(scoop1SprinkleMap, tIdx, pIdx, colorIdx);
-            markSprinkleRadius(scoop2SprinkleMap, tIdx, pIdx, colorIdx);
-            markSprinkleRadius(scoop3SprinkleMap, tIdx, pIdx, colorIdx);
-        }
-    }
-
-    private void markSprinkleRadius(int[][] map, int targetT, int targetP, int colorIdx) {
-        for (int dt = -1; dt <= 1; dt++) {
-            for (int dp = -2; dp <= 2; dp++) {
-                int t = (targetT + dt + 180) % 180;
-                int p = (targetP + dp + 180) % 180;
-                map[t][p] = colorIdx;
+        // Build the sprinkle map once, the same way DonutLoader does: for
+        // every grid cell, find the nearest fixed sprinkle within tolerance
+        // (with theta wraparound so sprinkles near 0/2*PI still connect).
+        for (int pIndex = 0; pIndex < PHI_STEPS; pIndex++) {
+            double phi = pIndex * (Math.PI / PHI_STEPS);
+            for (int tIndex = 0; tIndex < THETA_STEPS; tIndex++) {
+                double theta = tIndex * (TWO_PI / THETA_STEPS);
+                for (int i = 0; i < SPRINKLES.length; i++) {
+                    double dTheta = Math.abs(theta - SPRINKLES[i][0]);
+                    double dPhi = Math.abs(phi - SPRINKLES[i][1]);
+                    if (dTheta > ONE_PI) {
+                        dTheta = TWO_PI - dTheta;
+                    }
+                    if (dTheta < SPRINKLE_THETA_TOL && dPhi < SPRINKLE_PHI_TOL) {
+                        sprinkleMap[pIndex][tIndex] = (int) SPRINKLES[i][2];
+                        break;
+                    }
+                }
             }
         }
     }
 
     @Override
     protected void renderGeometry(String[] outputBuffer, double[] zBuffer) {
-        for (int tIndex = 0; tIndex < 180; tIndex++) {
-            double theta = tIndex * (2 * Math.PI / 180);
+        // Normalize rotation into [0, 2*PI) and measure how close we are to
+        // the front of the lap (0 / 2*PI), same as BigBenLoader's distToFront.
+        double currentAngleRad = rotationAngle % TWO_PI;
+        if (currentAngleRad < 0) {
+            currentAngleRad += TWO_PI;
+        }
+        double distToFront = Math.min(currentAngleRad, Math.abs(TWO_PI - currentAngleRad));
 
-            for (int pIndex = 0; pIndex < 180; pIndex++) {
-                double phi = pIndex * (Math.PI / 180);
-                double sinPhi = Math.sin(phi), cosPhi = Math.cos(phi);
+        // 1. Gaussian rotation slowdown: the spin eases off as we approach
+        // the dwell point so the zoomed-in shot isn't a motion blur.
+        double rotationSlowWindow = Math.exp(-Math.pow(distToFront, 2.0) / (1.5 * Math.pow(0.42, 2.0)));
+        double dynamicStepSpeed = 0.05 * (1.0 - rotationSlowWindow * 0.85) + 0.006;
+        rotationAngle += dynamicStepSpeed;
+
+        // 2. Narrower Gaussian dwell window drives the zoom punch-in itself.
+        double dwellWindow = Math.exp(-Math.pow(distToFront, 2.0) / (1.7 * Math.pow(0.30, 2.0)));
+
+        cameraDistance = CAMERA_DISTANCE_FAR - dwellWindow * (CAMERA_DISTANCE_FAR - CAMERA_DISTANCE_NEAR);
+        cameraTilt = TILT_FAR * (1.0 - dwellWindow) + TILT_NEAR * dwellWindow;
+        cameraYOffset = Y_OFFSET_FAR * (1.0 - dwellWindow) + Y_OFFSET_NEAR * dwellWindow;
+
+        for (int tIndex = 0; tIndex < THETA_STEPS; tIndex++) {
+            double theta = tIndex * (TWO_PI / THETA_STEPS);
+
+            for (int pIndex = 0; pIndex < PHI_STEPS; pIndex++) {
+                double phi = pIndex * (Math.PI / PHI_STEPS);
 
                 // ==========================================
                 // ZONE 1: THE WAFFLE CONE
                 // ==========================================
-                double coneHeight = 3.2;
-                double coneTopRadius = 1.5;
-                double coneY = 1.9 + (pIndex / 180.0) * coneHeight; 
-                double currentRadius = coneTopRadius * (1.0 - ((coneY - 1.9) / coneHeight));
-
-                if (currentRadius >= 0) {
-                    double cx0 = currentRadius * Math.cos(theta);
-                    double cy0 = coneY;
-                    double cz0 = currentRadius * Math.sin(theta);
-
-                    double wafflePattern = Math.sin(theta * 14 + (coneY * 6)) * Math.sin(theta * 14 - (coneY * 6));
-                    String coneColor = "\u001B[38;5;173m";
-                    if (wafflePattern > 0.3) {
-                        coneColor = "\u001B[38;5;130m";
-                    }
-                    projectPoint(cx0, cy0, cz0, Math.cos(theta), 0.3, Math.sin(theta), coneColor, outputBuffer, zBuffer);
-                }
+                renderCone(theta, pIndex, outputBuffer, zBuffer);
 
                 // ==========================================
-                // ZONE 2: CHOCOLATE SCOOP (Bottom)
+                // ZONE 2: CHOCOLATE SCOOP (Bottom, sits in the cone's rim)
                 // ==========================================
-                renderIceCreamScoop(phi, theta, 0.6, scoopBottomColor, scoop1SprinkleMap[pIndex][tIndex], outputBuffer, zBuffer);
+                renderIceCreamScoop(phi, theta, SCOOP_BOTTOM_Y, SCOOP_R, scoopBottomColor,
+                        sprinkleMap[pIndex][tIndex], false, outputBuffer, zBuffer);
 
                 // ==========================================
                 // ZONE 3: VANILLA SCOOP (Middle)
                 // ==========================================
-                renderIceCreamScoop(phi, theta, -0.9, scoopMidColor, scoop2SprinkleMap[pIndex][tIndex], outputBuffer, zBuffer);
+                renderIceCreamScoop(phi, theta, SCOOP_MID_Y, SCOOP_R, scoopMidColor,
+                        sprinkleMap[pIndex][tIndex], false, outputBuffer, zBuffer);
 
                 // ==========================================
-                // ZONE 4: STRAWBERRY SCOOP (Top)
+                // ZONE 4: STRAWBERRY SCOOP (Top, with a small swirl peak)
                 // ==========================================
-                renderIceCreamScoop(phi, theta, -2.4, scoopTopColor, scoop3SprinkleMap[pIndex][tIndex], outputBuffer, zBuffer);
+                renderIceCreamScoop(phi, theta, SCOOP_TOP_Y, SCOOP_R, scoopTopColor,
+                        sprinkleMap[pIndex][tIndex], true, outputBuffer, zBuffer);
             }
         }
-
-        // Spin smoothly purely around the vertical axis
-        rotationAngle += 0.05;
     }
 
-    private void renderIceCreamScoop(double phi, double theta, double centerY, String baseColor, 
-                                     int sprinkleColorIdx, String[] outputBuffer, double[] zBuffer) {
-        double baseRadius = 1.3;
-        double r = baseRadius;
-        
-        // STANDARD ICE CREAM GEOMETRY ENGINE: Perfect Sphere Dome + Thick Fluff Rim
-        // As phi passes the equator (0.55 * PI), flare outward heavily to make a prominent cartoonish rim lip
-        if (phi > (Math.PI * 0.53) && phi < (Math.PI * 0.76)) {
-            // Base thickness expansion + wavy sculpt contours matching the physical scoop mold lines
-            r += 0.42 + 0.07 * Math.sin(theta * 12); 
-        } else if (phi >= (Math.PI * 0.76)) {
-            // Taper back in sharply underneath the rim lip to reconnect with the stack column
-            r -= 0.1;
+    private void renderCone(double theta, int pIndex, String[] outputBuffer, double[] zBuffer) {
+        double coneHeight = CONE_TIP_Y - CONE_RIM_Y;
+        double t = pIndex / (double) PHI_STEPS; // 0 at the rim, 1 at the tip
+        double coneY = CONE_RIM_Y + t * coneHeight;
+        double currentRadius = coneRadiusAt(t);
+        boolean isRimLip = t < RIM_LIP_FRACTION;
+
+        double cx0 = currentRadius * Math.cos(theta);
+        double cy0 = coneY;
+        double cz0 = currentRadius * Math.sin(theta);
+
+        String coneColor;
+        if (isRimLip) {
+            // The rolled rim lip reads as one continuous toasted edge band,
+            // distinct from the crosshatched body below it.
+            coneColor = "\u001B[38;5;130m";
+        } else {
+            // Diamond waffle crosshatch: darker toasted ridges where the two
+            // diagonal wave sets cross.
+            double wafflePattern = Math.sin(theta * 12 + coneY * 5) * Math.sin(theta * 12 - coneY * 5);
+            coneColor = wafflePattern > 0.25 ? "\u001B[38;5;130m" : "\u001B[38;5;173m";
+        }
+
+        // Outward normal tilted slightly down along the cone's slanted wall.
+        projectPoint(cx0, cy0, cz0, Math.cos(theta), -0.35, Math.sin(theta), coneColor, outputBuffer, zBuffer);
+    }
+
+    /**
+     * Molded cake-cone radius profile: a flared rolled lip right at the rim
+     * (wider than the body just beneath it -- the single biggest cue that
+     * reads as a cone's cup rather than a party hat), then a gently concave
+     * taper through the body, ending in a small blunt tip instead of a
+     * perfect mathematical point.
+     */
+    private double coneRadiusAt(double t) {
+        if (t < RIM_LIP_FRACTION) {
+            double p = t / RIM_LIP_FRACTION;
+            double flare = 1.0 + RIM_FLARE_AMOUNT * (1.0 - p);
+            return CONE_RIM_RADIUS * flare;
+        }
+        double bodyT = (t - RIM_LIP_FRACTION) / (1.0 - RIM_LIP_FRACTION);
+        double taper = Math.pow(1.0 - bodyT, 0.82);
+        double barrel = 1.0 + 0.09 * Math.sin(Math.PI * bodyT) * (1.0 - bodyT * 0.5);
+        double r = CONE_RIM_RADIUS * taper * barrel;
+        return Math.max(r, CONE_TIP_MIN_RADIUS);
+    }
+
+    private void renderIceCreamScoop(double phi, double theta, double centerY, double radius, String baseColor,
+                                     int sprinkleColorIdx, boolean isTopScoop, String[] outputBuffer, double[] zBuffer) {
+        double r = radius;
+
+        // A small rounded peak at the very top of the top scoop, like the
+        // twist left behind by an ice cream scoop -- sells the silhouette
+        // without breaking the smooth dome shape everywhere else. phi=PI is
+        // the visible top pole (see the SPRINKLES comment above), so the
+        // bump needs to sit near PI, not near 0.
+        if (isTopScoop && phi > (Math.PI - 0.2)) {
+            double d = Math.PI - phi;
+            r += 0.16 * (0.2 - d) / 0.2;
         }
 
         double sinPhi = Math.sin(phi), cosPhi = Math.cos(phi);
+
+        // Vertical squash turns the sphere into a rounded "dollop": wider
+        // than it is tall, which is what actually reads as an ice cream
+        // scoop instead of a ball. x/z stay full radius so it still looks
+        // round when spinning.
         double sx = r * sinPhi * Math.cos(theta);
-        double sy = centerY + r * cosPhi;
+        double sy = centerY + SCOOP_SQUASH * r * cosPhi;
         double sz = r * sinPhi * Math.sin(theta);
 
-        // Surface normal vectors for calculation of light reflection maps
+        // Approximate surface normal from the unsquashed sphere -- good
+        // enough for cheap, pleasant shading.
         double nx = sinPhi * Math.cos(theta);
         double ny = cosPhi;
         double nz = sinPhi * Math.sin(theta);
 
-        // Map colors (Switching color strings seamlessly if coordinate matches sprinkle index)
         String color = baseColor;
-        if (sprinkleColorIdx != -1 && phi < (Math.PI * 0.53)) {
+        if (sprinkleColorIdx != -1) {
             color = sprinkleColors[sprinkleColorIdx];
         }
 
@@ -148,18 +267,23 @@ public class IceCreamConeLoader extends Loader {
 
     private void projectPoint(double x0, double y0, double z0, double nx, double ny, double nz,
                               String color, String[] outputBuffer, double[] zBuffer) {
+        // --- STEP 0: FRAME THE DWELL TARGET ---
+        // Shifting world-space y before anything else re-centers whichever
+        // point the current dwell wants front-and-center on screen.
+        double worldY = y0 - cameraYOffset;
+
         // --- STEP 1: TWIRL AROUND CENTRAL VERTICAL AXIS (Y-AXIS) ---
         double sinR = Math.sin(rotationAngle), cosR = Math.cos(rotationAngle);
         double x1 = x0 * cosR - z0 * sinR;
-        double y1 = y0;
+        double y1 = worldY;
         double z1 = x0 * sinR + z0 * cosR;
 
         double nx1 = nx * cosR - nz * sinR;
         double ny1 = ny;
         double nz1 = nx * sinR + nz * cosR;
 
-        // --- STEP 2: APPLY FIXED CAMERA TILT (PITCH AROUND X-AXIS) ---
-        double sinA = Math.sin(CAMERA_TILT), cosA = Math.cos(CAMERA_TILT);
+        // --- STEP 2: APPLY CAMERA TILT (PITCH AROUND X-AXIS) ---
+        double sinA = Math.sin(cameraTilt), cosA = Math.cos(cameraTilt);
         double x2 = x1;
         double y2 = y1 * cosA - z1 * sinA;
         double z2 = y1 * sinA + z1 * cosA;
@@ -169,15 +293,14 @@ public class IceCreamConeLoader extends Loader {
         double nz2 = ny1 * sinA + nz1 * cosA;
 
         // --- STEP 3: PERSPECTIVE PROJECTION & SHADING ---
-        double distanceOffset = 9.8; 
-        double D = 1.0 / (z2 + distanceOffset);
-        
+        double D = 1.0 / (z2 + cameraDistance);
+
         int x = (int) (40 + 35 * D * x2 * 2.0); // Aspect ratio balance multiplier
         int y = (int) (11 + 19 * D * y2);
         int o = x + window_width * y;
 
         // Constant overhead directional spotlight vector
-        double L = nx2 * 0.0 - ny2 * 0.7 - nz2 * 0.7; 
+        double L = nx2 * 0.0 - ny2 * 0.7 - nz2 * 0.7;
 
         if (window_height > y && y > 0 && x > 0 && window_width > x && D > (zBuffer[o] + 0.0001)) {
             zBuffer[o] = D;

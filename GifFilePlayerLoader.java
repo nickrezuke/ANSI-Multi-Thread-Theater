@@ -29,10 +29,9 @@ public class GifFilePlayerLoader extends Loader {
             new StatusStage(100, "Render Sequence Initialized!")
     };
 
-    private static String GIF_FILE_NAME;
+    private String GIF_FILE_NAME;
 
     private static final String ASCII_RAMP = "@#W$9876543210?!abc;:+=-,._ ";
-    private static final String PADDING_BLOCK = "\u001B[48;2;10;10;10m\u001B[38;2;10;10;10m \u001B[0m";
 
     private List<BufferedImage> cachedFrames = new ArrayList<>();
     private int frameCount = 0;
@@ -54,14 +53,16 @@ public class GifFilePlayerLoader extends Loader {
 
     @Override
     protected void initialize() {
+        setTargetFps(30); // Speed of GIFs
+
         switch((int)(Math.random() * 3)) { // 3 example gifs
             case 0:
-                GIF_FILE_NAME = "GifSkull.gif"; break;
+                GIF_FILE_NAME = "ImageFolderGIF/Skull.gif"; break;
             case 1:
-                GIF_FILE_NAME = "GifHelloWave.gif"; break;
+                GIF_FILE_NAME = "ImageFolderGIF/HelloWave.gif"; break;
             case 2:
             default:
-                GIF_FILE_NAME = "GifGemHeart.gif"; break;
+                GIF_FILE_NAME = "ImageFolderGIF/GemHeart.gif"; break;
         }
 
         try {
@@ -226,7 +227,7 @@ public class GifFilePlayerLoader extends Loader {
 
     @Override
     protected void renderGeometry(String[] outputBuffer, double[] zBuffer) {
-        Arrays.fill(outputBuffer, PADDING_BLOCK);
+        Arrays.fill(outputBuffer, " ");
 
         if (zBuffer != null) {
             Arrays.fill(zBuffer, Double.NEGATIVE_INFINITY);

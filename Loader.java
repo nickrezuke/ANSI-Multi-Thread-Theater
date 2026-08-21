@@ -2,7 +2,10 @@ public abstract class Loader implements Runnable {
     // These track the current progress amount
     protected volatile boolean isRunning = true;
     protected volatile int progress = 0;
-    protected static int INTENDED_FRAMERATE = 16666666; // ~16.66 milliseconds (60 FPS)
+    // Per-instance (NOT static/shared) target frame time. Was previously a shared
+    // static, meaning any one Loader subclass adjusting it would silently change
+    // the framerate of every other Loader instance running in the JVM at the time.
+    protected long frameTimeNanos = 16_666_666L; // ~16.66 milliseconds (60 FPS)
     protected boolean isRawCanvas = false;
     private final java.util.concurrent.atomic.AtomicBoolean isCleanedUp = new java.util.concurrent.atomic.AtomicBoolean(false);
     private final StatusStage[] stages;
@@ -71,6 +74,15 @@ public abstract class Loader implements Runnable {
 
     public void setProgress(int progress) {
         this.progress = progress;
+    }
+
+    // Lets a subclass tune its own pacing (e.g. a slower ambient scene, or a
+    // faster-ticking game loop) without affecting any other Loader instance.
+    protected void setTargetFps(int fps) {
+        this.frameTimeNanos = 1_000_000_000L / fps;
+    }
+    protected void frameTimeNanos(int nanos) {
+        this.frameTimeNanos = nanos;
     }
 
     @Override
@@ -180,7 +192,7 @@ public abstract class Loader implements Runnable {
 
                 // Frame rate regulation calculations
                 long elapsedTime = System.nanoTime() - startTime;
-                long sleepTimeNanos = INTENDED_FRAMERATE - elapsedTime;
+                long sleepTimeNanos = this.frameTimeNanos - elapsedTime;
 
                 if (sleepTimeNanos > 0) {
                     try {

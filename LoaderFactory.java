@@ -11,6 +11,12 @@ public class LoaderFactory {
     private static final Map<String, Supplier<Loader>> REGISTRY = new HashMap<>();
     private static final List<String> LOADER_NAMES;
 
+    // One entry per DISTINCT loader (regardless of how many names it registered),
+    // While the REGISTRY is used for lookup, this UNIQUE_LOADERS is pretty much
+    // used exclusively so the random fallback samples loaders uniformly (instead
+    // of over-weighting loaders that were registered with many different names).
+    private static final List<Supplier<Loader>> UNIQUE_LOADERS = new ArrayList<>();
+
     private static final Random RANDOM = new Random();
 
     static {
@@ -19,9 +25,11 @@ public class LoaderFactory {
         register("Apple", AppleLoader::new);
         register("RefractiveMagnifierLake", RefractiveMagnifierLakeLoader::new);
         register("SpiderWeb", SpiderWebLoader::new);
+        register("InternetDino", InternetDinoLoader::new);
         register("Donut", DonutLoader::new);
         register("RainyCityStreet", RainyCityStreetLoader::new);
         register("Sushi", SushiLoader::new);
+        register("RhythmDance", RhythmDanceLoader::new);
         //register("Alphabet", Alphabet::new); TODO Make an "Alphabet" Loader
         register("SnowGlobe", SnowGlobeLoader::new);
         register("Campfire", CampfireLoader::new);
@@ -44,6 +52,7 @@ public class LoaderFactory {
         register("ChromeCheckerboardSphere", ChromeCheckerboardSphereLoader::new);
         register("TexelCompanionCube", TexelCompanionCubeLoader::new);
         register("GaltonBoard", GaltonBoardLoader::new);
+        register("PaintCube", PaintCubeLoader::new);
         register("TexelMinecraftGrassBlock", TexelMinecraftGrassBlockLoader::new);
         register("TexelBorgCube", TexelBorgCubeLoader::new);
         register("TexelAllspark", TexelAllsparkLoader::new);
@@ -100,6 +109,7 @@ public class LoaderFactory {
         register(List.of("CorridorWaveGuide", "CorridorWave"), CorridorWaveLoader::new);
         register("SeifertSurface", SeifertLoader::new);
         register("TextFall", TextFallLoader::new);
+        register(List.of("GraphPlot", "Desmos"), GraphLoader::new);
         register("WireframeFisheyeGlobe", WireframeFisheyeGlobeLoader::new);
         register("Ring", RingLoader::new);
         register(List.of("SonicRing", "SonicRings"), SonicRingLoader::new);
@@ -109,6 +119,7 @@ public class LoaderFactory {
         register("FrutigerAero", FrutigerAeroLoader::new);
         register("Labyrinth3D", Labyrinth3DLoader::new);
         register("RainbowWhispSphere", RainbowWhispSphereLoader::new);
+        register(List.of("ImageFolder", "ImagePlayer"), ImageFolderLoader::new);
         register("TexelMuseumCube", TexelMuseumCubeLoader::new);
         register("PacManSphere", PacManSphereLoader::new);
         register("PsychedelicOctahedron", PsychedelicOctahedronLoader::new);
@@ -174,6 +185,7 @@ public class LoaderFactory {
     // Single-key helper registration
     private static void register(String name, Supplier<Loader> constructor) {
         REGISTRY.put(name.toLowerCase(), constructor);
+        UNIQUE_LOADERS.add(constructor);
     }
 
     // Multi-key/Alias helper registration
@@ -181,6 +193,9 @@ public class LoaderFactory {
         for (String name : names) {
             REGISTRY.put(name.toLowerCase(), constructor);
         }
+        // ONCE per call, not once per name, so a loader with multiple names
+        // isn't more likely to be picked from the fallback at random.
+        UNIQUE_LOADERS.add(constructor);
     }
 
     public static Loader createLoaderInstance() {
@@ -211,9 +226,8 @@ public class LoaderFactory {
     }
 
     private static Loader fallbackRandomInstance() {
-        int randomIndex = RANDOM.nextInt(LOADER_NAMES.size());
-        String selectedKey = LOADER_NAMES.get(randomIndex);
-        return REGISTRY.get(selectedKey).get();
+        int randomIndex = RANDOM.nextInt(UNIQUE_LOADERS.size());
+        return UNIQUE_LOADERS.get(randomIndex).get();
     }
 
     private static String findClosestMatch(String inputLower, List<String> possibilities) {

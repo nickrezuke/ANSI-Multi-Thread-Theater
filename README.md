@@ -141,6 +141,10 @@ This project comes packed with a ton of different variants, all derived from a c
 -> **Chladni**: <!-- TODO: Elaborate on this section -->
 -> **IkedaRibbon**: <!-- TODO: Elaborate on this section -->
 
+I also made a "Desmos"-like 2D graph plotter, which can handle arbitrary equations
+-> **GraphPlot**: <!-- TODO: Elaborate on this section -->
+
+Some Real-World Locations with iconic views 
 -> **BigBen**: <!-- TODO: Elaborate on this section -->
 -> **TajMahal**: <!-- TODO: Elaborate on this section -->
 -> **Lourve**: <!-- TODO: Elaborate on this section -->
@@ -178,8 +182,9 @@ This project comes packed with a ton of different variants, all derived from a c
 -> **BrickBreakout**: <!-- TODO: Elaborate on this section -->
 -> **Slitherio**: <!-- TODO: Elaborate on this section -->
 
+This one is able to analyze arbitrary .gif files and render them
+-> **ImagePlayer**: <!-- TODO: Elaborate on this section -->
 -> **GifPlayer**: <!-- TODO: Elaborate on this section -->
-
 
 I also have a sub subclass called InteractiveLoader which allows interactivity
 Some of these loaders extend this, and are also interactable by using the arrow keys:
@@ -188,11 +193,14 @@ Some of these loaders extend this, and are also interactable by using the arrow 
 -> **Labyrinth3D**: <!-- TODO: Elaborate on this section -->
 -> **SeifertSurface**: <!-- TODO: Elaborate on this section -->
 -> **KleinRing**: <!-- TODO: Elaborate on this section -->
+-> **InternetDino**: <!-- TODO: Elaborate on this section -->
 -> **FlappyBird**: <!-- TODO: Elaborate on this section -->
 -> **MotorcycleRacer**: <!-- TODO: Elaborate on this section -->
 -> **Pinball**: <!-- TODO: Elaborate on this section -->
 -> **SlotMachine**: <!-- TODO: Elaborate on this section -->
 -> **Pendulum**: <!-- TODO: Elaborate on this section -->
+-> **PaintCube**: <!-- TODO: Elaborate on this section -->
+-> **RhythmDance**: <!-- TODO: Elaborate on this section -->
 
 Note to self: Other ideas to consider:
 Quantum Wavefunction Interference
@@ -204,11 +212,9 @@ Cheeseburger
 Pizza Slice
 Taco
 Toy Boat
-Sunflower?
+Sunflower? or flowers in general?
 Car / Truck
 Interactive Tanks-like Aiming & Shooting game w/ breakable ground
-Interactive DDR Game (Arrow Key Tap Tap?)
-Interactive Cube Rolling along a surface, painting a grid as it rolls
 Interactive Tile Sliding Puzzle (like pokemon ice dungeon)
 Interactive Sokoban game
 (MAKE SOME OF THE EXISTING GAMES PLAYABLE / INTERACTIVE????)
