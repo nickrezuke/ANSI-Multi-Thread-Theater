@@ -4,10 +4,11 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ImageFolderLoader extends Loader {
 
@@ -27,32 +28,50 @@ public class ImageFolderLoader extends Loader {
     // The actual folder name
     private String folderPath;
 
-    private List<BufferedImage> cachedFrames = new ArrayList<>();
-    private int frameCount = 0;
-    private int currentFrameIndex = 0;
-    private boolean folderLoadedSuccessfully = false;
+    // Frame cache. Preallocated up front once we know the file count, then
+    // filled in from multiple worker threads. Index order is preserved
+    // (frameCache[i] corresponds to frameFiles[i] after sorting), so
+    // playback can loop over "however much of the front of this array is
+    // ready" instead of waiting for the whole thing.
+    private volatile BufferedImage[] frameCache;
+    private boolean[] frameReadyFlags;
+    private final Object readyLock = new Object();
+    private int nextContiguousIndex = 0;
+    private final AtomicInteger framesReady = new AtomicInteger(0);
 
-    private int renderWidth;
-    private int renderHeight;
-    private int offsetX;
-    private int offsetY;
+    private volatile int totalFrameCount = 0;
+    private volatile boolean folderLoadedSuccessfully = false;
+    private volatile boolean loadingFailed = false;
+
+    private int currentFrameIndex = 0;
+
+    private volatile int renderWidth;
+    private volatile int renderHeight;
+    private volatile int offsetX;
+    private volatile int offsetY;
+
+    private ExecutorService loaderExecutor;
 
     // Default Values
-    private static final String[] DEFAULT_PATHS = {"ImageFolderPNG", "ImageFolderJPG", "ImageFolderBMP"}; 
-    // TODO: add filetypes? like .jpeg, .tif .tiff, .dib, .wbmp, .gif, And finalize which videos to play!
-    // TODO: 6000+ frames takes too long, can we parallelize loading and playing???
-    private static final int DEFAULT_WIDTH = 100;
+    private static final String[] DEFAULT_PATHS = {"ImageFolderPNG", "ImageFolderJPG", "ImageFolderBMP"}; // TODO add a jpeg for example??
+    private static final String BAD_APPLE_PATH = "ImageFolderBadApple";
+
+    private static final int DEFAULT_WIDTH = 130;
     private static final int DEFAULT_HEIGHT = 40;
 
     // Master constructor handles all assignments
     public ImageFolderLoader(String folderPath, int w, int h) {
         super(FOLDER_STAGES, w, h);
-        this.folderPath = folderPath;
+        // We might have passed a special variant... double check
+        if(folderPath == "Bad Apple") {
+            this.folderPath = BAD_APPLE_PATH;
+        } else {
+            this.folderPath = folderPath;
+        }
     }
 
     public ImageFolderLoader() {
-        String randPath = DEFAULT_PATHS[(int)(Math.random() * DEFAULT_PATHS.length)];
-        this(randPath, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+        this(DEFAULT_PATHS[(int)(Math.random() * DEFAULT_PATHS.length)], DEFAULT_WIDTH, DEFAULT_HEIGHT);
     }
 
     public ImageFolderLoader(String folderPath) {
@@ -60,48 +79,62 @@ public class ImageFolderLoader extends Loader {
     }
 
     public ImageFolderLoader(int w, int h) {
-        String randPath = DEFAULT_PATHS[(int)(Math.random() * DEFAULT_PATHS.length)];
-        this(randPath, w, h);
+        this(DEFAULT_PATHS[(int)(Math.random() * DEFAULT_PATHS.length)], w, h);
+    }
+
+    @Override
+    public void stopLoading() {
+        super.stopLoading();
+        // loadingThread.join() in the standard usage pattern only waits on
+        // the render thread, not this pool. Without this, a caller that
+        // stops early on a large folder leaves thousands of queued decodes
+        // running for a loader nobody's watching anymore.
+        if (loaderExecutor != null) {
+            loaderExecutor.shutdownNow();
+        }
     }
 
     @Override
     protected void initialize() {
-        //setTargetFps(30); // If needed
+        setTargetFps(30); // Speed of Image slideshow
         try {
-            loadAndCacheFolderFrames();
-            folderLoadedSuccessfully = !cachedFrames.isEmpty();
-            frameCount = cachedFrames.size();
+            prepareFolderAndKickoffBackgroundLoad();
         } catch (IOException e) {
             System.err.println("[Loader Error] Failed to process image directory: " + folderPath);
             e.printStackTrace();
-            folderLoadedSuccessfully = false;
+            loadingFailed = true;
         }
     }
 
     /**
-     * Reads all PNG, JPG, and JPEG files from the target directory, sorts them by
-     * filename, and downscales each image into memory.
+     * Lists and sorts the frame files, synchronously decodes just the first
+     * frame (needed to establish the shared render bounds), then hands every
+     * remaining frame off to a pool of worker threads. This lets rendering
+     * start almost immediately instead of blocking until all 6000+ files are
+     * decoded and scaled.
      */
-    // TODO: maybe make jpg background white / black become transparent??
-    private void loadAndCacheFolderFrames() throws IOException {
+    private void prepareFolderAndKickoffBackgroundLoad() throws IOException {
         File folder = new File(folderPath);
         if (!folder.exists() || !folder.isDirectory()) {
             throw new IOException("Directory not found or invalid: " + folderPath);
         }
 
-        // Filter directory for compatible static image formats
         File[] frameFiles = folder.listFiles((dir, name) -> {
             String lower = name.toLowerCase();
-            return lower.endsWith(".png") || lower.endsWith(".jpg") || lower.endsWith(".bmp") || lower.endsWith(".jpeg") || lower.endsWith(".wbmp") || lower.endsWith(".dib") || lower.endsWith(".gif") || lower.endsWith(".tif") || lower.endsWith(".tiff");
+            return lower.endsWith(".png") || lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".bmp");
         });
 
         if (frameFiles == null || frameFiles.length == 0) {
             throw new IOException("No valid .png, .jpg, or .jpeg files found in: " + folderPath);
         }
 
-        // Sort files to ensure natural frame ordering 
+        // Sort files to ensure natural frame ordering
         // (e.g., frame_01.png, frame_02.png)
         Arrays.sort(frameFiles, Comparator.comparing(File::getName));
+
+        totalFrameCount = frameFiles.length;
+        frameCache = new BufferedImage[totalFrameCount];
+        frameReadyFlags = new boolean[totalFrameCount];
 
         // Read first frame to establish target aspect ratio & layout bounds
         BufferedImage firstFrame = ImageIO.read(frameFiles[0]);
@@ -119,27 +152,96 @@ public class ImageFolderLoader extends Loader {
 
         this.renderWidth = Math.min((int) (masterWidth * scaleFactor), window_width);
         this.renderHeight = Math.min((int) (masterHeight * scaleFactor * 0.5), window_height);
-
         this.offsetX = (window_width - this.renderWidth) / 2;
         this.offsetY = (window_height - this.renderHeight) / 2;
 
-        // Load and cache all frames directly into scaled memory buffers
-        for (File frameFile : frameFiles) {
-            BufferedImage original = ImageIO.read(frameFile);
-            if (original == null) {
-                continue;
-            }
+        frameCache[0] = scaleFrame(firstFrame);
+        markFrameReady(0);
+        folderLoadedSuccessfully = true;
 
-            BufferedImage scaledFrame = new BufferedImage(renderWidth, renderHeight, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D gScaled = scaledFrame.createGraphics();
-            gScaled.setComposite(AlphaComposite.Clear);
-            gScaled.fillRect(0, 0, renderWidth, renderHeight);
-            gScaled.setComposite(AlphaComposite.SrcOver);
-            gScaled.drawImage(original, 0, 0, renderWidth, renderHeight, null);
-            gScaled.dispose();
+        // Decode + scale every other frame in parallel. Each task owns a
+        // single, distinct array slot, so there's no shared-state contention
+        // beyond the ready-tracking below.
+        // Daemon threads: forceTerminalCleanup() is final (no subclass hook)
+        // and the Ctrl+C shutdown hook in ExampleTask calls it directly,
+        // bypassing stopLoading() entirely. Non-daemon pool threads would
+        // silently keep the JVM alive after cleanup in that path, so these
+        // must never be able to block process exit on their own.
+        // -1: the render thread (Loader.run()) also needs CPU every tick to
+        // build and print the frame. On low core-count machines, letting
+        // the pool claim every core can starve that thread and make the
+        // playback we just sped up to start immediately stutter instead.
+        int workerCount = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
+        loaderExecutor = Executors.newFixedThreadPool(workerCount, runnable -> {
+            Thread t = new Thread(runnable, "ImageFolderLoader-decode");
+            t.setDaemon(true);
+            return t;
+        });
 
-            cachedFrames.add(scaledFrame);
+        for (int i = 1; i < frameFiles.length; i++) {
+            final int index = i;
+            final File file = frameFiles[i];
+            loaderExecutor.submit(() -> {
+                // isRunning is the same flag Loader flips to false on
+                // stopLoading()/forceTerminalCleanup(). If this instance has
+                // already been torn down (e.g. the user skipped to a
+                // different animation while a 6000-frame folder was still
+                // loading), there's no render loop left to consume these
+                // frames, so stop doing decode work nobody will see.
+                if (!isRunning) {
+                    return;
+                }
+                try {
+                    BufferedImage original = ImageIO.read(file);
+                    if (original != null) {
+                        frameCache[index] = scaleFrame(original);
+                    }
+                } catch (IOException e) {
+                    System.err.println("[Loader Warning] Skipped unreadable frame: " + file.getName());
+                } finally {
+                    // Always mark ready, even on failure, so a single bad
+                    // file can't stall the contiguous-ready pointer forever.
+                    // frameCache[index] just stays null and gets skipped
+                    // during playback.
+                    markFrameReady(index);
+                }
+            });
         }
+
+        loaderExecutor.shutdown();
+    }
+
+    private BufferedImage scaleFrame(BufferedImage original) {
+        BufferedImage scaledFrame = new BufferedImage(renderWidth, renderHeight, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D gScaled = scaledFrame.createGraphics();
+        gScaled.setComposite(AlphaComposite.Clear);
+        gScaled.fillRect(0, 0, renderWidth, renderHeight);
+        gScaled.setComposite(AlphaComposite.SrcOver);
+        gScaled.drawImage(original, 0, 0, renderWidth, renderHeight, null);
+        gScaled.dispose();
+        return scaledFrame;
+    }
+
+    /**
+     * Frames can finish decoding out of order across worker threads, but
+     * playback can only safely loop over an unbroken run starting at index
+     * 0. This advances that run's length every time a new frame lands,
+     * and publishes it through an AtomicInteger so the render thread can
+     * read it without locking.
+     */
+    private void markFrameReady(int index) {
+        synchronized (readyLock) {
+            frameReadyFlags[index] = true;
+            while (nextContiguousIndex < frameReadyFlags.length && frameReadyFlags[nextContiguousIndex]) {
+                nextContiguousIndex++;
+            }
+            framesReady.set(nextContiguousIndex);
+        }
+        // Deliberately not calling setProgress() here. this.progress is
+        // owned by whatever external process is using this loader (see
+        // ExampleTask) - FOLDER_STAGES messages are flavor text, not a
+        // report of internal decode state, so this class shouldn't be
+        // writing to it.
     }
 
     @Override
@@ -150,16 +252,25 @@ public class ImageFolderLoader extends Loader {
             Arrays.fill(zBuffer, Double.NEGATIVE_INFINITY);
         }
 
-        if (!folderLoadedSuccessfully) {
-            String errorMsg = " ERROR: NO VALID FRAMES IN '" + folderPath + "' ";
-            int centerOffset = (window_height / 2) * window_width + (window_width / 2) - (errorMsg.length() / 2);
-            if (centerOffset >= 0 && centerOffset < outputBuffer.length) {
-                outputBuffer[centerOffset] = errorMsg;
-            }
+        if (loadingFailed || !folderLoadedSuccessfully) {
+            writeCenteredMessage(outputBuffer, " ERROR: NO VALID FRAMES IN '" + folderPath + "' ");
             return;
         }
 
-        BufferedImage activeFrame = cachedFrames.get(currentFrameIndex);
+        int available = framesReady.get();
+        if (available == 0) {
+            writeCenteredMessage(outputBuffer, " Loading frames... ");
+            return;
+        }
+
+        BufferedImage activeFrame = frameCache[currentFrameIndex % available];
+        currentFrameIndex = (currentFrameIndex + 1) % available;
+
+        if (activeFrame == null) {
+            // That particular file failed to decode; just hold this tick
+            // blank rather than crashing or flashing garbage.
+            return;
+        }
 
         for (int y = 0; y < renderHeight; y++) {
             for (int x = 0; x < renderWidth; x++) {
@@ -195,7 +306,12 @@ public class ImageFolderLoader extends Loader {
                 }
             }
         }
+    }
 
-        currentFrameIndex = (currentFrameIndex + 1) % frameCount;
+    private void writeCenteredMessage(String[] outputBuffer, String message) {
+        int centerOffset = (window_height / 2) * window_width + (window_width / 2) - (message.length() / 2);
+        if (centerOffset >= 0 && centerOffset < outputBuffer.length) {
+            outputBuffer[centerOffset] = message;
+        }
     }
 }

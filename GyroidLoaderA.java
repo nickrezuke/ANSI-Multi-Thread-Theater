@@ -1,4 +1,4 @@
-// TODO: do something with this
+// TODO: Why does this look jittery?  
 
 public class GyroidLoaderA extends Loader {
     private static final StatusStage[] STAGES = { 
@@ -22,8 +22,8 @@ public class GyroidLoaderA extends Loader {
     }
 
     public GyroidLoaderA() {
-        // This uses 80x22 specifically
-        super(STAGES, 80, 22);
+        // This uses 140x40 specifically
+        super(STAGES, 140, 40);
         this.width = this.window_width;
         this.height = this.window_height;
     }

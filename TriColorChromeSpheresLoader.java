@@ -7,8 +7,8 @@ public class TriColorChromeSpheresLoader extends Loader {
     };
 
     private double timeClock = 0.0;
-    private int width = 80;
-    private int height = 22;
+    private int width = 100;
+    private int height = 26;
     private static final double CAMERA_DISTANCE = 1.6;
 
     private static final int BALL_COUNT = 3;
@@ -25,7 +25,7 @@ public class TriColorChromeSpheresLoader extends Loader {
     };
 
     public TriColorChromeSpheresLoader() {
-        super(REFLECTIVE_STAGES, 80, 22);
+        super(REFLECTIVE_STAGES, 100, 26);
     }
 
     public TriColorChromeSpheresLoader(int w, int h) {
@@ -57,7 +57,7 @@ public class TriColorChromeSpheresLoader extends Loader {
         for (int i = 0; i < BALL_COUNT; i++) {
             // Offset each ball's entry timeline phase position uniformly by 120-degree
             // divisions (2 * PI / 3)
-            double ballPhase = timeClock + (i * 2.0 * Math.PI / 3.0);
+            double ballPhase = (timeClock * 3) + (i * 2.0 * Math.PI / 3.0);
 
             // Lissajous curve parameters create a classic overlapping figure-8 flow
             sphereX[i] = widthX * Math.sin(ballPhase) * -1;

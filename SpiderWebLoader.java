@@ -7,11 +7,7 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Renders an orb-weaver spider constructing a web, following the real
- * biological build sequence, in a fixed 3D world that a slowly orbiting
- * camera re-projects every frame (perspective divide + z-buffer, in the
- * style of Andy Sloan's donut.c). Nothing here is decorative: every thread
- * drawn corresponds to a specific, named step of the construction algorithm.
+ * Renders an orb-weaver spider constructing a web.
  *
  * Build sequence:
  *   1. Bridge thread   - the first line across two anchor points

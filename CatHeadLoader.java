@@ -1,3 +1,5 @@
+// TODO: Eyes flicker a little
+
 public class CatHeadLoader extends Loader {
     private static final StatusStage[] CAT_STAGES = {
             new StatusStage(20, "Chasing Butterflies:"),
@@ -5,7 +7,7 @@ public class CatHeadLoader extends Loader {
             new StatusStage(80, "Staring at you from the dark:"),
             new StatusStage(100, "MeowMrrrreeoww!  Meow!!")
     };
-    private static final char[] SHADE_RAMP = { '.', ',', '-', '~', ':', ';', '=', '!', '*', '#', '$', '@' };
+    private static final char[] SHADE_RAMP = { ':', ';', '=', '!', '*', '#', '$', '@', '▒', '▓', '█' };
     private String furColor;
     private String earColor;
     private String noseColor;

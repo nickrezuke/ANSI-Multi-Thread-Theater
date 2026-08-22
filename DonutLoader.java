@@ -18,7 +18,7 @@ public class DonutLoader extends Loader {
             { 2.3, 1.6, 2 }, { 3.5, 1.5, 0 }, { 4.2, 1.7, 1 }, { 4.9, 1.6, 2 }, { 5.7, 1.5, 0 }
     };
 
-    private static final String LUMINANCE_CHARS = ".,-~:;=!*#$@";
+    private static final String LUMINANCE_CHARS = ":;=!*#$@▒▓█";
 
     private static final double ONE_PI = Math.PI;
     private static final double TWO_PI = 2.0 * ONE_PI;

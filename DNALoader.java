@@ -108,7 +108,7 @@ public class DNALoader extends Loader {
 
                             int charIndex = (int) Math.round(8 * luminance);
                             if (charIndex < 0) charIndex = 0;
-                            String shadeString = ".,-~:;=!*#$@";
+                            String shadeString = ":;=!*#$@▒▓█";
                             char asciiChar = shadeString.charAt(charIndex >= shadeString.length() ? shadeString.length() - 1 : charIndex);
 
                             outputBuffer[bufferIdx] = COLOR_STRAND + asciiChar + RESET;

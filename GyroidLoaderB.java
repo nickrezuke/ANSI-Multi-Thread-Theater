@@ -1,4 +1,4 @@
-// TODO: do something with this
+// TODO: This looks jittery, a little slow, and sometimes it skips?  Make this one better
 
 public class GyroidLoaderB extends Loader {
     private static final StatusStage[] GYROID_STAGES = {
@@ -9,11 +9,12 @@ public class GyroidLoaderB extends Loader {
     };
 
     private double timeClock = 0.0;
-    private final int width = 80;
-    private final int height = 22;
+    private final int width = 100;
+    private final int height = 26;
 
     public GyroidLoaderB() {
-        super(GYROID_STAGES, 80, 22);
+        // This one asks for 100 x 26
+        super(GYROID_STAGES, 100, 26);
     }
 
     @Override
@@ -64,7 +65,7 @@ public class GyroidLoaderB extends Loader {
                 double maxDistance = 5.0;
                 
                 // Raymarch step loop
-                for (int step = 0; step < 24; step++) {
+                for (int step = 0; step < 48; step++) {
                     double px = rayX + dirX * depthTravelled;
                     double py = rayY + dirY * depthTravelled;
                     double pz = rayZ + dirZ * depthTravelled;
@@ -115,7 +116,7 @@ public class GyroidLoaderB extends Loader {
                         }
                         break;
                     }
-                    depthTravelled += 0.12; // Advance ray forward
+                    depthTravelled += 0.06; // Advance ray forward
                     if (depthTravelled > maxDistance) break;
                 }
                 
