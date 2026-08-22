@@ -434,7 +434,7 @@ Interactive Type & Text appears Loader (other than the alphabet loader?)
    javac *.java && java ExampleTask Tesseract ; rm *.class
 
    ```
-   All names listed above in (The Loader Library)[#--the-loader-library]
+   All names listed above in the Loader Library section above
 
 ---
 
