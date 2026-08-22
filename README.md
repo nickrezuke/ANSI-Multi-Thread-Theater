@@ -80,51 +80,51 @@ I also included a few classic "graphics processing" loaders
 
 -> ***TexelCube***: I made an abstract cube loader that can have custom textures applied to each face by defining a grid of texels.  This texel definition function, which only needs the parameters x, y, and face (all ints) it returns the RGB that texel should be, making it extremely easy to make your own, which I highly encourage you to do by checking out the "TexelMakeYourOwnCube" file.  Below are several texel face cubes.
 
------> **TexelMinecraftGrassBlock**: <!-- TODO: Elaborate on this section -->
+        -> **TexelMinecraftGrassBlock**: <!-- TODO: Elaborate on this section -->
 
------> **TexelCompantionCube**: <!-- TODO: Elaborate on this section -->
+        -> **TexelCompantionCube**: <!-- TODO: Elaborate on this section -->
 
------> **TexelKevinCube**: <!-- TODO: Elaborate on this section -->
+        -> **TexelKevinCube**: <!-- TODO: Elaborate on this section -->
 
------> **TexelBorgCube**: <!-- TODO: Elaborate on this section -->
+        -> **TexelBorgCube**: <!-- TODO: Elaborate on this section -->
 
------> **TexelAllspark**: <!-- TODO: Elaborate on this section -->
+        -> **TexelAllspark**: <!-- TODO: Elaborate on this section -->
 
------> **TexelEmojiCube**: <!-- TODO: Elaborate on this section -->
+        -> **TexelEmojiCube**: <!-- TODO: Elaborate on this section -->
 
------> **TexelPsychCube**: <!-- TODO: Elaborate on this section -->
+        -> **TexelPsychCube**: <!-- TODO: Elaborate on this section -->
 
------> **TexelHellraiserLamentConfiguration**: <!-- TODO: Elaborate on this section -->
+        -> **TexelHellraiserLamentConfiguration**: <!-- TODO: Elaborate on this section -->
 
------> **TexelFlatEarth**: <!-- TODO: Elaborate on this section -->
+        -> **TexelFlatEarth**: <!-- TODO: Elaborate on this section -->
 
------> **TexelPlasma**: <!-- TODO: Elaborate on this section -->
+        -> **TexelPlasma**: <!-- TODO: Elaborate on this section -->
 
------> **TexelGlitch**: <!-- TODO: Elaborate on this section -->
+        -> **TexelGlitch**: <!-- TODO: Elaborate on this section -->
 
------> **TexelRubixCube**: <!-- TODO: Elaborate on this section -->
+        -> **TexelRubixCube**: <!-- TODO: Elaborate on this section -->
 
------> **TexelGreyRubix**: <!-- TODO: Elaborate on this section -->
+        -> **TexelGreyRubix**: <!-- TODO: Elaborate on this section -->
 
------> **TexelMCUTesseract**: <!-- TODO: Elaborate on this section -->
+        -> **TexelMCUTesseract**: <!-- TODO: Elaborate on this section -->
 
------> **TexelMuseumCube**: <!-- TODO: Elaborate on this section -->
+        -> **TexelMuseumCube**: <!-- TODO: Elaborate on this section -->
 
------> **TexelMarioBricks**: <!-- TODO: Elaborate on this section -->
+        -> **TexelMarioBricks**: <!-- TODO: Elaborate on this section -->
 
------> **TexelMarioCapBlock**: <!-- TODO: Elaborate on this section -->
+        -> **TexelMarioCapBlock**: <!-- TODO: Elaborate on this section -->
 
------> **TexelMarioCoinBlock**: <!-- TODO: Elaborate on this section -->
+        -> **TexelMarioCoinBlock**: <!-- TODO: Elaborate on this section -->
 
------> **TexelTriplePhaseCubeBlock**: <!-- TODO: Elaborate on this section -->
+        -> **TexelTriplePhaseCubeBlock**: <!-- TODO: Elaborate on this section -->
 
------> **TexelEldritchAetherCube**: <!-- TODO: Elaborate on this section -->
+        -> **TexelEldritchAetherCube**: <!-- TODO: Elaborate on this section -->
 
------> **TexelHyperspaceVoid**: <!-- TODO: Elaborate on this section -->
+        -> **TexelHyperspaceVoid**: <!-- TODO: Elaborate on this section -->
 
------> **TexelHyperchromaticKaleidoscope**: <!-- TODO: Elaborate on this section -->
+        -> **TexelHyperchromaticKaleidoscope**: <!-- TODO: Elaborate on this section -->
 
------> **TexelMonochromeStatic**: <!-- TODO: Elaborate on this section -->
+        -> **TexelMonochromeStatic**: <!-- TODO: Elaborate on this section -->
 
 ### Some Other Cool Shapes
 
@@ -439,4 +439,4 @@ Interactive Type & Text appears Loader (other than the alphabet loader?)
 
 ## 🏗 Utilizing this Project (in your own projects)
 
-These `Loader`s operate concurrently with whatever called them.  To use a loader, you (the calling method) need to pass down an active thread token, spin up the canvas lifecycle, and feed numeric ticks over thread pipelines.  An example of this is shown in the ExampleTask.java file, either use similar logic or even just edit that file out into working with your project's archetecture.
+These `Loader`s operate concurrently with whatever called them.  To use a loader, you (the calling method) need to pass down an active thread token, spin up the canvas lifecycle, and feed numeric ticks over thread pipelines.  An example of this is shown in the `ExampleTask.java` file, either use similar logic or even just edit that file out into working with your project's archetecture.
