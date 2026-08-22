@@ -2,9 +2,9 @@
 
 <img width="1634" height="977" alt="LoaderSpinners" src="https://github.com/user-attachments/assets/e1518dbc-a493-4cf1-9bb0-5b938c9f6fb6" />
 
-Inspired by the famous Andy Sloane’s `donut.c`, this project is a collection of real-time 3D ASCII graphics, able to be viewed with this rendering engine built entirely in vanilla Java. While the original concept proved that 3D graphics could be projected onto a flat text grid for animating 3D graphics from within the terminal itself, this project goes a little bit farther and transforms that novelty into a proper loading-screen framework for use in Java. Depending on the loading screen selected, it introduces full ANSI TrueColor ray-lit compositing, geometric abstractions, advanced math/physics simulations, and sometimes even real-time input handling, all controlled under asynchronous thread messaging to serve as a functional and visually stunning "loading screen" for active Java background processes.
+This project is a collection of real-time 3D ASCII graphics, able to be viewed with this rendering engine built entirely in vanilla Java. While the original concept proved that 3D graphics could be projected onto a flat text grid for animating 3D graphics from within the terminal itself, this project goes a little bit farther and transforms that novelty into a proper loading-screen framework for use in Java. Depending on the loading screen selected, it introduces full ANSI TrueColor ray-lit compositing, geometric abstractions, advanced math/physics simulations, and sometimes even real-time input handling, all controlled under asynchronous thread messaging to serve as a functional and visually stunning "loading screen" for active Java background processes.
 
-Definitely check out the [original code by Andy Sloane](https://www.a1k0n.net/2006/09/15/obfuscated-c-donut.html) inspirtion behind this. [The page here explains this better than I can](https://www.a1k0n.net/2011/07/20/donut-math.html).
+The idea for this project came from the famous Andy Sloane’s `donut.c`, definitely check out the [original code by Andy Sloane](https://www.a1k0n.net/2006/09/15/obfuscated-c-donut.html) inspirtion behind this. The [explanation page here](https://www.a1k0n.net/2011/07/20/donut-math.html) shows the math behind it.
 
 ---
 
@@ -427,7 +427,7 @@ Interactive Type & Text appears Loader (other than the alphabet loader?)
    ```
 
 ->3. To run specific loaders, use their name in the command:
-      (All names listed (above)[#📖-the-loader-library])
+      (All names listed above in (The Loader Library)[#-the-loader-library])
    ```bash
    javac *.java && java ExampleTask Donut ; rm *.class
    javac *.java && java ExampleTask DNA ; rm *.class
