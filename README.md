@@ -427,7 +427,6 @@ Interactive Type & Text appears Loader (other than the alphabet loader?)
    ```
 
 ->3. To run specific loaders, use their name in the command:
-      (All names listed above in (The Loader Library)[#-the-loader-library])
    ```bash
    javac *.java && java ExampleTask Donut ; rm *.class
    javac *.java && java ExampleTask DNA ; rm *.class
@@ -435,6 +434,7 @@ Interactive Type & Text appears Loader (other than the alphabet loader?)
    javac *.java && java ExampleTask Tesseract ; rm *.class
 
    ```
+   All names listed above in (The Loader Library)[#-the-loader-library]
 
 ---
 
