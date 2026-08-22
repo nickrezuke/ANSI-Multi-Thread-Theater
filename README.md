@@ -78,53 +78,53 @@ I also included a few classic "graphics processing" loaders
 
 ### Texel Cube
 
--> ***TexelCube***: I made an abstract cube loader that can have custom textures applied to each face by defining a grid of texels.  This texel definition function, which only needs the parameters x, y, and face (all ints) it returns the RGB that texel should be, making it extremely easy to make your own, which I highly encourage you to do by checking out the "TexelMakeYourOwnCube" file.  Below are several texel face cubes.
+-> ***TexelCube***: I made an abstract cube loader that can have custom textures applied to each face by defining a grid of texels.  This texel definition function, which only needs the parameters x, y, and face (all ints) it returns the RGB that texel should be, making it extremely easy to make your own, which I highly encourage you to do by checking out the `TexelMakeYourOwnCube.java` file.  Below are several texel face cubes.
 
-        -> **TexelMinecraftGrassBlock**: <!-- TODO: Elaborate on this section -->
+---------> **TexelMinecraftGrassBlock**: <!-- TODO: Elaborate on this section -->
 
-        -> **TexelCompantionCube**: <!-- TODO: Elaborate on this section -->
+---------> **TexelCompantionCube**: <!-- TODO: Elaborate on this section -->
 
-        -> **TexelKevinCube**: <!-- TODO: Elaborate on this section -->
+---------> **TexelKevinCube**: <!-- TODO: Elaborate on this section -->
 
-        -> **TexelBorgCube**: <!-- TODO: Elaborate on this section -->
+---------> **TexelBorgCube**: <!-- TODO: Elaborate on this section -->
 
-        -> **TexelAllspark**: <!-- TODO: Elaborate on this section -->
+---------> **TexelAllspark**: <!-- TODO: Elaborate on this section -->
 
-        -> **TexelEmojiCube**: <!-- TODO: Elaborate on this section -->
+---------> **TexelEmojiCube**: <!-- TODO: Elaborate on this section -->
 
-        -> **TexelPsychCube**: <!-- TODO: Elaborate on this section -->
+---------> **TexelPsychCube**: <!-- TODO: Elaborate on this section -->
 
-        -> **TexelHellraiserLamentConfiguration**: <!-- TODO: Elaborate on this section -->
+---------> **TexelHellraiserLamentConfiguration**: <!-- TODO: Elaborate on this section -->
 
-        -> **TexelFlatEarth**: <!-- TODO: Elaborate on this section -->
+---------> **TexelFlatEarth**: <!-- TODO: Elaborate on this section -->
 
-        -> **TexelPlasma**: <!-- TODO: Elaborate on this section -->
+---------> **TexelPlasma**: <!-- TODO: Elaborate on this section -->
 
-        -> **TexelGlitch**: <!-- TODO: Elaborate on this section -->
+---------> **TexelGlitch**: <!-- TODO: Elaborate on this section -->
 
-        -> **TexelRubixCube**: <!-- TODO: Elaborate on this section -->
+---------> **TexelRubixCube**: <!-- TODO: Elaborate on this section -->
 
-        -> **TexelGreyRubix**: <!-- TODO: Elaborate on this section -->
+---------> **TexelGreyRubix**: <!-- TODO: Elaborate on this section -->
 
-        -> **TexelMCUTesseract**: <!-- TODO: Elaborate on this section -->
+---------> **TexelMCUTesseract**: <!-- TODO: Elaborate on this section -->
 
-        -> **TexelMuseumCube**: <!-- TODO: Elaborate on this section -->
+---------> **TexelMuseumCube**: <!-- TODO: Elaborate on this section -->
 
-        -> **TexelMarioBricks**: <!-- TODO: Elaborate on this section -->
+---------> **TexelMarioBricks**: <!-- TODO: Elaborate on this section -->
 
-        -> **TexelMarioCapBlock**: <!-- TODO: Elaborate on this section -->
+---------> **TexelMarioCapBlock**: <!-- TODO: Elaborate on this section -->
 
-        -> **TexelMarioCoinBlock**: <!-- TODO: Elaborate on this section -->
+---------> **TexelMarioCoinBlock**: <!-- TODO: Elaborate on this section -->
 
-        -> **TexelTriplePhaseCubeBlock**: <!-- TODO: Elaborate on this section -->
+---------> **TexelTriplePhaseCubeBlock**: <!-- TODO: Elaborate on this section -->
 
-        -> **TexelEldritchAetherCube**: <!-- TODO: Elaborate on this section -->
+---------> **TexelEldritchAetherCube**: <!-- TODO: Elaborate on this section -->
 
-        -> **TexelHyperspaceVoid**: <!-- TODO: Elaborate on this section -->
+---------> **TexelHyperspaceVoid**: <!-- TODO: Elaborate on this section -->
 
-        -> **TexelHyperchromaticKaleidoscope**: <!-- TODO: Elaborate on this section -->
+---------> **TexelHyperchromaticKaleidoscope**: <!-- TODO: Elaborate on this section -->
 
-        -> **TexelMonochromeStatic**: <!-- TODO: Elaborate on this section -->
+---------> **TexelMonochromeStatic**: <!-- TODO: Elaborate on this section -->
 
 ### Some Other Cool Shapes
 
@@ -395,6 +395,7 @@ Tower of Hanoi Solver?
 Sunflower? or flowers in general?
 Car / Truck
 Trains
+Andy's Fire https://www.a1k0n.net/2007/08/24/obfuscated-c-fire.html
 Interactive Tanks-like Aiming & Shooting game w/ breakable ground
 Interactive Tile Sliding Puzzle (like pokemon ice dungeon)
 Interactive Sokoban game
@@ -407,7 +408,7 @@ Interactive Type & Text appears Loader (other than the alphabet loader?)
 
 ### Prerequisites
 * **Java Development Kit (JDK)**: 17 or higher recommended.
-* **Terminal Window**: A terminal emulator supporting **ANSI Escape Codes** and **TrueColor (24-bit RGB) characters**.  Most of these Loaders require a minimum of 80(w)x22(h) when viewing the terminal window, (although some do occasionally ask for different dimensions).  This should work on Mac / Linux with Windows Support coming soon...  NOTE: Your computer's native terminal recommended, and fullscreen if possible, but this should also work with built in IDE terminal windows, such as Eclipse or VS Code, but seriously let me know if you find an instance or environment where anything is not working as intended.
+* **Terminal Window**: A terminal emulator supporting **ANSI Escape Codes** and **TrueColor (24-bit RGB) characters**.  Most of these Loaders require a minimum of 80(w)x25(h) when viewing the terminal window, (80x22 for the rendered geometry, and 3 lines at the bottom reserved for the loading bar, although some loaders do occasionally ask for larger dimensions, none require more than 160 x 48).  This should work on Mac / Linux with Windows Support coming soon...  NOTE: Your computer's native terminal is always recommended, and fullscreen if possible, but this should also work with built in IDE terminal windows, such as Eclipse or VS Code, but seriously let me know if you find an instance or environment where anything is not working as intended.
 
 ### Running the Project Standalone
 ->1. Clone the repository to your local machine:
@@ -426,7 +427,7 @@ Interactive Type & Text appears Loader (other than the alphabet loader?)
    ```
 
 ->3. To run specific loaders, use their name in the command:
-      (All names listed above)
+      (All names listed (above)[#📖-the-loader-library])
    ```bash
    javac *.java && java ExampleTask Donut ; rm *.class
    javac *.java && java ExampleTask DNA ; rm *.class

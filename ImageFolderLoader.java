@@ -53,7 +53,7 @@ public class ImageFolderLoader extends Loader {
     private ExecutorService loaderExecutor;
 
     // Default Values
-    private static final String[] DEFAULT_PATHS = {"ImageFolderPNG", "ImageFolderJPG", "ImageFolderBMP"}; // TODO add a jpeg for example??
+    private static final String[] DEFAULT_PATHS = {"ImageFolderPNG", "ImageFolderJPG", "ImageFolderJPEG", "ImageFolderBMP"};
     private static final String BAD_APPLE_PATH = "ImageFolderBadApple";
 
     private static final int DEFAULT_WIDTH = 130;
@@ -125,7 +125,7 @@ public class ImageFolderLoader extends Loader {
         });
 
         if (frameFiles == null || frameFiles.length == 0) {
-            throw new IOException("No valid .png, .jpg, or .jpeg files found in: " + folderPath);
+            throw new IOException("No valid .bmp, .png, .jpg, or .jpeg files found in: " + folderPath);
         }
 
         // Sort files to ensure natural frame ordering

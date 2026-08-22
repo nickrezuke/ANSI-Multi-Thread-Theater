@@ -9,6 +9,21 @@ public abstract class Loader implements Runnable {
     protected boolean isRawCanvas = false;
     private final java.util.concurrent.atomic.AtomicBoolean isCleanedUp = new java.util.concurrent.atomic.AtomicBoolean(false);
     private final StatusStage[] stages;
+
+    // Reference to whatever thread is currently executing run(), captured at the top of
+    // run() itself. stopLoading()/forceTerminalCleanup() use this to interrupt a render
+    // thread that's parked in the frame-pacing Thread.sleep() below, so shutdown doesn't
+    // have to wait out the rest of the current frame period (which, for a slow-ticking
+    // ambient loader, could be well over a second) before the loop notices isRunning
+    // flipped to false.
+    private volatile Thread renderThread;
+
+    // Worst-case number of terminal rows the status footer (blank separator line +
+    // message line + progress-bar line) can occupy below the rendered geometry. The
+    // narrow-screen layout in appendStatusFooter() is the worst case at 3 rows; the
+    // wide-screen layout only uses 2, so reserving 3 always leaves a single harmless
+    // blank row in the wide case rather than ever overflowing the terminal.
+    protected static final int FOOTER_RESERVED_ROWS = 3;
     
     // Define the window
     protected final int window_width;
@@ -46,10 +61,20 @@ public abstract class Loader implements Runnable {
         }
     }
 
-    // Default constructor retains dynamic size matching for standard terminals
+    // Default constructor retains dynamic size matching for standard terminals.
+    // Reserves FOOTER_RESERVED_ROWS off the real terminal height so renderGeometry's
+    // canvas and the status footer never fight over the same rows - the footer always
+    // gets its worst-case 3 rows, and geometry gets everything else. Loaders built with
+    // an explicit width/height (e.g. DonutLoader's hardcoded 80x22) skip this path
+    // entirely and are unaffected; that height has always meant "pure geometry rows,"
+    // and still does.
     public Loader(StatusStage[] stages) {
+        this(stages, TerminalConfig.getTerminalSize()[0], reservedTerminalHeight());
+    }
+
+    private static int reservedTerminalHeight() {
         int[] dimensions = TerminalConfig.getTerminalSize();
-        this(stages, dimensions[0], dimensions[1]);
+        return Math.max(1, dimensions[1] - FOOTER_RESERVED_ROWS);
     }
 
     // Overloaded constructor allowing custom dimensions
@@ -70,6 +95,13 @@ public abstract class Loader implements Runnable {
 
     public void stopLoading() {
         this.isRunning = false;
+        // Wake the render thread immediately if it's currently parked in the frame-pacing
+        // sleep below, rather than making the caller's loadingThread.join() wait out
+        // whatever's left of the current frame period.
+        Thread t = this.renderThread;
+        if (t != null) {
+            t.interrupt();
+        }
     }
 
     public void setProgress(int progress) {
@@ -87,6 +119,7 @@ public abstract class Loader implements Runnable {
 
     @Override
     public void run() {
+        this.renderThread = Thread.currentThread();
         try {
             // Ensure standard mode after previous runs
             if (!this.isRawCanvas) {
@@ -122,69 +155,8 @@ public abstract class Loader implements Runnable {
                     this.frameBuilder.append(outputBuffer[k]);
                 }
 
-                // Process progress staging boundaries
-                int currentProgress = this.progress;
-                String activeMessage = "Loading..."; 
-                for (StatusStage stage : stages) {
-                    if (currentProgress <= stage.maxPercent) {
-                        activeMessage = stage.message;
-                        break;
-                    }
-                }
-
-                this.barBuilder.setLength(0);
-
-                if (window_width * 2 < window_height || window_width <= 60) {
-                    // --- NARROW SCREEN TRACKING DISPLAY ---
-                    String cleanMsg = activeMessage.trim();
-                    int msgLen = cleanMsg.length();
-                    int maxMsgLen = Math.max(0, window_width - 3);
-
-                    if (msgLen > window_width) {
-                        cleanMsg.getChars(0, maxMsgLen, this.messageBuffer, 0);
-                        this.frameBuilder.append(isRawCanvas ? "\r\n\r\n" : "\n\n")
-                                    .append(WHITE).append(this.messageBuffer, 0, maxMsgLen).append("...")
-                                    .append(CLEAR_LINE).append(isRawCanvas ? "\r\n" : "\n");
-                    } else {
-                        this.frameBuilder.append(isRawCanvas ? "\r\n\r\n" : "\n\n")
-                                    .append(WHITE).append(cleanMsg)
-                                    .append(CLEAR_LINE).append(isRawCanvas ? "\r\n" : "\n");
-                    }
-
-                    int barWidth = window_width - 7;
-                    if (barWidth < 3) barWidth = 3; 
-                    int filledBars = (int) ((currentProgress / 100.0) * barWidth);
-
-                    for (int b = 0; b < barWidth; b++) {
-                        this.barBuilder.append(b < filledBars ? LOAD_BAR_FULL : LOAD_BAR_EMPTY);
-                    }
-
-                    this.frameBuilder.append(WHITE).append("[").append(GREEN).append(this.barBuilder).append(WHITE).append("] ")
-                                .append(currentProgress).append("%")
-                                .append(CLEAR_LINE)
-                                .append(RESET);
-                } else {
-                    // --- WIDE SCREEN TRACKING DISPLAY ---
-                    int totalBars = 30;
-                    int filledBars = (int) ((currentProgress / 100.0) * totalBars);
-
-                    for (int b = 0; b < totalBars; b++) {
-                        this.barBuilder.append(b < filledBars ? LOAD_BAR_FULL : LOAD_BAR_EMPTY);
-                    }
-
-                    // Manual text padding algorithm drops String.format overhead entirely
-                    this.frameBuilder.append(isRawCanvas ? "\r\n\r\n" : "\n\n").append(WHITE).append(" ");
-                    int paddingNeeded = 18 - activeMessage.length();
-                    for (int i = 0; i < paddingNeeded; i++) {
-                        this.frameBuilder.append(' ');
-                    }
-
-                    this.frameBuilder.append(activeMessage)
-                                .append("[").append(GREEN).append(this.barBuilder).append(WHITE).append("] ")
-                                .append(currentProgress).append("%")
-                                .append(CLEAR_LINE)
-                                .append(RESET);
-                }
+                // Build and append the progress bar + status message footer
+                appendStatusFooter();
 
                 // Push structural bytes cleanly into Standard Console Output
                 System.out.print(this.frameBuilder);
@@ -211,6 +183,78 @@ public abstract class Loader implements Runnable {
         }
     }
 
+    /**
+     * Builds and appends the progress bar + status message footer onto {@link #frameBuilder},
+     * choosing a narrow- or wide-screen layout based on the terminal's current dimensions.
+     * Pulled out of run() so the footer's spacing/centering/layout can be iterated on
+     * independently of the frame-loop and geometry-compositing logic above it.
+     */
+    private void appendStatusFooter() {
+        // Process progress staging boundaries
+        int currentProgress = this.progress;
+        String activeMessage = "Loading...";
+        for (StatusStage stage : stages) {
+            if (currentProgress <= stage.maxPercent) {
+                activeMessage = stage.message;
+                break;
+            }
+        }
+
+        this.barBuilder.setLength(0);
+
+        if (window_width * 2 < window_height || window_width <= 60) {
+            // --- NARROW SCREEN TRACKING DISPLAY ---
+            String cleanMsg = activeMessage.trim();
+            int msgLen = cleanMsg.length();
+            int maxMsgLen = Math.max(0, window_width - 3);
+
+            if (msgLen > window_width) {
+                cleanMsg.getChars(0, maxMsgLen, this.messageBuffer, 0);
+                this.frameBuilder.append(isRawCanvas ? "\r\n\r\n" : "\n\n")
+                            .append(WHITE).append(this.messageBuffer, 0, maxMsgLen).append("...")
+                            .append(CLEAR_LINE).append(isRawCanvas ? "\r\n" : "\n");
+            } else {
+                this.frameBuilder.append(isRawCanvas ? "\r\n\r\n" : "\n\n")
+                            .append(WHITE).append(cleanMsg)
+                            .append(CLEAR_LINE).append(isRawCanvas ? "\r\n" : "\n");
+            }
+
+            int barWidth = window_width - 7;
+            if (barWidth < 3) barWidth = 3;
+            int filledBars = (int) ((currentProgress / 100.0) * barWidth);
+
+            for (int b = 0; b < barWidth; b++) {
+                this.barBuilder.append(b < filledBars ? LOAD_BAR_FULL : LOAD_BAR_EMPTY);
+            }
+
+            this.frameBuilder.append(WHITE).append("[").append(GREEN).append(this.barBuilder).append(WHITE).append("] ")
+                        .append(currentProgress).append("%")
+                        .append(CLEAR_LINE)
+                        .append(RESET);
+        } else {
+            // --- WIDE SCREEN TRACKING DISPLAY ---
+            int totalBars = 30;
+            int filledBars = (int) ((currentProgress / 100.0) * totalBars);
+
+            for (int b = 0; b < totalBars; b++) {
+                this.barBuilder.append(b < filledBars ? LOAD_BAR_FULL : LOAD_BAR_EMPTY);
+            }
+
+            // Manual text padding algorithm drops String.format overhead entirely
+            this.frameBuilder.append(isRawCanvas ? "\r\n\r\n" : "\n\n").append(WHITE).append(" ");
+            int paddingNeeded = 18 - activeMessage.length();
+            for (int i = 0; i < paddingNeeded; i++) {
+                this.frameBuilder.append(' ');
+            }
+
+            this.frameBuilder.append(activeMessage)
+                        .append("[").append(GREEN).append(this.barBuilder).append(WHITE).append("] ")
+                        .append(currentProgress).append("%")
+                        .append(CLEAR_LINE)
+                        .append(RESET);
+        }
+    }
+
     protected abstract void initialize();
     protected abstract void renderGeometry(String[] outputBuffer, double[] zBuffer);
 
@@ -225,6 +269,10 @@ public abstract class Loader implements Runnable {
         }
 
         this.isRunning = false;
+        Thread t = this.renderThread;
+        if (t != null) {
+            t.interrupt();
+        }
 
         // Explicitly force the OS terminal out of raw mode right now
         TerminalConfig.restoreMode();

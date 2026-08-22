@@ -1,4 +1,4 @@
-// TODO: Eyes flicker a little
+// TODO: Add some Cat Breed Variants?
 
 public class CatHeadLoader extends Loader {
     private static final StatusStage[] CAT_STAGES = {
@@ -157,37 +157,49 @@ public class CatHeadLoader extends Loader {
         }
     }
 
-    private void trackAndRenderSqueezedEye(double lx, double ly, double lz, double cosA, double sinA,
-            String[] outputBuffer, double[] zBuffer) {
+    private void trackAndRenderSqueezedEye(double lx, double ly, double lz, double cosA, double sinA, String[] outputBuffer, double[] zBuffer) {
         double rx = lx * cosA + lz * sinA;
         double ry = ly;
         double rz = -lx * sinA + lz * cosA;
-
-        if (rz > -0.22)
-            return;
-
+        
+        // 1. LOOSEN CULLING: Only clip if the eye rotates to the true back-half of the head
+        if (rz > 0.0) return; 
+    
         double distanceToCamera = 4.0;
         double ooz = 1.0 / (rz + distanceToCamera);
+        
+        // Apply a subtle forward depth bias to cleanly sit ahead of the head spheroid
+        double eyeOozBias = ooz + 0.0125; 
+    
         int cx = (int) (40 + 38 * ooz * rx * 1.85);
         int cy = (int) (14 + 19 * ooz * ry * 1.25);
-
+        
         double surfaceNormalZ = (lx > 0) ? -cosA : cosA;
         double horizontalSqueeze = Math.max(0.20, Math.abs(surfaceNormalZ));
-
+        
         for (int dy = -2; dy <= 2; dy++) {
             int maxDX = (int) (4 * horizontalSqueeze);
             for (int dx = -maxDX; dx <= maxDX; dx++) {
                 int px = cx + dx;
                 int py = cy + dy;
+                
                 if (px >= 0 && px < 80 && py >= 0 && py < 22) {
                     int targetIndex = px + 80 * py;
+                    
                     double normX = dx / (4.0 * horizontalSqueeze);
                     double normY = dy / 2.0;
                     double distanceMetric = (normX * normX) + (normY * normY);
+                    
                     if (distanceMetric <= 1.0) {
-                        if (ooz > zBuffer[targetIndex] - 0.04) {
+                        // 2. TIGHTEN COMPARISON: Compare using biased eye depth with a tiny floating-point margin
+                        if (eyeOozBias > (zBuffer[targetIndex] - 0.001)) {
+                            
+                            // 3. WRITE TO Z-BUFFER: Claim this pixel space so head geometry doesn't bleed through
+                            zBuffer[targetIndex] = eyeOozBias; 
+                            
                             String color;
                             char glyph;
+                            
                             if (distanceMetric > 0.65) {
                                 color = eyeBorderColor;
                                 glyph = '█';
@@ -204,7 +216,7 @@ public class CatHeadLoader extends Loader {
                 }
             }
         }
-    }
+    }    
 
     private void plotProjectedPoint(double localX, double localY, double localZ, double rNx, double rNy, double rNz,
             int surfaceType, double cosA, double sinA, double lightX, double lightY, double lightZ,

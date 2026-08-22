@@ -1,17 +1,15 @@
-// TODO: Why does this look jittery?  
-
 public class GyroidLoaderA extends Loader {
-    private static final StatusStage[] STAGES = { 
-        new StatusStage(30, "Condensing liquid vapor fields:"),
-        new StatusStage(60, "Solving periodic differential matrices:"),
-        new StatusStage(90, "Tracing isosurface depth bounds:"),
-        new StatusStage(100, "Gyroid Core Floating Perfectly!")
-    }; 
+    private static final StatusStage[] STAGES = {
+            new StatusStage(30, "Condensing liquid vapor fields:"),
+            new StatusStage(60, "Solving periodic differential matrices:"),
+            new StatusStage(90, "Tracing isosurface depth bounds:"),
+            new StatusStage(100, "Gyroid Core Floating Perfectly!")
+    };
 
     private int width;
     private int height;
     private double timeStep = 0.0;
-    
+
     // Smooth character density ramp for depth shading
     private static final String DENSITY = ".,-~:;=!*#$@";
 
@@ -22,8 +20,8 @@ public class GyroidLoaderA extends Loader {
     }
 
     public GyroidLoaderA() {
-        // This uses 140x40 specifically
-        super(STAGES, 140, 40);
+        // This uses 110x32 specifically
+        super(STAGES, 110, 32);
         this.width = this.window_width;
         this.height = this.window_height;
     }
@@ -38,6 +36,18 @@ public class GyroidLoaderA extends Loader {
         // Advance time to animate the 3D slicing morph effect
         timeStep += 0.04;
 
+        // --- COLOR WHEEL HUE DRIFT CALCULATIONS ---
+        // We use sine waves offset by 120 degrees (2*PI/3) for R, G, and B.
+        // timeStep * 2.2 controls how fast the hue shifts over time.
+        double colorPhase = timeStep * 2.2;
+        int r = (int) (Math.sin(colorPhase) * 127 + 128);
+        int g = (int) (Math.sin(colorPhase + 2.0 * Math.PI / 3.0) * 127 + 128);
+        int b = (int) (Math.sin(colorPhase + 4.0 * Math.PI / 3.0) * 127 + 128);
+
+        // Generate the 24-bit RGB ANSI escape code
+        String dynamicColor = "\u001B[38;2;" + r + ";" + g + ";" + b + "m";
+        // ------------------------------------------
+
         // Scale factors to balance out the terminal's non-square character aspect ratio
         double scaleX = 0.25;
         double scaleY = 0.50;
@@ -51,23 +61,25 @@ public class GyroidLoaderA extends Loader {
                 double posX = (x - width / 2.0) * scaleX;
                 double posY = (y - height / 2.0) * scaleY;
 
-                // Raycast down a localized depth axis (z-depth) to check for surface intersections
+                // Raycast down a localized depth axis (z-depth) to check for surface
+                // intersections
                 for (double posZ = -5.0; posZ <= 5.0; posZ += 0.2) {
-                    
+
                     // Modulate coordinates with time to create smooth rotation/movement
                     double rotX = posX * Math.cos(timeStep * 0.5) - posZ * Math.sin(timeStep * 0.5);
                     double rotZ = posX * Math.sin(timeStep * 0.5) + posZ * Math.cos(timeStep * 0.5);
                     double rotY = posY + Math.sin(timeStep + rotX) * 0.3; // Add subtle warpage
 
                     // Evaluated Gyroid Isosurface Approximation Function
-                    double eval = Math.sin(rotX) * Math.cos(rotY) 
-                                + Math.sin(rotY) * Math.cos(rotZ) 
-                                + Math.sin(rotZ) * Math.cos(rotX);
+                    double eval = Math.sin(rotX) * Math.cos(rotY) + Math.sin(rotY) * Math.cos(rotZ)
+                            + Math.sin(rotZ) * Math.cos(rotX);
 
-                    // If the point is close to the zero threshold boundary, a surface slice is found
+                    // If the point is close to the zero threshold boundary, a surface slice is
+                    // found
                     if (Math.abs(eval) < 0.15) {
+
                         // Normalize depth to a standard positive range for the Z-Buffer comparison
-                        double depth = posZ + 5.0; 
+                        double depth = posZ + 5.0;
 
                         // Update buffer if this point is closer than any previously evaluated point
                         if (depth > zBuffer[bufferIndex]) {
@@ -76,9 +88,9 @@ public class GyroidLoaderA extends Loader {
                             // Calculate shading density based on ray distance depth
                             int shadeIdx = (int) ((depth / 10.0) * (DENSITY.length() - 1));
                             shadeIdx = Math.max(0, Math.min(DENSITY.length() - 1, shadeIdx));
-                            
-                            // Write ANSI green colored text element into the final rendering buffer
-                            outputBuffer[bufferIndex] = GREEN + DENSITY.charAt(shadeIdx) + RESET;
+
+                            // Write dynamic colored text element into the final rendering buffer
+                            outputBuffer[bufferIndex] = dynamicColor + DENSITY.charAt(shadeIdx) + RESET;
                         }
                     }
                 }
