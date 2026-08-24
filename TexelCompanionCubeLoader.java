@@ -14,6 +14,11 @@ public class TexelCompanionCubeLoader extends TexelCubeLoader {
         super(TEXEL_CUBE_STAGES, 80, 22);
     }
 
+    @Override
+    protected int getTextureResolution() {
+        return 16;
+    }
+
     protected VoxelTexel getCubeTexel(int face, int x, int y) {
         int noise = (int) (Math.abs((x * 34211L + y * 12473L + face * 4567L) ^ 0x5DEECE66DL) % 3);
 
@@ -24,16 +29,18 @@ public class TexelCompanionCubeLoader extends TexelCubeLoader {
 
         // Layer A: The Central Aperture Pink Heart
         boolean isHeart = false;
-        if (x >= 5 && x <= 10 && y >= 5 && y <= 9) {
+        if (x >= 5 && x <= 10 && y >= 5 && y <= 10) {
             if (y == 5)
                 isHeart = (x == 6 || x == 9);
-            if (y == 6)
-                isHeart = (x >= 5 && x <= 10);
+            if(y == 6)
+                isHeart = (x >= 6 || x <= 9);
             if (y == 7)
                 isHeart = (x >= 5 && x <= 10);
             if (y == 8)
-                isHeart = (x >= 6 && x <= 9);
+                isHeart = (x >= 5 && x <= 10);
             if (y == 9)
+                isHeart = (x >= 6 && x <= 9);
+            if (y == 10)
                 isHeart = (x == 7 || x == 8);
         }
 

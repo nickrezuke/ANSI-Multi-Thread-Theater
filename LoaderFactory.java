@@ -70,7 +70,6 @@ public class LoaderFactory {
         register("TexelGreyRubix", TexelGreyRubixLoader::new);
         register("TexelMCUTesseract", TexelMCUTesseractLoader::new);
         register("TexelTriplePhaseCube", TexelTriplePhaseCubeLoader::new);
-        //register("CosmicBrownie", CosmicBrownieLoader::new); TODO Make a Cosmic Brownie Loader
         register("TexelMarioBricks", TexelMarioBricksLoader::new);
         register("TexelMonochromeStatic",TexelMonochromeStaticLoader::new);
         register("MarioCoinBlock", TexelMarioCoinBlockLoader::new);
@@ -182,8 +181,10 @@ public class LoaderFactory {
         register("Uranus", UranusLoader::new);
         register("FlappyBird", FlappyBirdLoader::new);
         //register("Venus", VenusLoader::new); TODO Make a Venus Loader
-        register("Unused", UnusedInfiniteFractalLoader::new); 
-        register("Unused2", UnusedInfiniteFractalLoader2::new);
+        register("GravityFabric", GravityFabricLoader::new); 
+        register("TexelMagicalGlyph", TexelMagicalGlyphCubeLoader::new); 
+        register("MengerSponge", MengerSpongeLoader::new); 
+        register("KaleidoscopicFractal", KaleidoscopicFractalLoader::new);
 
         // Derive names list automatically from unique registered keys
         LOADER_NAMES = new ArrayList<>(REGISTRY.keySet());

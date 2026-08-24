@@ -1,5 +1,3 @@
-// TODO: Fix sizing.  Fix colors.  (Look up original online)
-
 import java.util.Arrays;
 
 public class Nintendo64LogoLoader extends Loader { 
@@ -15,11 +13,11 @@ public class Nintendo64LogoLoader extends Loader {
     private final int height = 22; 
     private static final double CAMERA_DISTANCE = 4.2; 
 
-    // Authentic N64 Color Palette Registers
-    private static final int[] RGB_RED = { 235, 30, 40 };      // Front N
-    private static final int[] RGB_GREEN = { 30, 175, 50 };    // Right N
-    private static final int[] RGB_YELLOW = { 245, 195, 20 };  // Back N
-    private static final int[] RGB_BLUE = { 35, 90, 220 };     // Left N
+    // Authentic N64 Color Palette Registers mapped by normal direction
+    private static final int[] RGB_RED = { 225, 15, 30 };       // Front (+Z)
+    private static final int[] RGB_YELLOW = { 245, 190, 15 };  // Right (+X)
+    private static final int[] RGB_BLUE = { 20, 65, 185 };     // Left (-X)
+    private static final int[] RGB_GREEN = { 25, 160, 50 };    // Top / Back (+Y / -Z)
 
     public Nintendo64LogoLoader() { 
         super(N64_STAGES, 80, 22); 
@@ -43,81 +41,107 @@ public class Nintendo64LogoLoader extends Loader {
         // Spotlight vector
         double lightX = 0.577, lightY = -0.707, lightZ = -0.408; 
 
-        // Logo geometry sizing
-        double hSize = 0.65;     // Half height/width of the bounding frame
-        double legW = 0.20;      // Thickness of the individual pillars
-        double halfLeg = legW / 2.0;
-
-        // Visual adjustment: Push each N outward from center to ensure crisp separation
+        // Corrected logo geometry sizing (4x4x4 grid proportions)
+        double hSize = 0.65;     
+        double legW = 0.325;     // Exactly 1/4 of total width
+        
         double outwardOffset = 0.02; 
 
-        // Loop over the 4 structural components of the logo
+        // 4 structural components of the logo layout quad faces
         for (int faceIndex = 0; faceIndex < 4; faceIndex++) {
-            int[] baseRGB;
-            double faceAngle = 0; // Local rotation to arrange them in a box configuration
+            double faceAngle = 0;
 
             switch (faceIndex) {
-                case 0: baseRGB = RGB_RED;    faceAngle = 0; break;                  // Front
-                case 1: baseRGB = RGB_GREEN;  faceAngle = Math.PI / 2.0; break;       // Right
-                case 2: baseRGB = RGB_YELLOW; faceAngle = Math.PI; break;             // Back
-                default: baseRGB = RGB_BLUE;   faceAngle = -Math.PI / 2.0; break;     // Left
+                case 0: faceAngle = 0; break;                  // Front quadrant
+                case 1: faceAngle = Math.PI / 2.0; break;      // Left quadrant
+                case 2: faceAngle = Math.PI; break;            // Back quadrant
+                default: faceAngle = -Math.PI / 2.0; break;    // Right quadrant
             }
 
             double cosFA = Math.cos(faceAngle), sinFA = Math.sin(faceAngle);
 
-            // Step through each component's local coordinate system space
-            // Left Pillar, Right Pillar, and Diagonal Crossbeam
             for (int part = 0; part < 3; part++) {
-                double minX, maxX, minZ, maxZ;
+                double minX = 0, maxX = 0;
+                double minZ = -hSize, maxZ = -hSize + legW;
 
                 if (part == 0) { // Left Pillar
                     minX = -hSize; maxX = -hSize + legW;
-                    minZ = -hSize; maxZ = -hSize + legW;
                 } else if (part == 1) { // Right Pillar
                     minX = hSize - legW; maxX = hSize;
-                    minZ = -hSize; maxZ = -hSize + legW;
-                } else { // Diagonal Crossbeam
+                } else if (part == 2) { // Diagonal Crossbeam bounds
                     minX = -hSize + legW; maxX = hSize - legW;
-                    minZ = -hSize; maxZ = -hSize + legW;
                 }
 
-                // Sample points cleanly within the structural boundaries
                 for (double lx = minX; lx <= maxX; lx += 0.025) {
                     for (double ly = -hSize; ly <= hSize; ly += 0.025) {
                         
-                        // Enforce the sloped constraint if rendering the diagonal part
+                        double targetX = 0;
                         if (part == 2) {
-                            double progress = (lx - (-hSize + legW)) / (hSize * 2.0 - 2.0 * legW);
-                            double targetY = hSize - (progress * hSize * 2.0);
-                            if (Math.abs(ly - targetY) > 0.16) {
-                                continue; // Skip voxels outside the slope line thickness
+                            double progressY = (hSize - ly) / (hSize * 2.0); 
+                            double startX = -hSize + (legW / 2.0);
+                            double endX = hSize - (legW / 2.0);
+                            
+                            targetX = startX + progressY * (endX - startX);
+                            if (Math.abs(lx - targetX) > (legW / 2.0)) {
+                                continue; 
                             }
                         }
 
                         for (double lz = minZ; lz <= maxZ; lz += 0.025) {
                             
-                            // 1. Shift the primitive geometry outward along its face direction
+                            // 1. Calculate local surface normals
+                            double nx = 0, ny = 0, nz = 0;
+                            if (Math.abs(lz - minZ) < 0.02) nz = -1.0;
+                            else if (Math.abs(lz - maxZ) < 0.02) nz = 1.0;
+                            
+                            if (Math.abs(ly - hSize) < 0.02) ny = 1.0;
+                            else if (Math.abs(ly - (-hSize)) < 0.02) ny = -1.0;
+
+                            if (part == 0 || part == 1) {
+                                if (Math.abs(lx - minX) < 0.02) nx = -1.0;
+                                else if (Math.abs(lx - maxX) < 0.02) nx = 1.0;
+                            } else if (part == 2) {
+                                if (lx <= targetX - (legW / 2.0) + 0.02) nx = -1.0;
+                                else if (lx >= targetX + (legW / 2.0) - 0.02) nx = 1.0;
+                            }
+                            
+                            if (nx == 0 && ny == 0 && nz == 0) continue; 
+                            
+                            double mag = Math.sqrt(nx*nx + ny*ny + nz*nz);
+                            nx /= mag; ny /= mag; nz /= mag;
+
+                            // 2. Geometry offsets
                             double ox = lx;
+                            double oy = ly;
                             double oz = lz - outwardOffset; 
 
-                            // 2. Rotate to align component onto its specific box layout quadrant face
+                            if (part == 0) oy += 0.005; 
+                            if (part == 1) oy -= 0.005; 
+
+                            // 3. Rotate to box quadrant (Model Space)
                             double fx = ox * cosFA + oz * sinFA;
-                            double fy = ly;
+                            double fy = oy;
                             double fz = -ox * sinFA + oz * cosFA;
 
-                            // Calculate local surface normal markers
-                            double nx = 0, ny = 0, nz = -1.0; 
-                            if (Math.abs(ly - hSize) < 0.03) ny = 1.0;
-                            else if (Math.abs(ly - (-hSize)) < 0.03) ny = -1.0;
-                            if (part == 0 && lx < -hSize + 0.02) nx = -1.0;
-                            if (part == 1 && lx > hSize - 0.02) nx = 1.0;
-
-                            // Transform normals to match the layout quadrant direction
                             double rnx = nx * cosFA + nz * sinFA;
                             double rny = ny;
                             double rnz = -nx * sinFA + nz * cosFA;
 
-                            // 3. Apply the global rotating spin matrix (Yaw)
+                            // 4. Determine Face Color based on Model-Space Normal (Locks color to the object geometry)
+                            int[] baseRGB;
+                            double absRNX = Math.abs(rnx);
+                            double absRNY = Math.abs(rny);
+                            double absRNZ = Math.abs(rnz);
+
+                            if (absRNZ >= absRNX && absRNZ >= absRNY) {
+                                baseRGB = (rnz > 0) ? RGB_RED : RGB_GREEN; 
+                            } else if (absRNX >= absRNY && absRNX >= absRNZ) {
+                                baseRGB = (rnx > 0) ? RGB_YELLOW : RGB_BLUE; 
+                            } else {
+                                baseRGB = (rny > 0) ? RGB_GREEN : RGB_BLUE; 
+                            }
+
+                            // 5. Spin Yaw (Global Rotation)
                             double x1 = fx * cosY + fz * sinY;
                             double y1 = fy;
                             double z1 = -fx * sinY + fz * cosY;
@@ -126,7 +150,7 @@ public class Nintendo64LogoLoader extends Loader {
                             double ny1 = rny;
                             double nz1 = -rnx * sinY + rnz * cosY;
 
-                            // 4. Apply fixed downward camera tilt matrix (Pitch)
+                            // 6. Camera Pitch
                             double finalX = x1;
                             double finalY = y1 * cosP + z1 * sinP;
                             double finalZ = -y1 * sinP + z1 * cosP;
@@ -135,7 +159,7 @@ public class Nintendo64LogoLoader extends Loader {
                             double worldNy = ny1 * cosP + nz1 * sinP;
                             double worldNz = -ny1 * sinP + nz1 * cosP;
 
-                            // Render target perspective coordinates projection
+                            // 7. Target Perspective Projection
                             double ooz = 1.0 / (finalZ + CAMERA_DISTANCE);
                             int xp = (int) (40 + 44 * ooz * finalX * 2.6);
                             int yp = (int) (11 - 19 * ooz * finalY * 1.8);
@@ -145,7 +169,6 @@ public class Nintendo64LogoLoader extends Loader {
                                 if (ooz > zBuffer[idx] + 0.0001) {
                                     zBuffer[idx] = ooz;
 
-                                    // Direct surface lighting calculations
                                     double luminance = worldNx * lightX + worldNy * lightY + worldNz * lightZ;
                                     double shade = 0.50 + 0.50 * Math.max(0.0, luminance);
 
@@ -157,7 +180,7 @@ public class Nintendo64LogoLoader extends Loader {
                                     g = g < 0 ? 0 : (g > 255 ? 255 : g);
                                     b = b < 0 ? 0 : (b > 255 ? 255 : b);
 
-                                    outputBuffer[idx] = "\u001B[38;2;" + r + ";" + g + ";" + b + "m█" + RESET;
+                                    outputBuffer[idx] = "\u001B[38;2;" + r + ";" + g + ";" + b + "m█\u001B[0m";
                                 }
                             }
                         }

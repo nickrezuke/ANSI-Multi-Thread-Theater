@@ -63,9 +63,8 @@ public class GraphLoader extends Loader {
             return;
         }
 
-        // But is there wasn't, lets select a random one...
-        int variant = (int) (Math.random() * 6);
-        // TODO: Add more Math Functions / variants??
+        // Select a random variant from 0 to 11
+        int variant = (int) (Math.random() * 12);
         switch (variant) {
             case 0:
                 // Represents sin(x + sin(t)) * cos(y + cos(t)) = 0.2
@@ -131,23 +130,21 @@ public class GraphLoader extends Loader {
                 // Visually: A complex propeller that splits into interlocking outer loops
                 // and secondary waves, pulsing from a 4-blade star to a geometric blossom.
                 currentEquation = (x, y, t) -> {
-                    x /= 2.2; // Unit scaling to zoom in on this one, its cool looking...
-                    y /= 2.2;
+                    double scaledX = x / 2.2;
+                    double scaledY = y / 2.2;
 
-                    double r2 = x * x + y * y;
+                    double r2 = scaledX * scaledX + scaledY * scaledY;
                     double r4 = r2 * r2;
 
                     // Spin rotation matrix
                     double cosT = Math.cos(t * 0.8);
                     double sinT = Math.sin(t * 0.8);
-                    double rotX = x * cosT - y * sinT;
-                    double rotY = x * sinT + y * cosT;
+                    double rotX = scaledX * cosT - scaledY * sinT;
+                    double rotY = scaledX * sinT + scaledY * cosT;
 
                     // Base Lemniscate profile
                     double baseLoop = r4 - 5.0 * (rotX * rotX - rotY * rotY);
-
-                    // Outer loop harmonics: use polar angle to inject secondary multi-blade folds
-                    double angle = Math.atan2(y, x);
+                    double angle = Math.atan2(scaledY, scaledX);
                     double outerRipples = Math.sin(4.0 * angle + t * 2.0) * Math.cos(t) * 3.5;
 
                     return baseLoop + outerRipples;
@@ -155,15 +152,11 @@ public class GraphLoader extends Loader {
                 break;
 
             case 4:
-                // Represents cos(3*(x - 0.5t)) * cos(3*(y - 0.3t)) * morph + sin(5*(x - 0.5t))
-                // * sin(5*(y - 0.3t)) * (1-morph) = 0.1
+                // Represents cos(3*(x - 0.5t)) * cos(3*(y - 0.3t)) * morph + sin(5*(x - 0.5t)) * sin(5*(y - 0.3t)) * (1-morph) = 0.1
                 // --- THE DRIFTING CHLADNI WAVE RESONANCE ---
-                // Visually: Clahdni standing waves that seamlessly slide diagonally across the
-                // screen
-                // like flowing liquid sand, shifting forms between a checkerboard and a starry
-                // mesh.
+                // Visually: Chladni standing waves that seamlessly slide diagonally across the
+                // screen like flowing liquid sand, shifting forms.
                 currentEquation = (x, y, t) -> {
-                    // Apply a slow, constant diagonal drift to the coordinate space
                     double driftX = x - (t * 0.5);
                     double driftY = y - (t * 0.3);
 
@@ -176,7 +169,6 @@ public class GraphLoader extends Loader {
                 break;
 
             case 5:
-            default:
                 // Represents tan(x^2 + y^2 - t) * cos(x + y) = cos(x^2 + y^2 - t)
                 // --- THE SPIRALING RIPPLE ---
                 // Visually: Concentric circles expanding outward from the origin, intersecting
@@ -184,6 +176,85 @@ public class GraphLoader extends Loader {
                 currentEquation = (x, y, t) -> {
                     double r2 = x * x + y * y - t;
                     return (Math.tan(r2) * Math.cos(x + y)) - Math.cos(r2);
+                };
+                break;
+
+            case 6:
+                // Represents (x^2 + y^2 - 1)^3 - (x^2 * y^3) * scale = 0
+                // TODO: Fix this heart it looks disney lol
+                // --- THE BEATIN' HEART ---
+                // Visually: A classic mathematical heart shape that rhythmically beats and pulses over time.
+                currentEquation = (x, y, t) -> {
+                    double scaledX = x / 1.9;
+                    double scaledY = y / 1.9;
+                    double scale = 1.0 + 0.15 * Math.sin(t * 3.0);
+                    double term = scaledX * scaledX + scaledY * scaledY - scale;
+                    return (term * term * term) - (scaledX * scaledX * scaledY * scaledY * scaledY);
+                };
+                break;
+
+            case 7:
+                // Represents |x|^(2/3) + |y|^(2/3) = scale^(2/3)
+                // --- THE NEON SHURIKEN (ASTROID) ---
+                // TODO: this one is uninteresting
+                // Visually: A sleek 4-pointed star whose curves bend inward and outward dynamically.
+                currentEquation = (x, y, t) -> {
+                    double scale = 1.5 + 0.4 * Math.cos(t * 1.5);
+                    double ax = Math.pow(Math.abs(x), 2.0 / 3.0);
+                    double ay = Math.pow(Math.abs(y), 2.0 / 3.0);
+                    return ax + ay - scale;
+                };
+                break;
+
+            case 8:
+                // Represents r = 0.6 + 1.2 * (0.5sin(3t) + 0.5) + 0.5 * cos(5 * theta + 2t)
+                // --- THE SPINNING LOTUS (POLAR ROSE) ---
+                // Visually: A multi-petaled geometric flower that continuously spins and blooms.
+                currentEquation = (x, y, t) -> {
+                    double r = Math.sqrt(x * x + y * y);
+                    double theta = Math.atan2(y, x);
+                    return r - (0.6 + 1.2 * (0.5 + 0.5 * Math.sin(t * 3.0)) + 0.5 * Math.cos(5.0 * theta + t * 2.0));
+                };
+                break;
+
+            case 9:
+                // Represents (x^2 + y^2 + a^2)^2 - 4a^2x^2 = b^4
+                // TODO: Make this cooler
+                // --- THE MITOSIS CELL DIVISION (CASSINI OVAL) ---
+                // Visually: A figure-eight shape that morphs into a dumbbell and splits/merges.
+                currentEquation = (x, y, t) -> {
+                    double a = 1.2;
+                    double b = 1.0 + 0.3 * Math.sin(t * 1.8);
+                    double x2 = x * x;
+                    double y2 = y * y;
+                    double term = x2 + y2 + a * a;
+                    return (term * term) - (4.0 * a * a * x2) - (b * b * b * b);
+                };
+                break;
+
+            case 10:
+                // Represents sin(rotX^2 - rotY^2 + t) * cos(2 * rotX * rotY) = 0.3
+                // --- THE BUBBLE VORTEX ---
+                // Visually: Hyperbolic curved wave patterns shearing across each other in a hypnotic swirl.
+                currentEquation = (x, y, t) -> {
+                    double rotX = x * Math.cos(t * 0.5) - y * Math.sin(t * 0.5);
+                    double rotY = x * Math.sin(t * 0.5) + y * Math.cos(t * 0.5);
+                    return Math.sin(rotX * rotX - rotY * rotY + t) * Math.cos(2.0 * rotX * rotY) - 0.3;
+                };
+                break;
+
+            case 11:
+            default:
+                // Represents (x^2 + y^2)^2 - c^2(x^2 - y^2) = 0
+                // TODO: Make this one cooler
+                // --- THE INFINITY LOOP (LEMNISCATE) ---
+                // Visually: A classic figure-eight lemniscate that tilts and ripples with time.
+                currentEquation = (x, y, t) -> {
+                    double scaledX = x / 1.8;
+                    double scaledY = y / 1.8;
+                    double r2 = scaledX * scaledX + scaledY * scaledY;
+                    double c2 = 2.0 + 0.5 * Math.sin(t);
+                    return (r2 * r2) - (c2 * (scaledX * scaledX - scaledY * scaledY));
                 };
                 break;
         }

@@ -126,7 +126,13 @@ I also included a few classic "graphics processing" loaders
 
 ---------> **TexelMonochromeStatic**: <!-- TODO: Elaborate on this section -->
 
-### Some Other Cool Shapes
+---------> **TexelMagicalGlyph**: <!-- TODO: Elaborate on this section -->
+
+### Other Cool Shapes
+
+-> **KaleidoscopicFractal**: <!-- TODO: Elaborate on this section -->
+
+-> **MengerSponge**: <!-- TODO: Elaborate on this section -->
 
 -> **PsychedelicIcosahedron**: <!-- TODO: Elaborate on this section -->
 
@@ -207,6 +213,8 @@ I also included a few classic "graphics processing" loaders
 -> **Hypersphere**: <!-- TODO: Elaborate on this section -->
 
 -> **HopfFibration**: <!-- TODO: Elaborate on this section -->
+
+-> **GravityFabric**: <!-- TODO: Elaborate on this section -->
 
 -> **GyroidA**: <!-- TODO: Elaborate on this section -->
 
@@ -387,6 +395,7 @@ I also included a few classic "graphics processing" loaders
 Note to self: Other ideas to consider:
 Raymarched Mandelbulb 3D too intense?  (can barely handle 2D Mandelbrot set lmao)
 Quantum Wavefunction Interference
+Schrodinger / Gaussian Wave Packet hitting a potential barrier (tunneling and reflection)
 Stanford Dragon
 Satelite? ISS? Hubble Telescope?
 Sponza Atrium (like floating the camera around like a drone flight or walk?)
@@ -395,6 +404,11 @@ Tower of Hanoi Solver?
 Sunflower? or flowers in general?
 Car / Truck
 Trains
+Soemthign with the high-detail resolution trick w/ blocks https://en.wikipedia.org/wiki/Block_Elements 
+Newton's Cradle Balls Swinging / Clacking
+3D Galton Board?  Like giant pyramid of 3D to make 
+Bakous Manifold Instability Equation
+Structural Resonance Frequency vs Height of several lolipop weights
 Andy's Fire https://www.a1k0n.net/2007/08/24/obfuscated-c-fire.html
 Interactive Tanks-like Aiming & Shooting game w/ breakable ground
 Interactive Tile Sliding Puzzle (like pokemon ice dungeon)

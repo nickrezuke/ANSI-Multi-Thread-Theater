@@ -1,5 +1,3 @@
-// TODO Improve this tornado
-
 import java.util.Random;
 
 public class TornadoLoader extends Loader {

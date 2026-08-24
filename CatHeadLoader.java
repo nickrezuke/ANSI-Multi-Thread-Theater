@@ -1,4 +1,4 @@
-// TODO: Add some Cat Breed Variants?
+// TODO: Add&Improve these Cat Breed Variants?
 
 public class CatHeadLoader extends Loader {
     private static final StatusStage[] CAT_STAGES = {
@@ -8,27 +8,68 @@ public class CatHeadLoader extends Loader {
             new StatusStage(100, "MeowMrrrreeoww!  Meow!!")
     };
     private static final char[] SHADE_RAMP = { ':', ';', '=', '!', '*', '#', '$', '@', '▒', '▓', '█' };
+    
     private String furColor;
+    private String secondaryFurColor; // Used for patches and tabby stripes
     private String earColor;
     private String noseColor;
     private String eyeBorderColor;
     private String eyePupilColor;
     private String whiskerColor;
+    private int breedVariant = 1;
     private double A = 0;
 
     public CatHeadLoader() {
-        // This uses 80x22 specifically
+        // This uses 80x22 specifically[cite: 1]
         super(CAT_STAGES, 80, 22);
     }
 
     @Override
     protected void initialize() {
-        furColor = "\u001B[38;5;235m"; // Deep Inkwell Black/Dark Gray
-        earColor = "\u001B[38;5;238m"; // Muted Charcoal Outer Ear
-        noseColor = "\u001B[38;5;211m"; // Pop-Art Pastel Pink Nose
-        eyeBorderColor = "\u001B[38;5;112m"; // Spooky Witch-Hazel Green / Slime Lime Iris
-        eyePupilColor = "\u001B[30m"; // Stark Solid Black for vertical center slit
-        whiskerColor = "\u001B[38;5;255m"; // Stark White for thin whiskers
+        // Randomly select a cat breed variant on initialization, inspired by DonutLoader[cite: 2]
+        breedVariant = (int) (Math.random() * 4) + 1;
+        switch (breedVariant) {
+            case 1: // --- 1. BLACK CAT W/ GREEN EYES ---
+                furColor = "\u001B[38;5;235m";          // Deep Inkwell Black/Dark Gray[cite: 1]
+                secondaryFurColor = "\u001B[38;5;238m"; // Muted Charcoal
+                earColor = "\u001B[38;5;238m";          // Muted Charcoal Outer Ear[cite: 1]
+                noseColor = "\u001B[38;5;211m";          // Pop-Art Pastel Pink Nose[cite: 1]
+                eyeBorderColor = "\u001B[38;5;112m";    // Spooky Witch-Hazel Green / Slime Lime Iris[cite: 1]
+                eyePupilColor = "\u001B[30m";            // Stark Solid Black for vertical center slit[cite: 1]
+                whiskerColor = "\u001B[38;5;255m";      // Stark White for thin whiskers[cite: 1]
+                break;
+
+            case 2: // --- 2. CALICO CAT W/ PATCHES ---
+                furColor = "\u001B[38;5;255m";          // White Base Coat[cite: 1]
+                secondaryFurColor = "\u001B[38;5;208m"; // Vibrant Ginger/Orange Patches
+                earColor = "\u001B[38;5;208m";          // Ginger Ears
+                noseColor = "\u001B[38;5;209m";          // Soft Peach Nose
+                eyeBorderColor = "\u001B[38;5;220m";    // Amber Gold Eyes
+                eyePupilColor = "\u001B[30m";            // Stark Solid Black
+                whiskerColor = "\u001B[38;5;255m";      // Stark White
+                break;
+
+            case 3: // --- 3. TABBY CAT W/ STRIPES ---
+                furColor = "\u001B[38;5;137m";          // Soft Baked Brown Base[cite: 1]
+                secondaryFurColor = "\u001B[38;5;238m"; // Dark Charcoal Stripes
+                earColor = "\u001B[38;5;130m";          // Rich Chocolate Outer Ears
+                noseColor = "\u001B[38;5;211m";          // Pastel Pink Nose
+                eyeBorderColor = "\u001B[38;5;214m";    // Bright Orange-Gold Eyes
+                eyePupilColor = "\u001B[30m";            // Stark Solid Black
+                whiskerColor = "\u001B[38;5;255m";      // Stark White
+                break;
+
+            case 4:
+            default: // --- 4. WHITE CAT W/ BLUE EYES ---
+                furColor = "\u001B[38;5;255m";          // Pure White Fur
+                secondaryFurColor = "\u001B[38;5;252m"; // Light Silver Highlights
+                earColor = "\u001B[38;5;218m";          // Soft Pink Inner/Outer Ear
+                noseColor = "\u001B[38;5;218m";          // Light Pink Nose
+                eyeBorderColor = "\u001B[38;5;39m";     // Sky/Sapphire Blue Eyes
+                eyePupilColor = "\u001B[30m";            // Stark Solid Black
+                whiskerColor = "\u001B[38;5;255m";      // Stark White
+                break;
+        }
     }
 
     @Override
@@ -104,7 +145,7 @@ public class CatHeadLoader extends Loader {
             double rootY = 0.08;
             double rootZ = -0.88;
 
-            // Rendered only 2 clean, distinct strands per side with wide angling spreads
+            // Render 2 clean, distinct strands per side with wide angling spreads
             renderWhiskerLine(rootX, rootY - 0.02, rootZ, side * 1.15, -0.05, -0.85, side, cosA, sinA, outputBuffer,
                     zBuffer); // Angled Up
             renderWhiskerLine(rootX, rootY + 0.02, rootZ, side * 1.15, 0.20, -0.85, side, cosA, sinA, outputBuffer,
@@ -116,8 +157,8 @@ public class CatHeadLoader extends Loader {
 
     private void renderWhiskerLine(double x1, double y1, double z1, double x2, double y2, double z2,
             double side, double cosA, double sinA, String[] outputBuffer, double[] zBuffer) {
-        // Reduced sample density (t += 0.05) to keep terminal lines naturally thin and
-        // un-clumped
+        // Reduced sample density (t += 0.05) to keep terminal lines 
+        // naturally thin and un-clumped
         for (double t = 0.0; t <= 1.0; t += 0.05) {
             double localX = x1 + (x2 - x1) * t;
             double localY = y1 + (y2 - y1) * t;
@@ -162,13 +203,10 @@ public class CatHeadLoader extends Loader {
         double ry = ly;
         double rz = -lx * sinA + lz * cosA;
         
-        // 1. LOOSEN CULLING: Only clip if the eye rotates to the true back-half of the head
         if (rz > 0.0) return; 
     
         double distanceToCamera = 4.0;
         double ooz = 1.0 / (rz + distanceToCamera);
-        
-        // Apply a subtle forward depth bias to cleanly sit ahead of the head spheroid
         double eyeOozBias = ooz + 0.0125; 
     
         int cx = (int) (40 + 38 * ooz * rx * 1.85);
@@ -191,10 +229,7 @@ public class CatHeadLoader extends Loader {
                     double distanceMetric = (normX * normX) + (normY * normY);
                     
                     if (distanceMetric <= 1.0) {
-                        // 2. TIGHTEN COMPARISON: Compare using biased eye depth with a tiny floating-point margin
                         if (eyeOozBias > (zBuffer[targetIndex] - 0.001)) {
-                            
-                            // 3. WRITE TO Z-BUFFER: Claim this pixel space so head geometry doesn't bleed through
                             zBuffer[targetIndex] = eyeOozBias; 
                             
                             String color;
@@ -248,11 +283,23 @@ public class CatHeadLoader extends Loader {
                 int shadeIndex = (int) ((luminance + 1.0) * 5.5);
                 shadeIndex = Math.max(0, Math.min(SHADE_RAMP.length - 1, shadeIndex));
                 char asciiChar = SHADE_RAMP[shadeIndex];
+                
                 String chosenColor = furColor;
-                if (surfaceType == 1)
+                if (surfaceType == 1) {
                     chosenColor = earColor;
-                if (surfaceType == 2)
+                } else if (surfaceType == 2) {
                     chosenColor = noseColor;
+                } else if (surfaceType == 0) {
+                    // Procedural breed markings on the main head spheroid
+                    if (breedVariant == 2) { // Calico patches
+                        boolean isPatch = Math.sin(localX * 3.5) * Math.cos(localZ * 3.5) > 0.3;
+                        if (isPatch) chosenColor = secondaryFurColor;
+                    } else if (breedVariant == 3) { // Tabby stripes
+                        boolean isStripe = Math.sin(localX * 8.0 + localY * 4.0) > 0.4;
+                        if (isStripe) chosenColor = secondaryFurColor;
+                    }
+                }
+                
                 outputBuffer[bufferIndex] = chosenColor + asciiChar + RESET;
             }
         }

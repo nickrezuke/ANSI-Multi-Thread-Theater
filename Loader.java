@@ -1,4 +1,4 @@
-public abstract class Loader implements Runnable { 
+public abstract class Loader implements Runnable {
     // These track the current progress amount
     protected volatile boolean isRunning = true;
     protected volatile int progress = 0;
@@ -48,8 +48,22 @@ public abstract class Loader implements Runnable {
     protected static final String SHOW_CURSOR = "\u001b[?25h";
     
     // Chars for the loading bar
-    protected static final String LOAD_BAR_EMPTY = "\u2661"; 
-    protected static final String LOAD_BAR_FULL = "\u2665"; 
+    protected static final String LOAD_BAR_EMPTY = " ";
+    protected static final String LOAD_BAR_FULL = "\u2588";
+
+    // Eighth-resolution partial blocks, ordered from 1/8 filled to 7/8 filled, used
+    // to
+    // render the single "leading edge" cell of the bar so progress isn't rounded
+    // down
+    // to the nearest whole character. Index i holds the glyph for (i+1)/8 fill:
+    // [0]=1/8 U+258F, [1]=2/8 U+258E, [2]=3/8 U+258D, [3]=4/8 U+258C,
+    // [4]=5/8 U+258B, [5]=6/8 U+258A, [6]=7/8 U+2589
+    // 0/8 falls back to LOAD_BAR_EMPTY and 8/8 rolls over into an extra
+    // LOAD_BAR_FULL
+    // cell instead (handled in appendProgressBar), so this array only needs 1..7.
+    private static final String[] PARTIAL_BLOCKS = {
+            "\u258F", "\u258E", "\u258D", "\u258C", "\u258B", "\u258A", "\u2589"
+    };
 
     protected static class StatusStage {
         final int maxPercent;
@@ -62,11 +76,15 @@ public abstract class Loader implements Runnable {
     }
 
     // Default constructor retains dynamic size matching for standard terminals.
-    // Reserves FOOTER_RESERVED_ROWS off the real terminal height so renderGeometry's
-    // canvas and the status footer never fight over the same rows - the footer always
-    // gets its worst-case 3 rows, and geometry gets everything else. Loaders built with
+    // Reserves FOOTER_RESERVED_ROWS off the real terminal height so
+    // renderGeometry's
+    // canvas and the status footer never fight over the same rows - the footer
+    // always
+    // gets its worst-case 3 rows, and geometry gets everything else. Loaders built
+    // with
     // an explicit width/height (e.g. DonutLoader's hardcoded 80x22) skip this path
-    // entirely and are unaffected; that height has always meant "pure geometry rows,"
+    // entirely and are unaffected; that height has always meant "pure geometry
+    // rows,"
     // and still does.
     public Loader(StatusStage[] stages) {
         this(stages, TerminalConfig.getTerminalSize()[0], reservedTerminalHeight());
@@ -85,7 +103,7 @@ public abstract class Loader implements Runnable {
         this.totalSize = width * height;
         this.zBuffer = new double[totalSize];
         this.outputBuffer = new String[totalSize];
-        
+
         // Allocate dynamic memory bounds ONCE during instantiation
         int estimatedFrameCapacity = totalSize + height + 512;
         this.frameBuilder = new StringBuilder(estimatedFrameCapacity);
@@ -95,7 +113,8 @@ public abstract class Loader implements Runnable {
 
     public void stopLoading() {
         this.isRunning = false;
-        // Wake the render thread immediately if it's currently parked in the frame-pacing
+        // Wake the render thread immediately if it's currently parked in the
+        // frame-pacing
         // sleep below, rather than making the caller's loadingThread.join() wait out
         // whatever's left of the current frame period.
         Thread t = this.renderThread;
@@ -113,6 +132,7 @@ public abstract class Loader implements Runnable {
     protected void setTargetFps(int fps) {
         this.frameTimeNanos = 1_000_000_000L / fps;
     }
+
     protected void frameTimeNanos(int nanos) {
         this.frameTimeNanos = nanos;
     }
@@ -184,9 +204,72 @@ public abstract class Loader implements Runnable {
     }
 
     /**
-     * Builds and appends the progress bar + status message footer onto {@link #frameBuilder},
-     * choosing a narrow- or wide-screen layout based on the terminal's current dimensions.
-     * Pulled out of run() so the footer's spacing/centering/layout can be iterated on
+     * Fills {@code builder} with a {@code barWidth}-cell progress bar representing
+     * {@code progressPercent} (0-100) at eighth-block resolution rather than
+     * rounding
+     * down to the nearest whole cell. The bar is composed of:
+     * - some number of fully-filled cells (LOAD_BAR_FULL),
+     * - at most one partial "leading edge" cell chosen from PARTIAL_BLOCKS to show
+     * the fractional remainder (skipped entirely if the remainder rounds to 0/8,
+     * and rolled over into an extra full cell if it rounds up to 8/8),
+     * - empty cells (LOAD_BAR_EMPTY) for the rest.
+     * This mirrors how the bar already looked, just with finer granularity, so
+     * callers
+     * don't need to change anything about how they consume {@code builder}.
+     */
+    private void appendProgressBar(StringBuilder builder, int barWidth, int progressPercent) {
+        if (barWidth <= 0) {
+            return;
+        }
+
+        double exactFilled = (progressPercent / 100.0) * barWidth;
+        int fullBlocks = (int) exactFilled;
+        double remainder = exactFilled - fullBlocks;
+
+        // Round the fractional remainder to the nearest eighth. Rounding up to a full
+        // 8/8 means the partial cell is actually a whole block, so fold it into
+        // fullBlocks instead of emitting a "partial" glyph for 100% of a cell.
+        int eighths = (int) Math.round(remainder * 8);
+        if (eighths >= 8) {
+            fullBlocks++;
+            eighths = 0;
+        }
+
+        // Clamp defensively (e.g. progressPercent > 100 from an over-eager caller)
+        // so we never write more cells than barWidth or index past PARTIAL_BLOCKS.
+        if (fullBlocks >= barWidth) {
+            fullBlocks = barWidth;
+            eighths = 0;
+        }
+
+        // Begin Underline
+        builder.append("\033[4m");
+
+        for (int b = 0; b < fullBlocks; b++) {
+            builder.append(LOAD_BAR_FULL);
+        }
+
+        int cellsUsed = fullBlocks;
+        if (eighths > 0) {
+            builder.append(PARTIAL_BLOCKS[eighths - 1]);
+            cellsUsed++;
+        }
+
+        for (int b = cellsUsed; b < barWidth; b++) {
+            builder.append(LOAD_BAR_EMPTY);
+        }
+
+        // End Underline
+        builder.append("\033[0m");
+    }
+
+    /**
+     * Builds and appends the progress bar + status message footer onto
+     * {@link #frameBuilder},
+     * choosing a narrow- or wide-screen layout based on the terminal's current
+     * dimensions.
+     * Pulled out of run() so the footer's spacing/centering/layout can be iterated
+     * on
      * independently of the frame-loop and geometry-compositing logic above it.
      */
     private void appendStatusFooter() {
@@ -211,34 +294,27 @@ public abstract class Loader implements Runnable {
             if (msgLen > window_width) {
                 cleanMsg.getChars(0, maxMsgLen, this.messageBuffer, 0);
                 this.frameBuilder.append(isRawCanvas ? "\r\n\r\n" : "\n\n")
-                            .append(WHITE).append(this.messageBuffer, 0, maxMsgLen).append("...")
-                            .append(CLEAR_LINE).append(isRawCanvas ? "\r\n" : "\n");
+                        .append(WHITE).append(this.messageBuffer, 0, maxMsgLen).append("...")
+                        .append(CLEAR_LINE).append(isRawCanvas ? "\r\n" : "\n");
             } else {
                 this.frameBuilder.append(isRawCanvas ? "\r\n\r\n" : "\n\n")
-                            .append(WHITE).append(cleanMsg)
-                            .append(CLEAR_LINE).append(isRawCanvas ? "\r\n" : "\n");
+                        .append(WHITE).append(cleanMsg)
+                        .append(CLEAR_LINE).append(isRawCanvas ? "\r\n" : "\n");
             }
 
             int barWidth = window_width - 7;
-            if (barWidth < 3) barWidth = 3;
-            int filledBars = (int) ((currentProgress / 100.0) * barWidth);
-
-            for (int b = 0; b < barWidth; b++) {
-                this.barBuilder.append(b < filledBars ? LOAD_BAR_FULL : LOAD_BAR_EMPTY);
-            }
+            if (barWidth < 0)
+                barWidth = 0;
+            appendProgressBar(this.barBuilder, barWidth, currentProgress);
 
             this.frameBuilder.append(WHITE).append("[").append(GREEN).append(this.barBuilder).append(WHITE).append("] ")
-                        .append(currentProgress).append("%")
-                        .append(CLEAR_LINE)
-                        .append(RESET);
+                    .append(currentProgress).append("%")
+                    .append(CLEAR_LINE)
+                    .append(RESET);
         } else {
             // --- WIDE SCREEN TRACKING DISPLAY ---
             int totalBars = 30;
-            int filledBars = (int) ((currentProgress / 100.0) * totalBars);
-
-            for (int b = 0; b < totalBars; b++) {
-                this.barBuilder.append(b < filledBars ? LOAD_BAR_FULL : LOAD_BAR_EMPTY);
-            }
+            appendProgressBar(this.barBuilder, totalBars, currentProgress);
 
             // Manual text padding algorithm drops String.format overhead entirely
             this.frameBuilder.append(isRawCanvas ? "\r\n\r\n" : "\n\n").append(WHITE).append(" ");
@@ -248,14 +324,15 @@ public abstract class Loader implements Runnable {
             }
 
             this.frameBuilder.append(activeMessage)
-                        .append("[").append(GREEN).append(this.barBuilder).append(WHITE).append("] ")
-                        .append(currentProgress).append("%")
-                        .append(CLEAR_LINE)
-                        .append(RESET);
+                    .append("[").append(GREEN).append(this.barBuilder).append(WHITE).append("] ")
+                    .append(currentProgress).append("%")
+                    .append(CLEAR_LINE)
+                    .append(RESET);
         }
     }
 
     protected abstract void initialize();
+
     protected abstract void renderGeometry(String[] outputBuffer, double[] zBuffer);
 
     /**
@@ -277,8 +354,8 @@ public abstract class Loader implements Runnable {
         // Explicitly force the OS terminal out of raw mode right now
         TerminalConfig.restoreMode();
 
-        // Wipe the canvas screen, reset coordinates, and reveal the hardware blinking
-        // cursor
+        // Wipe the canvas screen, reset coordinates,
+        // and reveal the blinking cursor
         System.out.print("\n" + CLEAR_SCREEN + CURSOR_HOME + SHOW_CURSOR);
         System.out.flush();
     }

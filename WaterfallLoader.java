@@ -21,7 +21,6 @@ public class WaterfallLoader extends Loader {
     private static final int[] RGB_PINE_WOOD = { 95, 52, 38 }; // Rich Red-Brown Pine Trunks
     private static final int[] RGB_WATER_DARK = { 65, 115, 150 }; // Rich Deep Flow Blue
     private static final int[] RGB_WATER_FOAM = { 232, 238, 225 }; // Off-White Waterfall Glare
-    private static final int[] RGB_LOG_WOOD = { 82, 48, 32 }; // Wet Log Dark Brown
 
     public WaterfallLoader() {
         super(CASCADE_STAGES, 120, 36);
@@ -42,21 +41,22 @@ public class WaterfallLoader extends Loader {
         int shelfY = 13;
         int basinY = 29;
 
-        // Position of the horizontal log wedged inside the waterfall channel
-        int logY = 22;
-        int logLeftX = 46;
-        int logRightX = 62;
-
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 int index = x + width * y;
 
-                // Base values tracking structural colors and characters
-                int[] pixelRGB = RGB_SKY;
+                // Base values tracking structural colors and characters. A very soft
+                // vertical gradient keeps the open sky from reading as a flat, dead fill.
+                double skyT = y / (double) height;
+                int[] pixelRGB = {
+                        (int) (RGB_SKY[0] * (0.88 + 0.12 * skyT)),
+                        (int) (RGB_SKY[1] * (0.88 + 0.12 * skyT)),
+                        (int) (RGB_SKY[2] * (0.92 + 0.08 * skyT))
+                };
                 char pixelChar = '█';
                 double zDepth = 0.01;
 
-                
+
                 // -------------------------------------------------------------
                 // PHASING PASS 1: BACKGROUND SKY & MIDDLE FOREST RIDGE
                 // -------------------------------------------------------------
@@ -102,28 +102,56 @@ public class WaterfallLoader extends Loader {
                 // -------------------------------------------------------------
                 // PHASING PASS 3: TOWERING FOREGROUND PINE TREES
                 // -------------------------------------------------------------
+                // Each tree is built from stacked triangular tiers that reset to a point
+                // at the top of every tier and flare back out toward its bottom. That
+                // notch between tiers is what reads as "layered evergreen branches"
+                // instead of one solid, shapeless green blob.
                 double[] pineTrunkX = { 9.0, 26.0, 94.0, 113.0 };
                 for (int t = 0; t < pineTrunkX.length; t++) {
                     double tx = pineTrunkX[t];
                     double dx = x - tx;
 
-                    if (Math.abs(dx) < 1.0 && y >= 3) {
-                        pixelRGB = RGB_PINE_WOOD;
-                        pixelChar = '█';
-                        zDepth = 0.90;
+                    double treeTopY = 3.0 + (t % 2); // 3 or 4
+                    double treeBaseY = 20.0 + (t % 3) * 2.0; // a little height variety per tree
+                    double treeHeight = treeBaseY - treeTopY;
+                    int tierCount = 3;
+                    double tierHeight = treeHeight / tierCount;
+
+                    if (y >= treeTopY && y < treeBaseY && Math.abs(dx) < 9.0) {
+                        double yInTree = y - treeTopY;
+                        int tierIndex = Math.min(tierCount - 1, (int) (yInTree / tierHeight));
+                        double yInTier = yInTree - tierIndex * tierHeight;
+                        double tierMaxHalfWidth = (tierIndex + 1) * 2.6;
+                        double halfWidthHere = (yInTier / tierHeight) * tierMaxHalfWidth;
+
+                        if (Math.abs(dx) <= halfWidthHere) {
+                            zDepth = 0.90;
+                            boolean isEdge = Math.abs(dx) > halfWidthHere - 0.8;
+
+                            if (Math.abs(dx) < 0.6) {
+                                // Soft sunlit highlight running down the tree's centerline
+                                pixelRGB = new int[] {
+                                        Math.min(255, (int) (RGB_PINE_NEEDLE[0] * 1.3)),
+                                        Math.min(255, (int) (RGB_PINE_NEEDLE[1] * 1.25)),
+                                        Math.min(255, (int) (RGB_PINE_NEEDLE[2] * 1.15))
+                                };
+                                pixelChar = '▓';
+                            } else if (isEdge) {
+                                pixelRGB = new int[] { (int) (RGB_PINE_NEEDLE[0] * 0.7), (int) (RGB_PINE_NEEDLE[1] * 0.7),
+                                        (int) (RGB_PINE_NEEDLE[2] * 0.7) };
+                                pixelChar = '▓';
+                            } else {
+                                pixelRGB = RGB_PINE_NEEDLE;
+                                pixelChar = '█';
+                            }
+                        }
                     }
 
-                    double canopyStartPhase = (t * 7.3);
-                    double leavesLimitY = 4.0 + Math.abs(dx) * 2.6 + Math.sin(x * 0.4 + canopyStartPhase);
-                    if (y >= 2 && y < leavesLimitY && Math.abs(dx) < 8.5) {
+                    // A short trunk peeking out just beneath the lowest canopy tier
+                    if (Math.abs(dx) < 1.0 && y >= treeBaseY - 1 && y < treeBaseY + 3) {
                         zDepth = 0.90;
-                        pixelRGB = RGB_PINE_NEEDLE;
-                        pixelChar = '▓';
-                        if ((x + y * 7) % 5 == 0) {
-                            pixelRGB = new int[] { (int) (RGB_PINE_NEEDLE[0] * 0.8), (int) (RGB_PINE_NEEDLE[1] * 0.8),
-                                    (int) (RGB_PINE_NEEDLE[2] * 0.8) };
-                            pixelChar = '█';
-                        }
+                        pixelRGB = RGB_PINE_WOOD;
+                        pixelChar = '█';
                     }
                 }
 
@@ -132,62 +160,76 @@ public class WaterfallLoader extends Loader {
                 // -------------------------------------------------------------
                 if (y >= basinY && zDepth < 0.85) {
                     zDepth = 0.50;
-                    double waterRipple = Math.sin(x * 0.40 - timeClock * 1.5) * Math.cos(y * 1.1);
+
+                    // Concentric ripples expanding outward from the point where the falls
+                    // strike the pool, plus a lighter secondary layer for texture. Two
+                    // independent high-frequency waves multiplied together (the old
+                    // approach) interfere into a grid; distance-based rings read as water.
+                    double impactX = (fallLeftX + fallRightX) / 2.0;
+                    double rdx = x - impactX;
+                    double rdy = (y - basinY) * 2.2; // cells are taller than they are wide
+                    double dist = Math.sqrt(rdx * rdx + rdy * rdy);
+
+                    double primaryRipple = Math.sin(dist * 0.55 - timeClock * 3.2);
+                    double secondaryRipple = 0.4 * Math.sin(dist * 1.3 - timeClock * 4.4 + x * 0.05);
+                    double waterRipple = primaryRipple + secondaryRipple;
+
                     pixelRGB = RGB_WATER_DARK;
                     pixelChar = '▒';
 
-                    if (waterRipple > 0.65) {
+                    if (waterRipple > 0.9) {
                         pixelRGB = RGB_WATER_FOAM;
                         pixelChar = '█';
-                    } else if (waterRipple < -0.3) {
+                    } else if (waterRipple > 0.35) {
+                        pixelRGB = RGB_WATER_FOAM;
+                        pixelChar = '▓';
+                    } else if (waterRipple < -0.5) {
                         pixelChar = '░';
                     }
                 }
 
                 // -------------------------------------------------------------
-                // PHASING PASS 5: DETAILED HIGH-POWER STATIC WATERFALL
+                // PHASING PASS 5: DETAILED HIGH-POWER FALLING WATERFALL
                 // -------------------------------------------------------------
                 boolean inWaterfallZone = x >= fallLeftX && x <= fallRightX && y >= shelfY && y <= basinY;
 
                 if (inWaterfallZone && 0.95 > zDepth) {
                     zDepth = 0.95;
 
-                    // Form a highly detailed, rigid structural layout for the waterfall artwork
-                    // Combining spatial coordinate noise seeds to paint crisp static fluid textures
-                    double detailMosaics = Math.sin(x * 1.25) * Math.cos(y * 0.45) + Math.sin(x * 0.35 + y * 0.85);
+                    // Give each column its own pseudo-random phase and speed so the
+                    // strands don't line up into a repeating woven texture.
+                    double colSeedRaw = Math.sin(x * 12.9898) * 43758.5453;
+                    double colPhase = (colSeedRaw - Math.floor(colSeedRaw)) * Math.PI * 2.0;
+                    double colSpeed = 5.0 + 2.0 * Math.sin(x * 0.7);
 
-                    if (detailMosaics > 0.4 || x == fallLeftX || x == fallRightX) {
+                    // The key fix: shift the actual texture downward over time (not just
+                    // its brightness), so the streak pattern itself travels down the
+                    // channel instead of staying fixed while only flickering in place.
+                    double flowY = y - timeClock * colSpeed;
+
+                    double strand = Math.sin(flowY * 0.85 + colPhase)
+                            + 0.5 * Math.sin(flowY * 2.1 - colPhase * 1.6 + x * 0.15);
+
+                    if (strand > 0.55 || x == fallLeftX || x == fallRightX) {
                         pixelRGB = RGB_WATER_FOAM;
-                        pixelChar = '█'; // Solid crystalline white water columns
-                    } else if (detailMosaics > -0.2) {
+                        pixelChar = '█'; // Bright falling foam strand
+                    } else if (strand > 0.0) {
+                        pixelRGB = RGB_WATER_FOAM;
+                        pixelChar = '▓'; // Lit water catching the light
+                    } else if (strand > -0.6) {
                         pixelRGB = RGB_WATER_DARK;
-                        pixelChar = '▓'; // Dense blue inner water streams
+                        pixelChar = '▒'; // Mid-tone flowing water
                     } else {
                         pixelRGB = RGB_WATER_DARK;
-                        pixelChar = '▒'; // Deep undertone currents
+                        pixelChar = '░'; // Deep undertone currents
                     }
 
-                    // --- CINEMAGRAPH MASK ENGINE VALUE ---
-                    // Instead of flashing light and dark channels back and forth, we apply a slow,
-                    // continuous scrolling vertical wave mask that gently alters the color tone.
-                    // This creates a smooth fluid illusion while preserving the underlying text
-                    // artwork.
-                    double flowMask = Math.sin(y * 0.48 - timeClock * 4.5) * Math.cos(x * 0.15 + timeClock * 0.5);
-
-                    if (flowMask > 0.3) {
-                        // Softly blend towards the bright foam register
-                        pixelRGB = new int[] {
-                                Math.min(255, (int) (pixelRGB[0] * 0.82 + RGB_WATER_FOAM[0] * 0.18)),
-                                Math.min(255, (int) (pixelRGB[1] * 0.82 + RGB_WATER_FOAM[1] * 0.18)),
-                                Math.min(255, (int) (pixelRGB[2] * 0.82 + RGB_WATER_FOAM[2] * 0.18))
-                        };
-                    } else if (flowMask < -0.4) {
-                        // Softly deepen down the dark palette channels
-                        pixelRGB = new int[] {
-                                Math.max(0, (int) (pixelRGB[0] * 0.85)),
-                                Math.max(0, (int) (pixelRGB[1] * 0.85)),
-                                Math.max(0, (int) (pixelRGB[2] * 0.88))
-                        };
+                    // A faint independent sparkle layer, still riding on flowY so it
+                    // drifts downward with everything else rather than static-flickering.
+                    double sparkle = Math.sin(x * 3.1 + flowY * 1.4);
+                    if (sparkle > 0.92) {
+                        pixelRGB = RGB_WATER_FOAM;
+                        pixelChar = '█';
                     }
 
                     // Soften edges dynamically where the waterfall drops into the bottom basin
@@ -198,35 +240,6 @@ public class WaterfallLoader extends Loader {
                             pixelChar = (bottomSplashNoise > 0.7) ? '¤' : '·';
                         }
                     }
-                }
-                // -------------------------------------------------------------
-                // PHASING PASS 6: THE SHIMMERING WET RIVER LOG OBSTACLE
-                // -------------------------------------------------------------
-                // Wedged horizontally right through the center waterfall channel stream
-                if (x >= logLeftX && x <= logRightX && y >= logY && y <= logY + 1) {
-                    if (0.97 > zBuffer[index]) {
-                        // Sits right in the foreground
-                        zBuffer[index] = 0.97;
-                        pixelRGB = RGB_LOG_WOOD;
-                        pixelChar = '█';
-                        // --- SHIMMERING WET COATING MECHANIC ---
-                        // Top horizontal row of pixels catches the direct cascading water impact.
-                        // We run a high-frequency shimmering calculation to make the log cap glisten
-                        // with foam.
-                        if (y == logY) {
-                            double wetShimmer = Math.sin(x * 2.8 + timeClock * 24.0);
-                            if (wetShimmer > 0.15) {
-                                pixelRGB = RGB_WATER_FOAM;
-                                // Splashing water coating
-                                pixelChar = (wetShimmer > 0.75) ? '█' : '▓';
-                            }
-                        } else {
-                            // Bottom row: simple wood shadow accents
-                            if (x % 3 == 0)
-                                pixelChar = '▓';
-                        }
-                    }
-                    continue;
                 }
                 // Render the finalized layer assets directly to screen output buffers
                 if (zDepth > zBuffer[index]) {
