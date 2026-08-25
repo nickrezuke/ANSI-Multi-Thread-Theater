@@ -1,3 +1,5 @@
+// TODO: Make the lighting / shading such that the sun is the light source on the planet
+
 import java.util.Arrays;
 
 public class GravityFabricLoader extends Loader {
@@ -14,7 +16,7 @@ public class GravityFabricLoader extends Loader {
     private double timeClock = 0.0;
 
     // Fixed pitch, but yaw will now rotate dynamically over time
-    private final double pitchAngle = 0.65;   
+    private final double pitchAngle = 0.36;   
 
     public GravityFabricLoader() {
         super(FABRIC_STAGES, WIDTH, HEIGHT);
@@ -39,12 +41,12 @@ public class GravityFabricLoader extends Loader {
         // Physics Masses
         double sunX = 0.0;
         double sunZ = 0.0;
-        double sunMass = 9.0;
+        double sunMass = 12.0;
 
         double orbitRadius = 7.0;
         double planetX = orbitRadius * Math.cos(timeClock * 1.1);
         double planetZ = orbitRadius * Math.sin(timeClock * 1.1);
-        double planetMass = 1.6;
+        double planetMass = 1.9;
 
         double zoomFactor = 2.5;
 
@@ -54,7 +56,7 @@ public class GravityFabricLoader extends Loader {
         // ====================================================================
         // PASS 1: THE SPACETIME FABRIC GRID (Rotating Wireframe)
         // ====================================================================
-        int gridExtent = 35; 
+        int gridExtent = 75; 
         double stepSize = 0.4; 
 
         for (int xi = -gridExtent; xi <= gridExtent; xi++) {
@@ -67,7 +69,7 @@ public class GravityFabricLoader extends Loader {
 
                 double sunWell = -sunMass / (distToSun * 0.35 + 0.9);
                 double planetWell = -planetMass / (distToPlanet * 0.7 + 0.5);
-                double gy = sunWell + planetWell;
+                double gy = sunWell + planetWell + 3; // Flat +3 raise for visual clarity
 
                 double rotX = gx * cosY - gz * sinY;
                 double rotZ = gx * sinY + gz * cosY;
@@ -86,9 +88,7 @@ public class GravityFabricLoader extends Loader {
                 if (finalZ < zBuffer[bufferIndex]) {
                     zBuffer[bufferIndex] = finalZ;
 
-                    String ansiColor;
-                    if (gy < -1.1)      ansiColor = "\u001B[38;5;33m";  // Electric Indigo (Wells)
-                    else                ansiColor = "\u001B[38;5;39m";  // Flat Slate Cyan (Surface)
+                    String ansiColor = "\u001B[38;5;33m";  // Electric Indigo (Wells)
 
                     boolean isLineX = (xi % 5 == 0);
                     boolean isLineZ = (zi % 5 == 0);
@@ -103,7 +103,7 @@ public class GravityFabricLoader extends Loader {
         // PASS 2: THE 3D SOLAR SPHERE CORE (Rotating Mass)
         // ====================================================================
         double sunRadius = 1.8; 
-        double sunCenterY = -1.1; 
+        double sunCenterY = -0.1; 
         double sunStep = 0.08;
 
         for (double sx = -sunRadius; sx <= sunRadius; sx += sunStep) {
@@ -143,7 +143,7 @@ public class GravityFabricLoader extends Loader {
         // PASS 3: THE 3D PLANET SPHERE CORE (Rotating Orbit)
         // ====================================================================
         double planetRadius = 0.5; 
-        double planetCenterY = -0.3; 
+        double planetCenterY = 0.1; 
         double planetStep = 0.05;
 
         for (double px = -planetRadius; px <= planetRadius; px += planetStep) {

@@ -31,7 +31,7 @@ public class ToyBoatLoader extends Loader {
         PORTHOLES.add(new Porthole(0.4, 0.1, 0.16));
     }
 
-    private static final String LUMINANCE_CHARS = ".,-~:;=!*#$@";
+    private static final String LUMINANCE_CHARS = "#%@$&WM#O";
 
     private static final double HULL_LENGTH = 4.2;
     private static final double HULL_WIDTH = 1.8;
@@ -43,7 +43,7 @@ public class ToyBoatLoader extends Loader {
     private String orangeTrim;
     private String portholeColor;
     private String[][] cellCache;
-    private double A = 1.3;
+    private double A = 1.5;
     private double B = 0.0;
 
     public ToyBoatLoader() {
@@ -216,7 +216,7 @@ public class ToyBoatLoader extends Loader {
             }
         }
 
-        A += 0.010 * Math.sin(B);
+        A += 0.008 * Math.sin(B);
         B += 0.025;
     }
 

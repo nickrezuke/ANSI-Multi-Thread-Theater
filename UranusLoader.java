@@ -1,3 +1,5 @@
+//TODO: make the ring more accurate??
+
 import java.util.Random;
 
 public class UranusLoader extends Loader {

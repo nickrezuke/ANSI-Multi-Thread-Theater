@@ -15,29 +15,27 @@ public class PlayStation1IntroLoader extends Loader {
     private double timeClock = 0.0;
     private final int width = 80;
     private final int height = 22;
-    private static final int CENTER_X = 38;
-    private static final int CENTER_Y = 10;
+    
+    // Adjusted canonical center for perspective layout
+    private static final int CENTER_X = 36;
+    private static final int CENTER_Y = 11;
 
-    // Canonical PS1 logo palette: a solid red "P" plus a yellow / teal /
-    // blue ribbon that folds into the "S" - not a grey/chrome render.
-    private static final int[] RGB_RED    = { 222, 30, 42 };
+    // Canonical PS1 logo palette
+    private static final int[] RGB_RED = { 222, 30, 42 };
     private static final int[] RGB_YELLOW = { 247, 200, 20 };
-    private static final int[] RGB_TEAL   = { 20, 150, 140 };
-    private static final int[] RGB_BLUE   = { 55, 100, 182 };
+    private static final int[] RGB_TEAL = { 20, 150, 140 };
+    private static final int[] RGB_BLUE = { 55, 100, 182 };
 
-    // A node carries its rest position, which color band it belongs to,
-    // and a bevel shade (0..1) computed once so lighting stays fixed to
-    // the shape as it slides, instead of to the screen.
     private static class PixelNode {
         int x, y;
         int[] baseColor;
-        double shade;
+        double depth; // Used to prevent rendering artifacts or handle overlaps
 
-        PixelNode(int x, int y, int[] baseColor, double shade) {
+        PixelNode(int x, int y, int[] baseColor, double depth) {
             this.x = x;
             this.y = y;
             this.baseColor = baseColor;
-            this.shade = shade;
+            this.depth = depth;
         }
     }
 
@@ -48,166 +46,108 @@ public class PlayStation1IntroLoader extends Loader {
         super(PS1_STAGES, 80, 22);
     }
 
-    private static double norm360(double a) {
-        while (a < 0) a += 360;
-        while (a >= 360) a -= 360;
-        return a;
-    }
-
-    private static boolean inAngleGap(double theta, double gapStart, double gapEnd) {
-        theta = norm360(theta);
-        gapStart = norm360(gapStart);
-        gapEnd = norm360(gapEnd);
-        if (gapStart <= gapEnd) {
-            return theta >= gapStart && theta <= gapEnd;
-        }
-        return theta >= gapStart || theta <= gapEnd;
-    }
-
-    // Simulated top-left light source, subtle - just enough to give each
-    // flat color band a touch of gloss without washing out its hue.
-    private static double bevelShade(int x, int y) {
-        double diag = (-(x - CENTER_X) - (y - CENTER_Y));
-        double shade = 0.5 + diag / 55.0;
-        shade += 0.04 * Math.sin(x * 0.7 + y * 0.4);
-        return Math.max(0.0, Math.min(1.0, shade));
-    }
-
-    private static int clamp255(int v) {
-        return Math.max(0, Math.min(255, v));
-    }
-
-    private static int[] scaleColor(int[] c, double factor) {
-        return new int[]{
-            clamp255((int) (c[0] * factor)),
-            clamp255((int) (c[1] * factor)),
-            clamp255((int) (c[2] * factor))
-        };
-    }
-
-    private static int[] lerpColor(int[] a, int[] b, double t) {
-        t = Math.max(0.0, Math.min(1.0, t));
-        return new int[]{
-            (int) (a[0] + (b[0] - a[0]) * t),
-            (int) (a[1] + (b[1] - a[1]) * t),
-            (int) (a[2] + (b[2] - a[2]) * t)
-        };
-    }
-
     @Override
     protected void initialize() {
         this.timeClock = 0.0;
         pVectorGroup.clear();
         sVectorGroup.clear();
 
-        // Build on a scratch grid so a quick neighbor-cleanup pass can
-        // strip stray single-cell fragments left by the hook math.
         char[][] grid = new char[height][width];
         for (char[] row : grid) Arrays.fill(row, ' ');
 
         // -------------------------------------------------------------
-        // THE "P" — solid spine + rounded bowl with an open counter
+        // 1. THE VERTICAL "P" (Stands perfectly upright)
         // -------------------------------------------------------------
-        for (int y = CENTER_Y - 9; y < CENTER_Y + 9; y++) {
-            for (int x = CENTER_X - 16; x < CENTER_X - 12; x++) {
+        int pLeft = CENTER_X - 6;
+        int pWidth = 4;
+        
+        // Vertical spine
+        for (int y = CENTER_Y - 8; y <= CENTER_Y + 5; y++) {
+            for (int x = pLeft; x < pLeft + pWidth; x++) {
                 if (x >= 0 && x < width && y >= 0 && y < height) grid[y][x] = 'P';
             }
         }
-        int loopCx = CENTER_X - 12;
-        int loopCy = CENTER_Y - 4;
-        for (int y = CENTER_Y - 9; y < CENTER_Y + 1; y++) {
-            for (int x = CENTER_X - 13; x < CENTER_X; x++) {
-                double dx = x - loopCx;
-                double dy = y - loopCy;
-                double val = dx * dx * 0.42 + dy * dy;
-                if (val >= 2.0 && val <= 15.5 && x >= CENTER_X - 13) {
-                    if (x >= 0 && x < width && y >= 0 && y < height) grid[y][x] = 'P';
+        
+        // P's Rounded Upper Bowl Loop
+        int bowlRadiusOuterX = 9;
+        int bowlRadiusOuterY = 5;
+        int bowlRadiusInnerX = 5;
+        int bowlRadiusInnerY = 2;
+        int bowlCenterX = pLeft + pWidth;
+        int bowlCenterY = CENTER_Y - 4;
+
+        for (int y = CENTER_Y - 9; y <= CENTER_Y + 1; y++) {
+            for (int x = pLeft; x <= pLeft + bowlRadiusOuterX + 2; x++) {
+                double dx = x - bowlCenterX;
+                double dy = y - bowlCenterY;
+                
+                // Normalized ellipse math
+                double normOuter = (dx*dx) / (bowlRadiusOuterX*bowlRadiusOuterX) + (dy*dy) / (bowlRadiusOuterY*bowlRadiusOuterY);
+                double normInner = (dx*dx) / (bowlRadiusInnerX*bowlRadiusInnerX) + (dy*dy) / (bowlRadiusInnerY*bowlRadiusInnerY);
+                
+                if (normOuter <= 1.0 && (dx < 0 || normInner >= 1.0)) {
+                    if (x >= pLeft && x < width && y >= 0 && y < height) {
+                        grid[y][x] = 'P';
+                    }
                 }
             }
         }
 
         // -------------------------------------------------------------
-        // THE RIBBON — flattened yellow hook / teal diagonal / blue hook
-        // that folds into an "S", laid across the P's lower half
+        // 2. THE FLOATING HORIZONTAL "S" (Sheared Perspective Plane)
         // -------------------------------------------------------------
-        double ribbonCy = CENTER_Y + 4;
-        double xScale = 3.4;
-        double yScale = 1.6;
-        double outerR = 3.4, innerR = 1.7;
-        double leftCx = CENTER_X - 11;
-        double rightCx = CENTER_X + 13;
+        // We model the S flat on the ground using standard parametric formulas,
+        // then shear/compress it horizontally so it mimics the 3D floor plane.
+        for (int sy = -6; sy <= 8; sy++) {
+            for (int sx = -22; sx <= 22; sx++) {
+                
+                // Transform target coordinate: map 2D layout grid space 
+                // into perspective space lying behind/underneath the P
+                int renderX = CENTER_X + sx + (int)(sy * 1.5); 
+                int renderY = CENTER_Y + 4 + (int)(sy * 0.45);
 
-        for (int y = CENTER_Y; y < CENTER_Y + 9; y++) {
-            for (int x = CENTER_X - 24; x < CENTER_X + 24; x++) {
-                char band = 0;
+                if (renderX < 0 || renderX >= width || renderY < 0 || renderY >= height) continue;
 
-                double dxL = (x - leftCx) / xScale;
-                double dyL = (y - ribbonCy) * yScale / 2.0;
-                double rL = Math.sqrt(dxL * dxL + dyL * dyL);
-                double thL = Math.toDegrees(Math.atan2(dyL, dxL));
-                if (rL >= innerR && rL <= outerR && !inAngleGap(thL, -70, 70)) {
-                    band = 'Y';
+                // Trace the logic flow of the original 'S' ribbon shape
+                boolean isS = false;
+                int[] bandColor = RGB_YELLOW;
+
+                // Top arc of the S
+                if (sy <= 0) {
+                    double r = Math.sqrt(sx*sx + (sy+3)*(sy+3)*4.0);
+                    if (r >= 7.0 && r <= 13.0 && sx <= 2) {
+                        isS = true;
+                        bandColor = (sx < -4) ? RGB_YELLOW : RGB_TEAL;
+                    }
                 }
-
-                double dxR = (x - rightCx) / xScale;
-                double dyR = (y - ribbonCy) * yScale / 2.0;
-                double rR = Math.sqrt(dxR * dxR + dyR * dyR);
-                double thR = Math.toDegrees(Math.atan2(dyR, dxR));
-                if (rR >= innerR && rR <= outerR && !inAngleGap(thR, 110, 250)) {
-                    band = 'B';
+                // Bottom arc of the S
+                if (sy >= -1) {
+                    double r = Math.sqrt(sx*sx + (sy-4)*(sy-4)*4.0);
+                    if (r >= 7.0 && r <= 13.0 && sx >= -2) {
+                        isS = true;
+                        bandColor = (sx > 5) ? RGB_BLUE : RGB_TEAL;
+                    }
                 }
-
-                if (y >= ribbonCy - 1 && y <= ribbonCy + 1) {
-                    double pct = (y - (ribbonCy - 1)) / 2.0;
-                    int targetX = (CENTER_X + 1) - (int) (pct * 6);
-                    if (x >= targetX - 10 && x <= targetX + 10) {
-                        band = 'T';
+                // Center transition stroke joining top & bottom arcs
+                if (sy >= -2 && sy <= 3 && sx >= -6 && sx <= 6) {
+                    if (sx + sy * 1.2 >= -3 && sx + sy * 1.2 <= 3) {
+                        isS = true;
+                        bandColor = RGB_TEAL;
                     }
                 }
 
-                if (band != 0 && x >= 0 && x < width && y >= 0 && y < height) {
-                    // Ribbon only shows where the P hasn't already claimed the cell.
-                    if (grid[y][x] != 'P') grid[y][x] = band;
+                // Inject nodes safely into group (S stays behind P vertically)
+                if (isS && grid[renderY][renderX] != 'P') {
+                    sVectorGroup.add(new PixelNode(renderX, renderY, bandColor, 0.5));
                 }
             }
         }
 
-        // Erode fragments that aren't part of a connected stroke.
-        for (int pass = 0; pass < 2; pass++) {
-            char[][] next = new char[height][width];
-            for (int y = 0; y < height; y++) next[y] = grid[y].clone();
-            for (int y = 0; y < height; y++) {
-                for (int x = 0; x < width; x++) {
-                    char ch = grid[y][x];
-                    if (ch == ' ') continue;
-                    int neighborCount = 0;
-                    for (int dy = -1; dy <= 1; dy++) {
-                        for (int dx = -1; dx <= 1; dx++) {
-                            if (dx == 0 && dy == 0) continue;
-                            int nx = x + dx, ny = y + dy;
-                            if (nx >= 0 && nx < width && ny >= 0 && ny < height && grid[ny][nx] == ch) {
-                                neighborCount++;
-                            }
-                        }
-                    }
-                    if (neighborCount < 2) next[y][x] = ' ';
-                }
-            }
-            grid = next;
-        }
-
+        // Convert the structural "P" grid layout into nodes
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                char ch = grid[y][x];
-                double shade = bevelShade(x, y);
-                if (ch == 'P') {
-                    pVectorGroup.add(new PixelNode(x, y, RGB_RED, shade));
-                } else if (ch == 'Y') {
-                    sVectorGroup.add(new PixelNode(x, y, RGB_YELLOW, shade));
-                } else if (ch == 'T') {
-                    sVectorGroup.add(new PixelNode(x, y, RGB_TEAL, shade));
-                } else if (ch == 'B') {
-                    sVectorGroup.add(new PixelNode(x, y, RGB_BLUE, shade));
+                if (grid[y][x] == 'P') {
+                    pVectorGroup.add(new PixelNode(x, y, RGB_RED, 0.9));
                 }
             }
         }
@@ -218,71 +158,67 @@ public class PlayStation1IntroLoader extends Loader {
         Arrays.fill(outputBuffer, " ");
         Arrays.fill(zBuffer, 0.0);
 
-        timeClock += 0.014;
-
-        double progress = Math.min(1.0, timeClock * 0.85);
-        double easeFactor = 1.0 - Math.pow(1.0 - progress, 3);
-
-        // -------------------------------------------------------------
-        // PASS 1: THE RED "P" DROPS STRAIGHT DOWN INTO PLACE
-        // -------------------------------------------------------------
-        int pOffsetY = (int) (-22.0 * (1.0 - easeFactor));
-
-        for (PixelNode node : pVectorGroup) {
-            int currentX = node.x;
-            int currentY = node.y + pOffsetY;
-            if (currentX < 0 || currentX >= width || currentY < 0 || currentY >= height) continue;
-
-            int index = currentX + width * currentY;
-            zBuffer[index] = 0.90;
-            int[] rgb = shadeToColor(node, currentX, currentY, progress);
-            outputBuffer[index] = ansi(rgb) + "█" + RESET;
-        }
+        timeClock += 0.015;
+        double progress = Math.min(1.0, timeClock * 0.75);
+        double easeFactor = 1.0 - Math.pow(1.0 - progress, 3); // Cubic Ease Out
 
         // -------------------------------------------------------------
-        // PASS 2: THE RIBBON GLIDES IN FROM THE LOWER-RIGHT
+        // PASS 1: THE HORIZONTAL "S" SLIDES IN FROM THE LEFT
         // -------------------------------------------------------------
-        int sOffsetX = (int) (26.0 * (1.0 - easeFactor));
-        int sOffsetY = (int) (10.0 * (1.0 - easeFactor));
-
+        int sOffsetX = (int) (-35.0 * (1.0 - easeFactor));
         for (PixelNode node : sVectorGroup) {
             int currentX = node.x + sOffsetX;
-            int currentY = node.y + sOffsetY;
+            int currentY = node.y;
+
             if (currentX < 0 || currentX >= width || currentY < 0 || currentY >= height) continue;
 
             int index = currentX + width * currentY;
-            if (zBuffer[index] < 0.85) {
-                zBuffer[index] = 0.50;
-                int[] rgb = shadeToColor(node, currentX, currentY, progress);
+            if (node.depth > zBuffer[index]) {
+                zBuffer[index] = node.depth;
+                int[] rgb = applyLightGlint(node.baseColor, currentX, currentY);
                 outputBuffer[index] = ansi(rgb) + "█" + RESET;
             }
         }
 
-        
+        // -------------------------------------------------------------
+        // PASS 2: THE UPRIGHT RED "P" DROPS DOWN FROM THE TOP
+        // -------------------------------------------------------------
+        int pOffsetY = (int) (-20.0 * (1.0 - easeFactor));
+        for (PixelNode node : pVectorGroup) {
+            int currentX = node.x;
+            int currentY = node.y + pOffsetY;
 
-        if (timeClock > 2.6) {
+            if (currentX < 0 || currentX >= width || currentY < 0 || currentY >= height) continue;
+
+            int index = currentX + width * currentY;
+            if (node.depth > zBuffer[index]) {
+                zBuffer[index] = node.depth;
+                int[] rgb = applyLightGlint(node.baseColor, currentX, currentY);
+                outputBuffer[index] = ansi(rgb) + "█" + RESET;
+            }
+        }
+
+        // Standard auto-loop reset sequence
+        if (timeClock > 3.0) {
             initialize();
         }
     }
 
-    // Blends a node's true hue between a darkened and lightened variant
-    // of itself (never toward grey) and adds a soft moving glint once
-    // assembly has mostly settled.
-    private int[] shadeToColor(PixelNode node, int currentX, int currentY, double progress) {
-        double shade = node.shade;
-
-        if (progress > 0.6) {
-            double diagPos = currentX + currentY;
-            double sweepCenter = (timeClock * 55.0) % (width + height + 20) - 10;
-            double dist = Math.abs(diagPos - sweepCenter);
-            if (dist < 4.0) {
-                shade = Math.min(1.0, shade + (4.0 - dist) / 4.0 * 0.35);
+    // Authentic flat colors with subtle light tint sweep over the vector geometry
+    private int[] applyLightGlint(int[] baseColor, int x, int y) {
+        double factor = 1.0;
+        if (timeClock > 1.2) {
+            double scanline = ((timeClock - 1.2) * 65.0) % (width + height + 30) - 15;
+            double distance = Math.abs((x + y) - scanline);
+            if (distance < 5.0) {
+                factor += (5.0 - distance) / 5.0 * 0.28; // Subtle bright shine factor
             }
         }
-
-        int[] darker = scaleColor(node.baseColor, 0.55);
-        int[] lighter = scaleColor(node.baseColor, 1.35);
-        return lerpColor(darker, lighter, shade);
+        return new int[]{
+            Math.min(255, (int)(baseColor[0] * factor)),
+            Math.min(255, (int)(baseColor[1] * factor)),
+            Math.min(255, (int)(baseColor[2] * factor))
+        };
     }
 
     private static String ansi(int[] rgb) {

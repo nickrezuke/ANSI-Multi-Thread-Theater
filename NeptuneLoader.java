@@ -1,6 +1,3 @@
-// TODO: Improve the graphical accuracy of Neptune.  The surface should fade white dependign on distance to the poles?
-// https://science.nasa.gov/resource/neptune-3d-model/
-
 import java.util.Random;
 
 public class NeptuneLoader extends Loader {
@@ -21,6 +18,7 @@ public class NeptuneLoader extends Loader {
     private static final int[] C_GDS_CORE = { 15, 35, 110 }; // Deep Navy Indigo Spot Core
     private static final int[] C_SCOUTER = { 240, 245, 255 }; // Stark White High-Altitude Clouds
     private static final int[] RGB_RING = { 90, 115, 140 }; // Faint, Dusty Slate-Grey Ring Filaments
+    private static final int[] C_POLAR_HAZE = { 235, 245, 255 }; // Icy white polar haze
 
     public NeptuneLoader() {
         super(NEPTUNE_STAGES, 80, 22);
@@ -82,17 +80,12 @@ public class NeptuneLoader extends Loader {
         double scooterLatRad = Math.toRadians(-42.0);
         double scooterLonRad = Math.toRadians(12.0) + (neptuneRotationAngle * 1.55);
 
-        // -------------------------------------------------------------
-        // Step 3: Render Faint 1-Pixel Wide Dust Ring Filaments (With Dynamic Pitch &
-        // Tilt)
-        // -------------------------------------------------------------
+        // Step 3: Render Faint 1-Pixel Wide Dust Ring (w/ Dynamic Pitch and Tilt)
         // Base planar tilt oscillation (roll around the camera Z axis)
         double dynamicRingTilt = axialTilt + Math.toRadians(3.0) * Math.sin(neptuneRotationAngle * 1.8);
         double cosRingTilt = Math.cos(dynamicRingTilt);
         double sinRingTilt = Math.sin(dynamicRingTilt);
 
-        // NEW: Pitch oscillation (tilts the ring toward/away from the camera
-        // perspective around the X axis)
         double ringPitchWobble = Math.toRadians(2.5) * Math.cos(neptuneRotationAngle * 0.7);
         double cosPitch = Math.cos(ringPitchWobble);
         double sinPitch = Math.sin(ringPitchWobble);
@@ -138,9 +131,7 @@ public class NeptuneLoader extends Loader {
             }
         }
 
-        // -------------------------------------------------------------
         // Step 4: Render Uniform Methane-Absorbing Spheroid Globe
-        // -------------------------------------------------------------
         for (double theta = 0.008; theta < Math.PI; theta += 0.008) {
             double sinTheta = Math.sin(theta);
             double cosTheta = Math.cos(theta);
@@ -231,9 +222,22 @@ public class NeptuneLoader extends Loader {
                             outG = (int) (C_GDS_CORE[1] * (0.9 + 0.1 * coreFade));
                             outB = (int) (C_GDS_CORE[2]);
                         } else {
-                            outR = (int) (C_BASE_COBALT[0] * (0.85 + 0.15 * smoothGasBlend));
-                            outG = (int) (C_BASE_COBALT[1] * (0.85 + 0.15 * smoothGasBlend));
-                            outB = (int) (C_BASE_COBALT[2]);
+                            // 1. Calculate the base blue with the existing gas banding
+                            double baseR = C_BASE_COBALT[0] * (0.85 + 0.15 * smoothGasBlend);
+                            double baseG = C_BASE_COBALT[1] * (0.85 + 0.15 * smoothGasBlend);
+                            double baseB = C_BASE_COBALT[2];
+
+                            // 2. Calculate proximity to the poles (0.0 at equator, 1.0 at absolute poles)
+                            double normalizedLat = Math.abs(latDeg) / 90.0;
+
+                            // 3. Use a power function so the white haze
+                            // only becomes prominent at the extreme high latitudes.
+                            double polarFade = Math.pow(normalizedLat, 2.8);
+
+                            // 4. Linear interpolate (lerp) between the cobalt base and the polar haze
+                            outR = (int) (baseR * (1.0 - polarFade) + C_POLAR_HAZE[0] * polarFade);
+                            outG = (int) (baseG * (1.0 - polarFade) + C_POLAR_HAZE[1] * polarFade);
+                            outB = (int) (baseB * (1.0 - polarFade) + C_POLAR_HAZE[2] * polarFade);
                         }
 
                         outR = Math.max(0, Math.min(255, (int) (outR * finalLuminance)));

@@ -1,5 +1,3 @@
-// TODO: The ends of the hot dog look a little cut off... Make them round like iconic hot dog look
-
 public class HotDogLoader extends Loader {
     // 1. Hot Dog specific loading stages
     private static final StatusStage[] HOTDOG_STAGES = {
@@ -87,30 +85,52 @@ public class HotDogLoader extends Loader {
         }
 
         // --- LAYER 2: The Iconic Curved Wiener ---
-        // Swept along X length, with cross section tube angles p
-        for (double x = -DOG_LENGTH/2; x <= DOG_LENGTH/2; x += 0.05) {
-            // Base center coordinates of the sausage string curving quadratically upward on the ends
+        // Swept along X length, with mathematical spherical end caps
+        double halfDog = DOG_LENGTH / 2.0;
+        
+        // Extend the sweep loop to include the radius of the caps on both ends
+        for (double x = -halfDog - DOG_RADIUS; x <= halfDog + DOG_RADIUS; x += 0.05) {
+            
+            double currentRadius;
+            double nx = 0.0;
+            double dx = 0.0;
+
+            // Calculate the spherical taper for the left cap
+            if (x < -halfDog) {
+                dx = Math.abs(x - (-halfDog));
+                dx = Math.min(dx, DOG_RADIUS); // Clamp to prevent NaN floating point errors
+                currentRadius = Math.sqrt(DOG_RADIUS * DOG_RADIUS - dx * dx);
+                nx = -dx / DOG_RADIUS; // Normal points outward to the left
+            } 
+            // Calculate the spherical taper for the right cap
+            else if (x > halfDog) {
+                dx = x - halfDog;
+                dx = Math.min(dx, DOG_RADIUS); 
+                currentRadius = Math.sqrt(DOG_RADIUS * DOG_RADIUS - dx * dx);
+                nx = dx / DOG_RADIUS; // Normal points outward to the right
+            } 
+            // Main cylindrical body
+            else {
+                currentRadius = DOG_RADIUS;
+                nx = 0.0; // Normal is purely radial in the center body
+            }
+
+            // Base center coordinates curving quadratically upward
             double centerX = x;
             double centerY = 0.0;
             double centerZ = WIENER_CURVATURE * (x * x);
 
-            for (double p = 0; p < 2.0 * Math.PI; p += 0.15) {
+            for (double p = 0; p < 2.0 * Math.PI; p += 0.09) {
                 double cosP = Math.cos(p), sinP = Math.sin(p);
 
-                // Displace outward from the curved core trajectory line
+                // Displace outward using the dynamically calculated radius
                 double wx = centerX;
-                double wy = centerY + DOG_RADIUS * cosP;
-                double wz = centerZ + DOG_RADIUS * sinP;
+                double wy = centerY + currentRadius * cosP;
+                double wz = centerZ + currentRadius * sinP;
 
-                // Surface normal vectors pointing outward from the tube core
-                double nx = 0.0; 
-                double ny = cosP;
-                double nz = sinP;
-
-                // Cap off the ends gracefully like rounded sausage tips
-                if (x <= -DOG_LENGTH/2 + 0.1 || x >= DOG_LENGTH/2 - 0.1) {
-                    nx = (x > 0) ? 0.6 : -0.6;
-                }
+                // Scale the Y and Z normals proportionally to the taper so lighting stays perfectly smooth
+                double ny = (currentRadius / DOG_RADIUS) * cosP;
+                double nz = (currentRadius / DOG_RADIUS) * sinP;
 
                 drawPoint(wx, wy, wz, nx, ny, nz, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, 1); // 1 = Wiener
             }

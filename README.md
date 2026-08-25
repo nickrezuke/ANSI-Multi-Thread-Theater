@@ -51,6 +51,8 @@ This project comes packed with a ton of different variants, all derived from a c
 
 -> **Cupcake**: <!-- TODO: Elaborate on this section -->
 
+-> **TurkeyLeg**: <!-- TODO: Elaborate on this section -->
+
 -> **Sushi**: <!-- TODO: Elaborate on this section -->
 
 -> **SnowGlobe**: <!-- TODO: Elaborate on this section -->
@@ -59,9 +61,17 @@ This project comes packed with a ton of different variants, all derived from a c
 
 -> **HotDog**: <!-- TODO: Elaborate on this section -->
 
+-> **Cookie** <!-- TODO: Elaborate on this section -->
+
 -> **CosmicBrownie**: <!-- TODO: Elaborate on this section -->
 
+-> **ToyCar**: <!-- TODO: Elaborate on this section -->
+
 -> **ToyBoat**: <!-- TODO: Elaborate on this section -->
+
+-> **ToyTrain**: <!-- TODO: Elaborate on this section -->
+
+-> **Fish**: <!-- TODO: Elaborate on this section -->
 
 ### Real Models
 I also included a few classic "graphics processing" loaders
@@ -178,11 +188,17 @@ I also included a few classic "graphics processing" loaders
 
 ### Our Solar System
 
+-> **SolarSystem**: <!-- TODO: Elaborate on this section -->
+
 -> **Sun**: <!-- TODO: Elaborate on this section -->
 
 -> **Mercury**: <!-- TODO: Elaborate on this section -->
 
 -> **Venus**: <!-- TODO: Elaborate on this section -->
+
+-> **InternationalSpaceStation**: <!-- TODO: Elaborate on this section -->
+
+-> **HubbleTelescope**: <!-- TODO: Elaborate on this section -->
 
 -> **Earth**: <!-- TODO: Elaborate on this section -->
 
@@ -190,7 +206,13 @@ I also included a few classic "graphics processing" loaders
 
 -> **Moon**: <!-- TODO: Elaborate on this section -->
 
+-> **ApolloLunarModule** <!-- TODO: Elaborate on this section -->
+
+-> **Satellite**: <!-- TODO: Elaborate on this section -->
+
 -> **Mars**: <!-- TODO: Elaborate on this section -->
+
+-> **Curiosity**: <!-- TODO: Elaborate on this section -->
 
 -> **AsteroidBelt**: <!-- TODO: Elaborate on this section -->
 
@@ -204,7 +226,7 @@ I also included a few classic "graphics processing" loaders
 
 -> **Pluto**: <!-- TODO: Elaborate on this section -->
 
--> **SolarSystem**: <!-- TODO: Elaborate on this section -->
+-> **Voyager**: <!-- TODO: Elaborate on this section -->
 
 ### Higher Dimensional Math
 
@@ -219,6 +241,8 @@ I also included a few classic "graphics processing" loaders
 -> **GyroidA**: <!-- TODO: Elaborate on this section -->
 
 -> **GyroidB**: <!-- TODO: Elaborate on this section -->
+
+-> **BaukusManifold**: <!-- TODO: Elaborate on this section -->
 
 ### Proper Simulations
 
@@ -397,17 +421,27 @@ Raymarched Mandelbulb 3D too intense?  (can barely handle 2D Mandelbrot set lmao
 Quantum Wavefunction Interference
 Schrodinger / Gaussian Wave Packet hitting a potential barrier (tunneling and reflection)
 Stanford Dragon
-Satelite? ISS? Hubble Telescope?
 Sponza Atrium (like floating the camera around like a drone flight or walk?)
-Comet / Meteor
+Comet / Meteor / Shooting Star?
 Tower of Hanoi Solver?
 Sunflower? or flowers in general?
-Car / Truck
-Trains
-Soemthign with the high-detail resolution trick w/ blocks https://en.wikipedia.org/wiki/Block_Elements 
+Super Mario Reflective Gold Coin?
+Pulsars / Quazars
+Gravitational Lensing Simulation?
+Accretion Disk
+Something with the high-detail resolution trick w/ blocks https://en.wikipedia.org/wiki/Block_Elements 
 Newton's Cradle Balls Swinging / Clacking
 3D Galton Board?  Like giant pyramid of 3D to make 
-Bakous Manifold Instability Equation
+2D Scene of an Aquarium / Coral Reef?
+2D Scene of Oasis in the desert
+Something to do with Lehigh
+Something to do with CCSU (Blue Devil?)
+Roman Collesseum
+Pyramids of Giza / Sphinx
+Acropolis of Athens
+Machu Pichu
+Statue of Liberty
+Mt. Fuji?
 Structural Resonance Frequency vs Height of several lolipop weights
 Andy's Fire https://www.a1k0n.net/2007/08/24/obfuscated-c-fire.html
 Interactive Tanks-like Aiming & Shooting game w/ breakable ground

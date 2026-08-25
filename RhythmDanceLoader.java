@@ -1,3 +1,5 @@
+// TODO: Make sure the timing of the helper is accurate to the timing of the actual button push window
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;

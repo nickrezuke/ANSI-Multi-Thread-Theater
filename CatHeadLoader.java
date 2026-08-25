@@ -3,8 +3,9 @@
 public class CatHeadLoader extends Loader {
     private static final StatusStage[] CAT_STAGES = {
             new StatusStage(20, "Chasing Butterflies:"),
-            new StatusStage(50, "Scratching Yarn Balls:"),
-            new StatusStage(80, "Staring at you from the dark:"),
+            new StatusStage(40, "Scratching Yarn Balls:"),
+            new StatusStage(70, "Taking a mid-day nap:"),
+            new StatusStage(95, "Staring at you from the dark:"),
             new StatusStage(100, "MeowMrrrreeoww!  Meow!!")
     };
     private static final char[] SHADE_RAMP = { ':', ';', '=', '!', '*', '#', '$', '@', '▒', '▓', '█' };
