@@ -54,15 +54,18 @@ public class GifFilePlayerLoader extends Loader {
     @Override
     protected void initialize() {
         setTargetFps(30); // Speed of GIFs
-
-        switch((int)(Math.random() * 3)) { // 3 example gifs
+        int variant = (int)(Math.random() * 4);
+        switch(variant) { // example gifs
             case 0:
                 GIF_FILE_NAME = "ImageFolderGIF/Skull.gif"; break;
             case 1:
                 GIF_FILE_NAME = "ImageFolderGIF/HelloWave.gif"; break;
             case 2:
-            default:
                 GIF_FILE_NAME = "ImageFolderGIF/GemHeart.gif"; break;
+            case 3:
+            default:
+                GIF_FILE_NAME = "ImageFolderGIF/BlueDevilDance.gif"; break;
+
         }
 
         try {

@@ -103,7 +103,7 @@ public class SeifertLoader extends InteractiveLoader {
                 double cameraDepth = rotY + 5.5; 
                 double D = 1.0 / cameraDepth;
 
-                // Map coordinates downstream to your 80x22 grid boundaries
+                // Map coordinates downstream to 80x22 grid boundaries
                 int x = (int) (40 + 55 * D * rotX);
                 int y = (int) (11 - 25 * D * rotZ); 
                 int o = x + 80 * y;

@@ -1,4 +1,5 @@
-// TODO: Add&Improve these Cat Breed Variants?
+// TODO: Variant 3 Tabby Cat is too stripey, looks like peppermint
+// TODO: Add more Cat Breed Variants?
 
 public class CatHeadLoader extends Loader {
     private static final StatusStage[] CAT_STAGES = {
@@ -9,9 +10,10 @@ public class CatHeadLoader extends Loader {
             new StatusStage(100, "MeowMrrrreeoww!  Meow!!")
     };
     private static final char[] SHADE_RAMP = { ':', ';', '=', '!', '*', '#', '$', '@', '▒', '▓', '█' };
-    
+
     private String furColor;
-    private String secondaryFurColor; // Used for patches and tabby stripes
+    private String secondaryFurColor;   // Patches / stripes
+    private String tertiaryFurColor;    // Third color for calico (black patches)
     private String earColor;
     private String noseColor;
     private String eyeBorderColor;
@@ -20,8 +22,23 @@ public class CatHeadLoader extends Loader {
     private int breedVariant = 1;
     private double A = 0;
 
+    // Per-instance randomization so markings aren't perfectly repeating/mathematical.
+    // NOTE: these drive fixed-duty-cycle patterns (angle/direction based, not raw
+    // sine-threshold luck) so coverage stays visible regardless of which random
+    // phase gets rolled - see resolveBreedMarking().
+    private static final int CALICO_BLOB_COUNT = 5;
+    private double[] blobDirX = new double[CALICO_BLOB_COUNT];
+    private double[] blobDirY = new double[CALICO_BLOB_COUNT];
+    private double[] blobDirZ = new double[CALICO_BLOB_COUNT];
+    private double[] blobThreshold = new double[CALICO_BLOB_COUNT];
+    private boolean[] blobIsBlack = new boolean[CALICO_BLOB_COUNT];
+
+    private int tabbyStripeCount;
+    private double tabbyPhase, tabbyWarpFreq, tabbyWarpPhase;
+    private double foreheadMOffset, foreheadMWave;
+
     public CatHeadLoader() {
-        // This uses 80x22 specifically[cite: 1]
+        // This uses 80x22 specifically
         super(CAT_STAGES, 80, 22);
     }
 
@@ -29,21 +46,49 @@ public class CatHeadLoader extends Loader {
     protected void initialize() {
         // Randomly select a cat breed variant on initialization, inspired by DonutLoader[cite: 2]
         breedVariant = (int) (Math.random() * 4) + 1;
+
+        // Randomize marking "genetics" per instance so patterns feel organic instead of a fixed formula.
+        // Calico patches: pick blob directions on the unit sphere (avoiding the exact poles so
+        // every blob is reachable) with a threshold band tuned so total coverage never collapses
+        // to near-zero, no matter which random draw comes up.
+        for (int i = 0; i < CALICO_BLOB_COUNT; i++) {
+            double t = 0.25 + Math.random() * (Math.PI - 0.5);
+            double p = Math.random() * Math.PI * 2;
+            blobDirX[i] = Math.sin(t) * Math.cos(p);
+            blobDirY[i] = Math.cos(t);
+            blobDirZ[i] = Math.sin(t) * Math.sin(p);
+            blobThreshold[i] = 0.35 + Math.random() * 0.25; // cosine-similarity cutoff (smaller = bigger patch)
+            blobIsBlack[i] = Math.random() < 0.35;
+        }
+
+        // Tabby stripes are generated from the point's angle around the head rather than raw
+        // local coordinates, so the on-screen stripe fraction stays consistent through the
+        // rotation instead of depending on lucky phase alignment.
+        tabbyStripeCount = 7 + (int) (Math.random() * 5);  // 7-11 stripes, varies cat to cat
+        tabbyPhase = Math.random() * Math.PI * 2;
+        tabbyWarpFreq = 2.0 + Math.random() * 1.5;         // makes stripes waver instead of ruler-straight
+        tabbyWarpPhase = Math.random() * Math.PI * 2;
+
+        foreheadMOffset = 0.14 + Math.random() * 0.05;
+        foreheadMWave = 6.0 + Math.random() * 3.0;
+
         switch (breedVariant) {
             case 1: // --- 1. BLACK CAT W/ GREEN EYES ---
-                furColor = "\u001B[38;5;235m";          // Deep Inkwell Black/Dark Gray[cite: 1]
+                furColor = "\u001B[38;5;235m";          // Deep Inkwell Black/Dark Gray
                 secondaryFurColor = "\u001B[38;5;238m"; // Muted Charcoal
-                earColor = "\u001B[38;5;238m";          // Muted Charcoal Outer Ear[cite: 1]
-                noseColor = "\u001B[38;5;211m";          // Pop-Art Pastel Pink Nose[cite: 1]
-                eyeBorderColor = "\u001B[38;5;112m";    // Spooky Witch-Hazel Green / Slime Lime Iris[cite: 1]
-                eyePupilColor = "\u001B[30m";            // Stark Solid Black for vertical center slit[cite: 1]
-                whiskerColor = "\u001B[38;5;255m";      // Stark White for thin whiskers[cite: 1]
+                tertiaryFurColor = furColor;
+                earColor = "\u001B[38;5;238m";          // Muted Charcoal Outer Ear
+                noseColor = "\u001B[38;5;211m";          // Pop-Art Pastel Pink Nose
+                eyeBorderColor = "\u001B[38;5;112m";    // Spooky Witch-Hazel Green / Slime Lime Iris
+                eyePupilColor = "\u001B[30m";            // Stark Solid Black for vertical center slit
+                whiskerColor = "\u001B[38;5;255m";      // Stark White for thin whiskers
                 break;
 
             case 2: // --- 2. CALICO CAT W/ PATCHES ---
-                furColor = "\u001B[38;5;255m";          // White Base Coat[cite: 1]
+                furColor = "\u001B[38;5;255m";          // White Base Coat
                 secondaryFurColor = "\u001B[38;5;208m"; // Vibrant Ginger/Orange Patches
-                earColor = "\u001B[38;5;208m";          // Ginger Ears
+                tertiaryFurColor = "\u001B[38;5;235m";  // Black patches (real calicos are tri-color)
+                earColor = "\u001B[38;5;255m";          // White Ears
                 noseColor = "\u001B[38;5;209m";          // Soft Peach Nose
                 eyeBorderColor = "\u001B[38;5;220m";    // Amber Gold Eyes
                 eyePupilColor = "\u001B[30m";            // Stark Solid Black
@@ -51,8 +96,9 @@ public class CatHeadLoader extends Loader {
                 break;
 
             case 3: // --- 3. TABBY CAT W/ STRIPES ---
-                furColor = "\u001B[38;5;137m";          // Soft Baked Brown Base[cite: 1]
+                furColor = "\u001B[38;5;137m";          // Soft Baked Brown Base
                 secondaryFurColor = "\u001B[38;5;238m"; // Dark Charcoal Stripes
+                tertiaryFurColor = secondaryFurColor;
                 earColor = "\u001B[38;5;130m";          // Rich Chocolate Outer Ears
                 noseColor = "\u001B[38;5;211m";          // Pastel Pink Nose
                 eyeBorderColor = "\u001B[38;5;214m";    // Bright Orange-Gold Eyes
@@ -64,6 +110,7 @@ public class CatHeadLoader extends Loader {
             default: // --- 4. WHITE CAT W/ BLUE EYES ---
                 furColor = "\u001B[38;5;255m";          // Pure White Fur
                 secondaryFurColor = "\u001B[38;5;252m"; // Light Silver Highlights
+                tertiaryFurColor = furColor;
                 earColor = "\u001B[38;5;218m";          // Soft Pink Inner/Outer Ear
                 noseColor = "\u001B[38;5;218m";          // Light Pink Nose
                 eyeBorderColor = "\u001B[38;5;39m";     // Sky/Sapphire Blue Eyes
@@ -284,25 +331,69 @@ public class CatHeadLoader extends Loader {
                 int shadeIndex = (int) ((luminance + 1.0) * 5.5);
                 shadeIndex = Math.max(0, Math.min(SHADE_RAMP.length - 1, shadeIndex));
                 char asciiChar = SHADE_RAMP[shadeIndex];
-                
+
                 String chosenColor = furColor;
                 if (surfaceType == 1) {
                     chosenColor = earColor;
                 } else if (surfaceType == 2) {
                     chosenColor = noseColor;
                 } else if (surfaceType == 0) {
-                    // Procedural breed markings on the main head spheroid
-                    if (breedVariant == 2) { // Calico patches
-                        boolean isPatch = Math.sin(localX * 3.5) * Math.cos(localZ * 3.5) > 0.3;
-                        if (isPatch) chosenColor = secondaryFurColor;
-                    } else if (breedVariant == 3) { // Tabby stripes
-                        boolean isStripe = Math.sin(localX * 8.0 + localY * 4.0) > 0.4;
-                        if (isStripe) chosenColor = secondaryFurColor;
-                    }
+                    chosenColor = resolveBreedMarking(localX, localY, localZ, chosenColor);
                 }
-                
+
                 outputBuffer[bufferIndex] = chosenColor + asciiChar + RESET;
             }
         }
+    }
+
+    /**
+     * Procedural breed markings, redesigned to read as actual fur patterns rather than
+     * a repeating math grid: organic multi-frequency "noise" for calico blotches, and
+     * warped/wavering stripes plus a classic forehead "M" for the tabby.
+     */
+    private String resolveBreedMarking(double localX, double localY, double localZ, String baseColor) {
+        if (breedVariant == 2) {
+            // CALICO: a handful of irregular patches placed by direction on the unit sphere
+            // (not by raw sine threshold), so coverage is guaranteed regardless of which
+            // random phase this instance happened to roll.
+            double ux = localX / 1.35, uy = localY / 0.95, uz = localZ / 0.95;
+            double mag = Math.sqrt(ux * ux + uy * uy + uz * uz);
+            if (mag > 0) {
+                ux /= mag; uy /= mag; uz /= mag;
+            }
+            for (int i = 0; i < CALICO_BLOB_COUNT; i++) {
+                double dot = ux * blobDirX[i] + uy * blobDirY[i] + uz * blobDirZ[i];
+                if (dot > blobThreshold[i]) {
+                    return blobIsBlack[i] ? tertiaryFurColor : secondaryFurColor;
+                }
+            }
+            return baseColor; // white base showing through
+        }
+
+        if (breedVariant == 3) {
+            // Classic tabby "M" on the forehead: two soft, wavering strokes just above
+            // the eyes/nose bridge, close to center.
+            boolean onForehead = localY < -0.25 && localY > -0.72 && localZ < -0.45;
+            if (onForehead) {
+                double stroke = Math.abs(Math.abs(localX) - (foreheadMOffset + 0.10 * Math.sin(localY * foreheadMWave)));
+                if (stroke < 0.06) {
+                    return secondaryFurColor;
+                }
+            }
+
+            // Body stripes: driven by the point's angle around the head (like real mackerel
+            // tabby banding wrapping the body) rather than raw local X, so the on-screen
+            // stripe fraction stays roughly constant through the whole rotation instead of
+            // depending on lucky phase alignment. A gentle vertical warp keeps them from
+            // looking ruler-straight.
+            double angle = Math.atan2(localZ, localX);
+            double warp = 0.15 * Math.sin(localY * tabbyWarpFreq + tabbyWarpPhase);
+            double band = Math.sin((angle + warp) * tabbyStripeCount + tabbyPhase);
+            if (band > 0.25) {
+                return secondaryFurColor;
+            }
+        }
+
+        return baseColor;
     }
 }

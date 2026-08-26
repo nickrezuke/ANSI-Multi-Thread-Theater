@@ -162,7 +162,7 @@ public class CheckersLoader extends Loader {
         if (bestMove.isJump && bestMove.capturedIdx != -1) {
             board[bestMove.capturedIdx] = EMPTY;
         }
-        // Handle King promotions at back ranks using your exact constants
+        // Handle King promotions at back ranks using the exact constants
         // Strip the side flags (RED_SIDE/BLACK_SIDE) to look at just the piece type
         int plainPieceType = board[bestMove.to] & 7;
         if (plainPieceType == RED_PAWN && (bestMove.to / 8 == 0)) {

@@ -19,7 +19,7 @@ public class ChicagoBeanLoader extends Loader {
     private static final int BASE_G = 145;
     private static final int BASE_B = 155;
 
-    // Fixed overhead studio light (the sphere's rim light, unchanged)
+    // Overhead studio light (the sphere's rim light)
     private static final double OVERHEAD_X = 0.577;
     private static final double OVERHEAD_Y = -0.707;
     private static final double OVERHEAD_Z = -0.408;

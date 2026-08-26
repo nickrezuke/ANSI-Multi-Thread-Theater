@@ -1,5 +1,3 @@
-// TODO: Make the lighting / shading such that the sun is the light source on the planet
-
 import java.util.Arrays;
 
 public class GravityFabricLoader extends Loader {
@@ -46,12 +44,9 @@ public class GravityFabricLoader extends Loader {
         double orbitRadius = 7.0;
         double planetX = orbitRadius * Math.cos(timeClock * 1.1);
         double planetZ = orbitRadius * Math.sin(timeClock * 1.1);
-        double planetMass = 1.9;
+        double planetMass = 2.0;
 
         double zoomFactor = 2.5;
-
-        // 3D Lighting engine vector for rendering volumetric spheres (Lambertian)
-        double lx = 0.577, ly = 0.577, lz = -0.577;
 
         // ====================================================================
         // PASS 1: THE SPACETIME FABRIC GRID (Rotating Wireframe)
@@ -100,7 +95,7 @@ public class GravityFabricLoader extends Loader {
         }
 
         // ====================================================================
-        // PASS 2: THE 3D SOLAR SPHERE CORE (Rotating Mass)
+        // PASS 2: THE 3D SOLAR SPHERE CORE (Self-Illuminating Light Source)
         // ====================================================================
         double sunRadius = 1.8; 
         double sunCenterY = -0.1; 
@@ -128,19 +123,33 @@ public class GravityFabricLoader extends Loader {
                         if (screenX < 0 || screenX >= WIDTH || screenY < 0 || screenY >= HEIGHT) continue;
 
                         int bufferIndex = screenX + WIDTH * screenY;
-                        zBuffer[bufferIndex] = finalZ;
-
-                        double exposure = (sx / sunRadius) * lx + (sy / sunRadius) * ly + (sz / sunRadius) * lz;
-                        char glyph = (exposure > 0.4) ? '#' : (exposure > 0.0) ? 'O' : (exposure > -0.4) ? '*' : ':';
                         
-                        outputBuffer[bufferIndex] = "\u001B[38;5;220m" + glyph + RESET; // Radiant Gold
+                        // Z-Buffer check to only render the front-facing hemisphere
+                        if (finalZ < zBuffer[bufferIndex]) {
+                            zBuffer[bufferIndex] = finalZ;
+
+                            // Calculate normal vector of the sun's surface
+                            double nx = sx / sunRadius;
+                            double ny = sy / sunRadius;
+                            double nz = sz / sunRadius;
+
+                            // Rotate normal identically to geometry to find normal relative to camera
+                            double rotNz = nx * sinY + nz * cosY;
+                            double finalNz = (-ny) * sinP + rotNz * cosP;
+
+                            // Exposure based purely on camera-facing angle (limb darkening) to create a glowing volume
+                            double exposure = -finalNz; 
+                            char glyph = (exposure > 0.8) ? '#' : (exposure > 0.5) ? 'O' : (exposure > 0.2) ? '*' : ':';
+                            
+                            outputBuffer[bufferIndex] = "\u001B[38;5;220m" + glyph + RESET; // Radiant Gold
+                        }
                     }
                 }
             }
         }
 
         // ====================================================================
-        // PASS 3: THE 3D PLANET SPHERE CORE (Rotating Orbit)
+        // PASS 3: THE 3D PLANET SPHERE CORE (Lit by the Sun)
         // ====================================================================
         double planetRadius = 0.5; 
         double planetCenterY = 0.1; 
@@ -168,12 +177,33 @@ public class GravityFabricLoader extends Loader {
                         if (screenX < 0 || screenX >= WIDTH || screenY < 0 || screenY >= HEIGHT) continue;
 
                         int bufferIndex = screenX + WIDTH * screenY;
-                        zBuffer[bufferIndex] = finalZ;
+                        
+                        // Z-Buffer check prevents dark side of planet from overwriting the lit side
+                        if (finalZ < zBuffer[bufferIndex]) {
+                            zBuffer[bufferIndex] = finalZ;
 
-                        double exposure = (px / planetRadius) * lx + (py / planetRadius) * ly + (pz / planetRadius) * lz;
-                        char glyph = (exposure > 0.3) ? '@' : (exposure > -0.2) ? '8' : '=';
+                            // 1. Calculate direction vector FROM the planet TO the sun
+                            double dirX = sunX - worldX;
+                            double dirY = sunCenterY - worldY;
+                            double dirZ = sunZ - worldZ;
+                            double mag = Math.sqrt(dirX * dirX + dirY * dirY + dirZ * dirZ);
+                            dirX /= mag;
+                            dirY /= mag;
+                            dirZ /= mag;
 
-                        outputBuffer[bufferIndex] = "\u001B[38;5;81m" + glyph + RESET; // Sky Blue
+                            // 2. Normal vector of the planet's surface at this local point
+                            double nx = px / planetRadius;
+                            double ny = py / planetRadius;
+                            double nz = pz / planetRadius;
+
+                            // 3. Lambertian reflectance (dot product of normal and light direction)
+                            double exposure = (nx * dirX) + (ny * dirY) + (nz * dirZ);
+                            
+                            // High exposure creates the daytime face, low exposure maps out the nighttime face
+                            char glyph = (exposure > 0.3) ? '@' : (exposure > -0.2) ? '8' : '=';
+
+                            outputBuffer[bufferIndex] = "\u001B[38;5;81m" + glyph + RESET; // Sky Blue
+                        }
                     }
                 }
             }

@@ -212,7 +212,7 @@ public class ToyTrainLoader extends Loader {
 
         // Red Side Coupling Rods (Connecting wheel centers)
         // Red Side Coupling Rods (Simulating a rotating eccentric crank/driving rod)
-        // We use a time-varying phase angle based on B (or your animation tick)
+        // We use a time-varying phase angle based on B
         double crankRadius = 0.15; // The radius of the crank pin rotation around the wheel center
         double crankAngle = B * 20.0; // Speed multiplier for the wheel rotation
         

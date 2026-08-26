@@ -232,7 +232,7 @@ public class ApolloLunarModuleLoader extends Loader {
             rotNY /= nLen;
             rotNZ /= nLen;
         }
-        // Camera Depth: Now rotZ is your depth vector into the screen distance
+        // Camera Depth: Now rotZ is the depth vector into the screen distance
         double cameraDepth = rotZ + 2.7;
         if (cameraDepth <= 0.1)
             return;

@@ -113,7 +113,6 @@ public class PacManSphereLoader extends Loader {
             double pelletDistance = 1.7 - ((1-mouthOpenFactor) * 1.2);
             
             // Map the pellet in front of Pacman's mouth wedge profile alignment
-            // Mouth center in your phi sweep sits mathematically along the local X positive/Z neutral profile
             double pelletLocalX = pelletDistance;
             double pelletLocalY = 0.0; // Level height path alignment
             double pelletLocalZ = 0.0;

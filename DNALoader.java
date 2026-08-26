@@ -67,7 +67,7 @@ public class DNALoader extends Loader {
                     double nz = cosPhi * sinT;
                     double ny = sinPhi;
 
-                    // Step A: Rotate around Y-axis (C) -> Clean horizontal spinner spin
+                    // Step A: Rotate around Y-axis (C) -> Clean horizontal spin
                     double xRotY = x3d * cosC - z3d * sinC;
                     double zRotY = x3d * sinC + z3d * cosC;
                     double yRotY = y3d;

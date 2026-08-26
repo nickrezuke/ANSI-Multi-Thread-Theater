@@ -179,9 +179,7 @@ abstract public class TexelCubeLoader extends Loader {
         angle += 0.025;
     }
 
-    // This is where the fun happens.... Define this in your own class!!
-    // Look at the code for TexelMinecraftGrassBlock.java, notice how this
-    // method is the only thing needed to define to create your own custom cube...
+    // This is the method that defines the faces of the cube
     protected abstract VoxelTexel getCubeTexel(int face, int x, int y);
 
     // The actual Texels we deal with

@@ -67,6 +67,7 @@ public class LoaderFactory {
         register("TexelFlatEarth", TexelFlatEarthLoader::new);
         register("TexelMario64CapBlock",TexelMario64CapBlockLoader::new);
         register("TexelGlitch", TexelGlitchLoader::new);
+        // register("StanfordDragon", StanfordDragonLoader::new); TODO Make a "Stanford Dragon" Loader
         register(List.of("Aizawa", "AizawaAttractor"), AizawaLoader::new);
         register("TexelRubixCube", TexelRubixCubeLoader::new);
         register("TexelGreyRubix", TexelGreyRubixLoader::new);
@@ -82,23 +83,28 @@ public class LoaderFactory {
         register("IkedaRibbon", IkedaRibbonLoader::new);
         register("Synthwave", SynthWaveLoader::new);
         register("BarnsleyFernZoom", BarnsleyFernZoomLoader::new);
+        // register("PyramidsOfGiza", PyramidsOfGizaLoader::new); TODO Make a "Pyramids Of Giza" Loader
+        // register("Sphinx", SphinxLoader::new); TODO Make a "Sphinx" Loader
         register("Mercury", MercuryLoader::new);
         register("Vaporwave", VaporWaveLoader::new);
         register("LunarLander", LunarLanderLoader::new);
-        //register("Cupcake", CupcakeLoader::new); TODO Make a Cupcake loader (with flavor variants??)
+        //register("StatueOfLiberty", StatueOfLibertyLoader::new); TODO Make a "Statue Of Liberty" Loader
         register("Taco", TacoLoader::new);
         register("Jupiter", JupiterLoader::new);
+        //register("Cupcake", CupcakeLoader::new); TODO Make a Cupcake loader (with flavor variants??)
         register(List.of("GreyScottReactionDiffusion", "ReactionDiffusion", "DiffusionReaction"), ReactionDiffusionLoader::new);
         register("MotorcycleRacer", MotorcycleRacerLoader::new);
         register("TexelEldritchAetherCube", TexelEldritchAetherCubeLoader::new);
         register("Radar", RadarLoader::new);
+        //register(List.of("RomanColosseum", "Colosseum"), RomanColosseumLoader::new); TODO Make a "Roman Colosseum" Loader
         register(List.of("NASAShuttle", "SpaceShuttle"), SpaceShuttleLoader::new);
         register("PsychedelicIcosahedron", PsychedelicIcosahedronLoader::new);
         register("HillTree", HillTreeLoader::new);
+        //register(List.of("AcropolisOfAthens", "Acropolis"), AcropolisOfAthensLoader::new); TODO Make an "Acropolis Of Athens" Loader
         register("StanfordBunny", StanfordBunnyLoader::new);
         register("MandelbrotZoom", MandelbrotZoomLoader::new);
         register("DNA", DNALoader::new);
-        //register(List.of("TheSun", "Sol", "Sun"), SolarLoader::new); TODO Make a Loader for just the Sun
+        //register(List.of("TheSun", "Sol", "Sun"), SolarLoader::new); TODO Make a Loader for just the Sun itself
         //register(List.of("SolarSystem", "TheSolarSystem"), SolarSystemLoader::new); TODO Make a Loader for the whole Solar System
         register("Pendulum", PendulumLoader::new);
         register("Saturn", SaturnLoader::new);
@@ -139,6 +145,7 @@ public class LoaderFactory {
         register("Louvre", LouvreLoader::new);
         register(List.of("FluidDynamics", "NavierStokes"), FluidDynamicsLoader::new);
         register(List.of("DJ", "DJTurntable"), DJTurntableLoader::new);
+        //register("MarioCoin", MarioCoinLoader::new); TODO Make a reflective gold "Mario Coin" loader
         register("Moon", MoonLoader::new);
         register("PerlinNoiseA", PerlinNoiseLoaderA::new);
         register(List.of("ApolloLunarModule", "LunarModule"), ApolloLunarModuleLoader::new);
@@ -146,6 +153,7 @@ public class LoaderFactory {
         register("SydneyOperaHouse", SydneyOperaHouseLoader::new);
         register("Cookie", CookieLoader::new);
         register("EiffelTower", EiffelTowerLoader::new);
+        //register("MachuPicchu", MachuPicchuLoader::new); TODO Make a "Machu Picchu" loader
         register(List.of("HubbleTelescope", "Hubble"), HubbleTelescopeLoader::new);
         register(List.of("Voyager", "VoyagerSpacecraft", "VoyagerProbe"), VoyagerLoader::new);
         register("TajMahal", TajMahalLoader::new);
@@ -154,6 +162,7 @@ public class LoaderFactory {
         register("BigBen", BigBenLoader::new);
         register("TexelKevinCube", TexelKevinCubeLoader::new);
         register("NyanCat", NyanCatLoader::new);
+        //register("MtFuji", MtFujiLoader::new); TODO Make a Mt. Fuji loader
         register("BouncingSpinner", BouncingSpinnerLoader::new);
         register("TexelHyperchromaticKaleidoscope", TexelHyperchromaticKaleidoscopeLoader::new);
         register("DancingBanana", DancingBananaLoader::new);
@@ -169,6 +178,7 @@ public class LoaderFactory {
         register("Chess", ChessLoader::new);
         register("Checkers", CheckersLoader::new);
         register("Tetris", TetrisLoader::new);
+        //register("ChickenItza", ChickenItzaLoader::new); TODO Make a "Chicken Itza" loader
         register("Asteroids", AsteroidsLoader::new);
         register("Centepede", CentipedeLoader::new);
         register("Fish", FishLoader::new);

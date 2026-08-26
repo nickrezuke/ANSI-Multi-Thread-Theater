@@ -447,7 +447,7 @@ public class AppleLoader extends Loader {
             nz1 = 0.0;
         }
 
-        // Fixed overhead illumination vector
+        // Overhead illumination vector
         double L = nx2 * 0.0 + ny2 * 0.8 - nz1 * 0.6;
 
         if (window_height > y && y > 0 && x > 0 && window_width > x && D > (zBuffer[o] + 0.0001)) {

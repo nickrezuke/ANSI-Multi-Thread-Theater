@@ -577,8 +577,7 @@ public class StanfordBunnyLoader extends Loader {
         double cameraDepth = rotY + 5.0;
         double D = 1.0 / cameraDepth;
 
-        // Project onto the canvas, scaled relative to its actual
-        // dimensions rather than a fixed 80x22 assumption.
+        // Project onto the canvas, scaled relative to its dimensions.
         int sx = (int) (width / 2.0 + (width * 0.62) * D * rotX);
         int sy = (int) (height / 2.0 - (height * 1.05) * D * (rotZ + 0.1));
         int o = sx + width * sy;

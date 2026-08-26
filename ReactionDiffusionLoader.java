@@ -198,7 +198,7 @@ public class ReactionDiffusionLoader extends Loader {
         }
 
         // --- SUB-SAMPLED 2x2 BLOCK RENDERING PASS ---
-        // Down-samples the 280x84 math array onto your 140x42 console canvas
+        // Down-samples the 280x84 math array onto 140x42 console canvas
         for (int displayY = 0; displayY < DISPLAY_H; displayY++) {
             for (int displayX = 0; displayX < DISPLAY_W; displayX++) {
 

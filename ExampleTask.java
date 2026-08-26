@@ -6,7 +6,7 @@ public class ExampleTask {
     protected static final String SHOW_CURSOR = "\u001b[?25h";
 
     public static void main(String[] args) {
-        // This serves as an example file / existing code 
+        // This serves as an example file / existing code
         // segment that would like to use a loader.
         // Here are the steps to do so in your own code:
 
@@ -17,11 +17,13 @@ public class ExampleTask {
 
         // 1. Evaluate the desired loader and create it
         String userPreference = (args.length > 0) ? args[0] : null;
-        // Here we pass one in when we ran ExampleTask, but you can 
+        // Here we pass one in when we ran ExampleTask, but you can
         // do whatever you like, use a specific one, random one, etc.
         Loader loader = LoaderFactory.createLoaderInstance(userPreference); // Create it using our factory
-        //Loader loader = LoaderFactory.createLoaderInstance("Donut"); // Or do a specific one...
-        //Loader loader = LoaderFactory.createLoaderInstance(); // Or do a random one...
+        // Loader loader = LoaderFactory.createLoaderInstance("Donut"); // Or do a
+        // specific one...
+        // Loader loader = LoaderFactory.createLoaderInstance(); // Or do a random
+        // one...
 
         // 2. Register an emergency thread that fires exclusively when Control+C is hit.
         // This acts as a bulletproof structural cleanup routine in case your users are
@@ -45,17 +47,17 @@ public class ExampleTask {
         try {
 
             // In theory, you would be running your code block right inside
-            // this try block right here:_____ and if you're able to
+            // this try block right here:... and if you're able to
             // meaningfully calculate/evaluate your progress with
-            // some int p ranged [0,100], you can pass that through to update the loading
-            // bar progress
+            // some int p ranged [0,100], you can pass that through to setProgress
+            // to pereodically update the loading bar progress
 
             // I simulate this "long intense process" by just looping and running
             // sleep() for a bit before updating the progress variable in increments
             // from 0% to 100% over a few seconds
             for (int p = 0; p <= 100; p += 1) {
                 loader.setProgress(p); // Push progress values to the loader to update it
-                Thread.sleep(250); // Simulating 250ms of work time...
+                Thread.sleep(300); // Simulating 300ms of work time...
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

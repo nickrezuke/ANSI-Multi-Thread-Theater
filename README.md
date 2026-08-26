@@ -1,10 +1,10 @@
-# Loading Spinners: Advanced Real-Time ASCII Shading Engine
+# ANSI Multi-Thread Theater: An Advanced Real-Time ASCII Shading Engine
 
 <img width="1634" height="977" alt="LoaderSpinners" src="https://github.com/user-attachments/assets/e1518dbc-a493-4cf1-9bb0-5b938c9f6fb6" />
 
-This project is a collection of real-time 3D ASCII graphics, able to be viewed with this rendering engine built entirely in vanilla Java. While the original concept proved that 3D graphics could be projected onto a flat text grid for animating 3D graphics from within the terminal itself, this project goes a little bit farther and transforms that novelty into a proper loading-screen framework for use in Java. Depending on the loading screen selected, it introduces full ANSI TrueColor ray-lit compositing, geometric abstractions, advanced math/physics simulations, and sometimes even real-time input handling, all controlled under asynchronous thread messaging to serve as a functional and visually stunning "loading screen" for active Java background processes.
+This project is a collection of real-time 3D ASCII / ANSI graphics, able to be viewed with this rendering engine built entirely in vanilla Java. Depending on the loading screen selected, it introduces full ANSI TrueColor ray-lit compositing, geometric abstractions, advanced math/physics simulations, and sometimes even real-time input handling, all controlled under asynchronous thread messaging to serve as a functional and visually stunning "loading screen" for active Java background processes.
 
-The idea for this project came from the famous Andy Sloane’s `donut.c`, definitely check out the [original code by Andy Sloane](https://www.a1k0n.net/2006/09/15/obfuscated-c-donut.html) inspirtion behind this. The [explanation page here](https://www.a1k0n.net/2011/07/20/donut-math.html) shows the math behind it.
+The idea for this project came from the famous Andy Sloane’s `donut.c`, definitely check out the [original code by Andy Sloane](https://www.a1k0n.net/2006/09/15/obfuscated-c-donut.html) inspirtion behind this. The [explanation page here](https://www.a1k0n.net/2011/07/20/donut-math.html) shows the math behind it. While the original concept certainly proved that 3D graphics could be projected onto a flat text grid for animating 3D graphics from within the terminal itself, this project goes a little bit farther and transforms that novelty into a proper loading-screen framework for use in Java, along with a sizable library of high quality artwork. 
 
 ---
 
@@ -15,7 +15,7 @@ The idea for this project came from the famous Andy Sloane’s `donut.c`, defini
 * **Live Progress Bar Binding**: Real-time cross-thread communication loops allow your worker function to feed granular progress updates to the active `Loader`, updating a stylized ASCII progress bar dynamically by passing it a value (0-100 inclusive) for the percent complete.
 * **TrueColor Shading & Custom Palettes**: Features custom illumination models, specular glints, edge-glow, and per-pixel programmatic tint mapping utilizing raw terminal character sequences to bring style to an otherwise entirely mathematical endeveour.
 * **Extesive Library Collection**: Includes the iconic Andy Sloane donut (torus), cubes, spheres, pyramids, and completely custom math meshes.  Simulations, including a Mandelbrot Zoom, Conways Game of Life, the famous Double Slit Experiment, Fluid Mechanics, etc. are also available. Also attempts to recreate a few real world recognizable locations such as the Lourve and Big Ben. Some Loaders are even interactable, responding to inputs in real time.  With well over 150 different loaders, you'll rarely see the same loading screen twice, hopefully lengthening the novelty of the visualizations and perhaps even bringing some visual satisfaction to an otherwise understimulating waiting period.
-* **Raw Mode Handling**: Some loaders allow direct input from the keyboard to interact with the scene.  Some are 
+* **Raw Mode Handling**: Some loaders allow direct input from the keyboard to interact with the scene.  Some are playable games, while others can merely be interacted with and controlled to some extent.
 
 ---
 
@@ -31,7 +31,7 @@ At the heart of the engine is an object-oriented rendering pipeline. All loaders
 This project comes packed with a ton of different variants, all derived from a common footprint:
 <!-- TODO: Elaborate on this section -->
 
-### Initial Loaders
+### Initial General Loaders
 
 -> **Donut**: My take on the classic, an upgraded and color-customized adaptation of Sloane's original code.  I gave it triginometric frosting, a half dozen random color variants, and a sprinkle map.
 
@@ -71,6 +71,8 @@ This project comes packed with a ton of different variants, all derived from a c
 
 -> **ToyTrain**: <!-- TODO: Elaborate on this section -->
 
+-> **SpiderWeb**: <!-- TODO: Elaborate on this section -->
+
 -> **Fish**: <!-- TODO: Elaborate on this section -->
 
 ### Real Models
@@ -83,6 +85,8 @@ I also included a few classic "graphics processing" loaders
 -> **CornellBox**: <!-- TODO: Elaborate on this section -->
 
 -> **SuzanneTheMonkey**: <!-- TODO: Elaborate on this section -->
+
+-> **StanfordDragon**: <!-- TODO: Elaborate on this section -->
 
 -> **BadApple**: <!-- TODO: Elaborate on this section -->
 
@@ -166,6 +170,8 @@ I also included a few classic "graphics processing" loaders
 
 -> **PacManSphere**: <!-- TODO: Elaborate on this section -->
 
+-> **MarioCoin**: <!-- TODO: Elaborate on this section -->
+
 -> **SonicRings**: <!-- TODO: Elaborate on this section -->
 
 ### Surface Light Reflection Logic
@@ -244,7 +250,7 @@ I also included a few classic "graphics processing" loaders
 
 -> **BaukusManifold**: <!-- TODO: Elaborate on this section -->
 
-### Proper Simulations
+### Advanced Simulations
 
 -> **DFSMazeSolver**: <!-- TODO: Elaborate on this section -->
 
@@ -263,8 +269,6 @@ I also included a few classic "graphics processing" loaders
 -> **BarnsleyFernZoom**: <!-- TODO: Elaborate on this section -->
 
 -> **RockPaperScissors**: <!-- TODO: Elaborate on this section -->
-
--> **SpiderWeb**: <!-- TODO: Elaborate on this section -->
 
 -> **GaltonBoard**: <!-- TODO: Elaborate on this section -->
 
@@ -302,9 +306,11 @@ I also included a few classic "graphics processing" loaders
 
 -> **IkedaRibbon**: <!-- TODO: Elaborate on this section -->
 
--> **GraphPlot**: I also made a "Desmos"-like 2D graph plotter, which can handle plotting arbitrary equations.  Includes a way to pass your own equations.
+### Graph Plot
 
-### Iconic Locations
+-> **GraphPlot**: This one deserves its own section entirely. This "Desmos"-like 2D graph plotter, which can handle plotting arbitrary equations, even includes a way to pass your own equations.  I format them as F(x) - F(y) - C = 0, rather than modeling them as y = F(x) so that we can plot non-functions (like circles eg. x^2 + y^2 = 5)
+
+### Iconic Real-World Locations
 
 -> **BigBen**: <!-- TODO: Elaborate on this section -->
 
@@ -316,9 +322,26 @@ I also included a few classic "graphics processing" loaders
 
 -> **SydneyOperaHouse**: <!-- TODO: Elaborate on this section -->
 
+-> **PyramidsOfGiza**: <!-- TODO: Elaborate on this section -->
+
+-> **AcropolisOfAthens**: <!-- TODO: Elaborate on this section -->
+
+-> **StatueOfLiberty**: <!-- TODO: Elaborate on this section -->
+
 -> **EiffelTower**: <!-- TODO: Elaborate on this section -->
 
--> **EyeOfProvidence**: <!-- TODO: Elaborate on this section -->
+-> **MachuPicchu**: <!-- TODO: Elaborate on this section -->
+
+-> **RomanColosseum**: <!-- TODO: Elaborate on this section -->
+
+-> **EyeOfProvidence**: This one is definitely real, I've been there myself and I can personally testify that the eye does indeed come around more than you think it should. That's just how the eye is don't question what you can't understand.
+
+-> **MtFuji**: <!-- TODO: Elaborate on this section -->
+
+-> **Sphinx**: <!-- TODO: Elaborate on this section -->
+
+-> **ChickenItza**: <!-- TODO: Elaborate on this section -->
+
 
 ### Scenery and Ambience
 
@@ -422,28 +445,19 @@ Note to self: Other ideas to consider:
 Raymarched Mandelbulb 3D too intense?  (can barely handle 2D Mandelbrot set lmao)
 Quantum Wavefunction Interference
 Schrodinger / Gaussian Wave Packet hitting a potential barrier (tunneling and reflection)
-Stanford Dragon
 Sponza Atrium (like floating the camera around like a drone flight or walk?)
-Comet / Meteor / Shooting Star?
-Tower of Hanoi Solver?
-Sunflower? or flowers in general?
-Super Mario Reflective Gold Coin?
 Pulsars / Quazars
-Gravitational Lensing Simulation?
 Accretion Disk
+Comet / Meteor / Shooting Star?
+Gravitational Lensing Simulation?
+Structural Resonance Frequency vs Height of several lolipop weights
 Something with the high-detail resolution trick w/ blocks https://en.wikipedia.org/wiki/Block_Elements 
 Newton's Cradle Balls Swinging / Clacking
-3D Galton Board?  Like giant pyramid of 3D to make 
+3D Galton Board?  Like giant pyramid of 3D to make a 3D gaussian curve?
 2D Scene of an Aquarium / Coral Reef?
-Something to do with Lehigh
-Something to do with CCSU (Blue Devil?)
-Roman Collesseum
-Pyramids of Giza / Sphinx
-Acropolis of Athens
-Machu Pichu
-Statue of Liberty
-Mt. Fuji?
-Structural Resonance Frequency vs Height of several lolipop weights
+Tower of Hanoi Solver?
+Something to do with Lehigh or CCSU (3D model of The Blue Devil Itself??)
+Sunflower? or flowers in general?
 Andy's Fire https://www.a1k0n.net/2007/08/24/obfuscated-c-fire.html
 Interactive Tanks-like Aiming & Shooting game w/ breakable ground
 Interactive Tile Sliding Puzzle (like pokemon ice dungeon)

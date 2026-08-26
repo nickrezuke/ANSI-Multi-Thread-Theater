@@ -136,7 +136,7 @@ public class UranusLoader extends Loader {
                 double ly = baseRadius * sinTheta * sinPhi;
                 double lz = baseRadius * cosTheta * flattenFactor;
 
-                // Matrix Transformation (Globe is left un-rolled, keeping your original lighting math)
+                // Matrix Transformation
                 double rx = lx * cosTZ - ly * sinTZ;
                 double tmpY = lx * sinTZ + ly * cosTZ;
                 double ry = tmpY * cosTX - lz * sinTX;
