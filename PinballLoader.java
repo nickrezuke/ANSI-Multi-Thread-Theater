@@ -1,5 +1,3 @@
-//TODO: This is very barebones... Improve this...
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -7,13 +5,13 @@ import java.util.Random;
 
 public class PinballLoader extends InteractiveLoader {
     private static final StatusStage[] PINBALL_STAGES = {
-            new StatusStage(100, "[Arrow Keys control Flippers!!]")
+            new StatusStage(100, "ARCADE BOOT SEQUENCE INITIATED... [Arrow Keys Control Flippers!]")
     };
 
     private static final int WIDTH = 110;
     private static final int HEIGHT = 30;
 
-    // Ball Physics State
+    // Ball Physics State (Untouched Math)
     private volatile double ballX = 55.0;
     private volatile double ballY = 6.0;
     private volatile double ballVX = 0.4;
@@ -30,6 +28,11 @@ public class PinballLoader extends InteractiveLoader {
     // Game Matrix Flow
     private int score = 0;
     private int crashFreezeTimer = 0;
+    private int frameTick = 0; // Universal clock for ambient pulsing/animations
+
+    // Motion Trail Buffers
+    private final double[] trailX = new double[6];
+    private final double[] trailY = new double[6];
 
     // Playfield Bumpers
     private static class Bumper {
@@ -46,18 +49,32 @@ public class PinballLoader extends InteractiveLoader {
 
     private final List<Bumper> bumpers = new ArrayList<>();
 
-    // Aesthetic Palette Strings
-    private static final String COLOR_CHASSIS = "\u001B[38;2;60;65;80m"; // Steel Blue Machine
-    private static final String COLOR_BUMPER = "\u001B[38;2;255;45;140m"; // Neon Pink Bumpers
-    private static final String COLOR_BUMPER_HIT = "\u001B[97m"; // Flash Bright White
-    private static final String COLOR_FLIPPER = "\u001B[38;2;0;240;180m"; // Cyber Cyan Paddles
-    private static final String COLOR_BALL = "\u001B[38;2;240;240;255m"; // Silver Chrome Ball
-    private static final String COLOR_TXT = "\u001B[38;2;255;210;0m"; // Matrix Gold Text
+    // Enhanced Synthwave / Neon Arcade Palette
+    private static final String C_CAB_OUTER  = "\u001B[38;2;30;25;45m";   // Deep Cabinet Purple
+    private static final String C_CAB_INNER  = "\u001B[38;2;0;200;255m";  // Neon Cyan Rails
+    private static final String C_GRID_IDLE  = "\u001B[38;2;25;20;40m";   // Subtle Dark Playfield Grid
+    private static final String C_GRID_GLOW  = "\u001B[38;2;55;35;75m";   // Pulsing Playfield Grid
+    
+    private static final String C_BUMP_CORE  = "\u001B[38;2;255;0;100m";  // Hot Pink Bumper Base
+    private static final String C_BUMP_PULSE = "\u001B[38;2;255;80;180m"; // Soft Pink Idle Pulse
+    private static final String C_BUMP_HIT   = "\u001B[97m";              // Blinding White Flash
+    
+    private static final String C_FLIP_JOINT = "\u001B[38;2;255;200;0m";  // Mechanical Orange Pivot
+    private static final String C_FLIP_PAD   = "\u001B[38;2;0;255;150m";  // Bright Neon Green Paddles
+    
+    private static final String C_BALL       = "\u001B[38;2;240;240;255m"; // Silver Chrome
+    private static final String C_TRAIL_1    = "\u001B[38;2;120;140;200m"; // Cool Blue Wake
+    private static final String C_TRAIL_2    = "\u001B[38;2;60;80;140m";   // Fading Blue Wake
+    private static final String C_TRAIL_3    = "\u001B[38;2;30;40;80m";    // Dark Blue Wake
+    
+    private static final String C_DMD_BG     = "\u001B[38;2;15;5;0m";      // Dark Marquee Glass
+    private static final String C_DMD_TXT    = "\u001B[38;2;255;80;0m";    // Dot-Matrix Orange Text
 
     private final Random random = new Random();
 
     public PinballLoader() {
         super(PINBALL_STAGES, WIDTH, HEIGHT);
+        // Playfield Layout (Kept Original Coordinates)
         bumpers.add(new Bumper(45, 8, 100));
         bumpers.add(new Bumper(65, 8, 100));
         bumpers.add(new Bumper(55, 13, 250));
@@ -70,6 +87,7 @@ public class PinballLoader extends InteractiveLoader {
         resetBall();
         this.score = 0;
         this.crashFreezeTimer = 0;
+        this.frameTick = 0;
     }
 
     private void resetBall() {
@@ -77,6 +95,10 @@ public class PinballLoader extends InteractiveLoader {
         this.ballY = 4.0;
         this.ballVX = (random.nextBoolean() ? 0.3 : -0.3);
         this.ballVY = 0.1;
+        
+        // Flush trail off-screen
+        Arrays.fill(trailX, -100.0);
+        Arrays.fill(trailY, -100.0);
     }
 
     @Override
@@ -85,18 +107,18 @@ public class PinballLoader extends InteractiveLoader {
             return;
 
         switch (keyCode) {
-            case 'D': // Arrow LEFT -> Actuate Left Paddle
+            case 'D': // Arrow LEFT
                 leftFlipperActive = true;
-                leftFlipperTimer = 4; // Keep raised for 4 frames
+                leftFlipperTimer = 4;
                 break;
-            case 'C': // Arrow RIGHT -> Actuate Right Paddle
+            case 'C': // Arrow RIGHT
                 rightFlipperActive = true;
                 rightFlipperTimer = 4;
                 break;
             case 'A':
-            case 'B': // Arrow UP&DOWN -> Actuate Both
+            case 'B': // Arrow UP/DOWN (Both)
                 leftFlipperActive = true;
-                leftFlipperTimer = 4; // Keep raised for 4 frames
+                leftFlipperTimer = 4;
                 rightFlipperActive = true;
                 rightFlipperTimer = 4;
                 break;
@@ -105,43 +127,34 @@ public class PinballLoader extends InteractiveLoader {
 
     @Override
     protected void renderGeometry(String[] outputBuffer, double[] zBuffer) {
-        // Clear background array setup
         Arrays.fill(zBuffer, 0.0);
-        for (int i = 0; i < outputBuffer.length; i++) {
-            outputBuffer[i] = " ";
-        }
+        Arrays.fill(outputBuffer, " ");
+        frameTick++;
 
-        // Tick down flipper mechanics
-        if (leftFlipperTimer > 0) {
-            leftFlipperTimer--;
-            if (leftFlipperTimer == 0)
-                leftFlipperActive = false;
-        }
-        if (rightFlipperTimer > 0) {
-            rightFlipperTimer--;
-            if (rightFlipperTimer == 0)
-                rightFlipperActive = false;
-        }
+        // Flipper Cooldowns
+        if (leftFlipperTimer > 0) if (--leftFlipperTimer == 0) leftFlipperActive = false;
+        if (rightFlipperTimer > 0) if (--rightFlipperTimer == 0) rightFlipperActive = false;
 
-        // 1. BALL PHYSICS RESOLUTIONS
+        // -------------------------------------------------------------
+        // 1. BALL PHYSICS & MOTION RECORDING
+        // -------------------------------------------------------------
         if (crashFreezeTimer > 0) {
-            crashFreezeTimer--;
-            if (crashFreezeTimer == 0) {
-                resetBall(); // Endless continuous looping reset block
-            }
+            if (--crashFreezeTimer == 0) resetBall();
         } else {
+            // Record Motion Trail before moving
+            for (int i = trailX.length - 1; i > 0; i--) {
+                trailX[i] = trailX[i - 1];
+                trailY[i] = trailY[i - 1];
+            }
+            trailX[0] = ballX;
+            trailY[0] = ballY;
+
             // Apply constant gravity vector steps
             ballVY += GRAVITY;
 
             // Velocity bounding clamps
-            if (ballVX > MAX_VELOCITY)
-                ballVX = MAX_VELOCITY;
-            if (ballVX < -MAX_VELOCITY)
-                ballVX = -MAX_VELOCITY;
-            if (ballVY > MAX_VELOCITY)
-                ballVY = MAX_VELOCITY;
-            if (ballVY < -MAX_VELOCITY)
-                ballVY = -MAX_VELOCITY;
+            ballVX = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, ballVX));
+            ballVY = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, ballVY));
 
             // Integrate step translations
             ballX += ballVX;
@@ -149,8 +162,7 @@ public class PinballLoader extends InteractiveLoader {
 
             // Resolve Round Bumper Collisions
             for (Bumper b : bumpers) {
-                if (b.hitFlashTicks > 0)
-                    b.hitFlashTicks--;
+                if (b.hitFlashTicks > 0) b.hitFlashTicks--;
 
                 double dx = ballX - b.x;
                 double dy = ballY - b.y;
@@ -158,12 +170,10 @@ public class PinballLoader extends InteractiveLoader {
 
                 if (distance < 2.2) {
                     score += b.scoreValue;
-                    b.hitFlashTicks = 6;
+                    b.hitFlashTicks = 8; // slightly longer hit flash
 
                     if (distance == 0) {
-                        dx = 0.1;
-                        dy = 0.1;
-                        distance = 0.14;
+                        dx = 0.1; dy = 0.1; distance = 0.14;
                     }
                     ballVX = (dx / distance) * 0.95;
                     ballVY = (dy / distance) * 0.95;
@@ -174,18 +184,9 @@ public class PinballLoader extends InteractiveLoader {
             }
 
             // Boundary Box Static Rail Collisions
-            if (ballX <= 30.5) {
-                ballX = 31.0;
-                ballVX = -ballVX * 0.8;
-            }
-            if (ballX >= 79.5) {
-                ballX = 79.0;
-                ballVX = -ballVX * 0.8;
-            }
-            if (ballY <= 3.5) {
-                ballY = 4.0;
-                ballVY = -ballVY * 0.8;
-            }
+            if (ballX <= 30.5) { ballX = 31.0; ballVX = -ballVX * 0.8; }
+            if (ballX >= 79.5) { ballX = 79.0; ballVX = -ballVX * 0.8; }
+            if (ballY <= 3.5)  { ballY = 4.0;  ballVY = -ballVY * 0.8; }
 
             // Slanted Inlane Rail Deflections
             if (ballX >= 30 && ballX <= 40 && ballY >= 21) {
@@ -205,97 +206,163 @@ public class PinballLoader extends InteractiveLoader {
                 }
             }
 
-            // EXPANDED FLIPPER PADDLES MECHANICS & BALL OVERLAP CHECKS
-            // Left Flipper Footprint closed in: Row 25, Columns 38 to 49 (Width 11)
+            // EXPANDED FLIPPER PADDLES MECHANICS (Width 11)
             if (Math.round(ballY) == 25 && ballX >= 38 && ballX <= 49) {
-                if (leftFlipperActive) {
-                    ballVY = -1.0; // Upward physics vector launch impulse
-                    ballVX += 0.5;
-                } else {
-                    ballVY = -ballVY * 0.3;
-                }
+                if (leftFlipperActive) { ballVY = -1.0; ballVX += 0.5; } 
+                else { ballVY = -ballVY * 0.3; }
             }
-
-            // Right Flipper Footprint closed in: Row 25, Columns 61 to 72 (Width 11)
             if (Math.round(ballY) == 25 && ballX >= 61 && ballX <= 72) {
-                if (rightFlipperActive) {
-                    ballVY = -1.0;
-                    ballVX -= 0.5;
-                } else {
-                    ballVY = -ballVY * 0.3;
-                }
+                if (rightFlipperActive) { ballVY = -1.0; ballVX -= 0.5; } 
+                else { ballVY = -ballVY * 0.3; }
             }
 
             // Check Bottom Void Drain Drop Event
-            if (ballY >= HEIGHT - 1) {
-                crashFreezeTimer = 35; // Short structural halt before dropping fresh ball
+            if (ballY >= HEIGHT - 1) crashFreezeTimer = 40;
+        }
+
+        // -------------------------------------------------------------
+        // 2. RENDER PLAYFIELD GRID & AMBIENCE (Background Layer)
+        // -------------------------------------------------------------
+        boolean gridPulse = Math.sin(frameTick * 0.1) > 0.5;
+        String gridColor = gridPulse ? C_GRID_GLOW : C_GRID_IDLE;
+        
+        for (int y = 4; y <= 27; y++) {
+            for (int x = 31; x <= 79; x++) {
+                int index = x + WIDTH * y;
+                // Subtle dotted grid for retro aesthetic
+                if ((x + y) % 4 == 0) outputBuffer[index] = gridColor + "." + RESET;
+                if ((x - y) % 7 == 0) outputBuffer[index] = gridColor + "+" + RESET;
             }
         }
 
-        // 2. RENDER STATIC PLAYFIELD MATRIX LAYOUT
+        // -------------------------------------------------------------
+        // 3. RENDER CABINET WALLS & NEON RAILS
+        // -------------------------------------------------------------
         for (int y = 2; y <= 27; y++) {
             for (int x = 28; x <= 82; x++) {
                 int index = x + WIDTH * y;
-
                 boolean isOuterFrame = (y == 2 || y == 27 || x == 28 || x == 82);
                 boolean isRailWall = (y == 3 || x == 30 || x == 80);
 
                 if (isOuterFrame) {
-                    outputBuffer[index] = COLOR_CHASSIS + "█" + RESET;
+                    // Draw heavy cabinet casing
+                    outputBuffer[index] = C_CAB_OUTER + "▓" + RESET;
                 } else if (isRailWall && y <= 25) {
-                    outputBuffer[index] = COLOR_CHASSIS + "║" + RESET;
+                    // Draw inner glowing guide rails
+                    char railChar = (y == 3) ? '═' : '║';
+                    if (y == 3 && x == 30) railChar = '╔';
+                    if (y == 3 && x == 80) railChar = '╗';
+                    outputBuffer[index] = C_CAB_INNER + railChar + RESET;
                 }
             }
         }
 
         // Overlay Slant Lane Art Lines
         for (int i = 0; i <= 10; i++) {
-            outputBuffer[(30 + i) + WIDTH * (21 + (int) (i * 0.4))] = COLOR_CHASSIS + "\\" + RESET;
-            outputBuffer[(80 - i) + WIDTH * (21 + (int) (i * 0.4))] = COLOR_CHASSIS + "/" + RESET;
+            int lIdx = (30 + i) + WIDTH * (21 + (int) (i * 0.4));
+            int rIdx = (80 - i) + WIDTH * (21 + (int) (i * 0.4));
+            outputBuffer[lIdx] = C_CAB_INNER + "↘" + RESET;
+            outputBuffer[rIdx] = C_CAB_INNER + "↙" + RESET;
         }
 
-        // 3. RENDER REBOUND BUMPERS
+        // -------------------------------------------------------------
+        // 4. RENDER REACTIVE BUMPERS
+        // -------------------------------------------------------------
         for (Bumper b : bumpers) {
-            String color = b.hitFlashTicks > 0 ? COLOR_BUMPER_HIT : COLOR_BUMPER;
             int idx = b.x + WIDTH * b.y;
-            outputBuffer[idx - 1] = color + "(" + RESET;
-            outputBuffer[idx] = color + "O" + RESET;
-            outputBuffer[idx + 1] = color + ")" + RESET;
+            if (b.hitFlashTicks > 0) {
+                // Expanding hit shockwave visual
+                outputBuffer[idx - 2] = C_BUMP_HIT + "<" + RESET;
+                outputBuffer[idx - 1] = C_BUMP_HIT + "[" + RESET;
+                outputBuffer[idx]     = C_BUMP_HIT + "X" + RESET;
+                outputBuffer[idx + 1] = C_BUMP_HIT + "]" + RESET;
+                outputBuffer[idx + 2] = C_BUMP_HIT + ">" + RESET;
+            } else {
+                // Idle pulsing visual
+                boolean pulse = Math.sin(frameTick * 0.15 + b.x) > 0.3;
+                String bColor = pulse ? C_BUMP_PULSE : C_BUMP_CORE;
+                outputBuffer[idx - 1] = bColor + "(" + RESET;
+                outputBuffer[idx]     = bColor + "O" + RESET;
+                outputBuffer[idx + 1] = bColor + ")" + RESET;
+            }
         }
 
-        // 4. RENDER EXTENDED FLIPPER PADDLES STATES (Width 11 Each)
+        // -------------------------------------------------------------
+        // 5. RENDER FLIPPER PADDLES & JOINTS (Width 11)
+        // -------------------------------------------------------------
         int leftFX = 38;
         int rightFX = 61;
         int flipperY = 25;
-        int flipperWidth = 11;
 
-        for (int w = 0; w < flipperWidth; w++) {
-            // Left paddle extended block array footprint map
-            int leftIndex = (leftFX + w) + WIDTH * (flipperY - (leftFlipperActive ? w / 3 : 0));
-            outputBuffer[leftIndex] = COLOR_FLIPPER + "◢" + RESET;
+        for (int w = 0; w < 11; w++) {
+            // Left paddle
+            int lY = flipperY - (leftFlipperActive ? w / 3 : 0);
+            int leftIndex = (leftFX + w) + WIDTH * lY;
+            
+            if (w == 0) { // Render mechanical pivot joint
+                outputBuffer[leftIndex] = C_FLIP_JOINT + "O" + RESET;
+            } else {
+                outputBuffer[leftIndex] = C_FLIP_PAD + "▄" + RESET;
+            }
 
-            // Right paddle extended block array footprint map
-            int rightIndex = (rightFX + w) + WIDTH * (flipperY - (rightFlipperActive ? (10 - w) / 3 : 0));
-            outputBuffer[rightIndex] = COLOR_FLIPPER + "◣" + RESET;
+            // Right paddle
+            int rY = flipperY - (rightFlipperActive ? (10 - w) / 3 : 0);
+            int rightIndex = (rightFX + w) + WIDTH * rY;
+            
+            if (w == 10) { // Render mechanical pivot joint (anchored on right side)
+                outputBuffer[rightIndex] = C_FLIP_JOINT + "O" + RESET;
+            } else {
+                outputBuffer[rightIndex] = C_FLIP_PAD + "▄" + RESET;
+            }
         }
 
-        // 5. RENDER CHROME BALL ENTITY
+        // -------------------------------------------------------------
+        // 6. RENDER KINETIC BALL & MOTION TRAIL
+        // -------------------------------------------------------------
+        // Draw trailing ghost particles (Oldest to Newest)
+        String[] trailColors = {C_TRAIL_3, C_TRAIL_3, C_TRAIL_2, C_TRAIL_2, C_TRAIL_1, C_TRAIL_1};
+        char[] trailChars = {'.', '.', '·', '·', 'o', 'o'};
+        
+        for (int i = trailX.length - 1; i >= 0; i--) {
+            int tX = (int) Math.round(trailX[i]);
+            int tY = (int) Math.round(trailY[i]);
+            if (tX >= 31 && tX <= 79 && tY >= 4 && tY <= 27) { // Only draw trail inside playfield
+                outputBuffer[tX + WIDTH * tY] = trailColors[i] + trailChars[i] + RESET;
+            }
+        }
+
+        // Draw Chrome Ball Core (On Top)
         int bX = (int) Math.round(ballX);
         int bY = (int) Math.round(ballY);
         if (crashFreezeTimer == 0 && bX >= 0 && bX < WIDTH && bY >= 0 && bY < HEIGHT) {
-            outputBuffer[bX + WIDTH * bY] = COLOR_BALL + "●" + RESET;
+            outputBuffer[bX + WIDTH * bY] = C_BALL + "●" + RESET;
         }
 
-        // 6. OVERLAP DASHBOARD TEXT HUD LAYERS
-        String hudMsg = "SCORE: " + score;
+        // -------------------------------------------------------------
+        // 7. DOT-MATRIX DISPLAY (DMD) HUD DASHBOARD
+        // -------------------------------------------------------------
+        String hudMsg = String.format(" SCORE : %07d ", score);
         if (crashFreezeTimer > 0) {
-            hudMsg = "⚠️ BALL DRAINED! AUTO-LAUNCHING NEW STRIP... ⚠️";
+            boolean flash = (crashFreezeTimer % 10 < 5);
+            hudMsg = flash ? "   ** BALL DRAINED! **   " : "   -- LAUNCHING --       ";
         }
-        int targetX = 30 + (50 - hudMsg.length()) / 2;
-        for (int i = 0; i < hudMsg.length(); i++) {
-            int idx = (targetX + i) + WIDTH * 1;
+        
+        // Frame the Marquee display at the top center
+        int hudWidth = hudMsg.length();
+        int hudStartX = 55 - (hudWidth / 2);
+        
+        // Render DMD Background Block
+        for (int y = 0; y <= 2; y++) {
+            for (int x = hudStartX - 2; x <= hudStartX + hudWidth + 1; x++) {
+                if (x >= 0 && x < WIDTH) outputBuffer[x + WIDTH * y] = C_DMD_BG + "█" + RESET;
+            }
+        }
+        
+        // Render Text over the background
+        for (int i = 0; i < hudWidth; i++) {
+            int idx = (hudStartX + i) + WIDTH * 1;
             if (idx >= 0 && idx < outputBuffer.length) {
-                outputBuffer[idx] = COLOR_TXT + hudMsg.charAt(i) + RESET;
+                outputBuffer[idx] = C_DMD_TXT + hudMsg.charAt(i) + RESET;
             }
         }
     }

@@ -52,8 +52,6 @@ public class CookieLoader extends Loader {
 
         String primary, secondary, filling, accentA, accentB, accentC;
 
-        cookieType = 8; //TODO REMOVE THIS
-
         switch (cookieType) {
             case 1: // CHOCOLATE CHIP
                 primary = "\u001B[38;5;222m";

@@ -332,6 +332,8 @@ I also included a few classic "graphics processing" loaders
 
 -> **Tornado**: <!-- TODO: Elaborate on this section -->
 
+-> **Oasis**: <!-- TODO: Elaborate on this section -->
+
 -> **SynthWave**: <!-- TODO: Elaborate on this section -->
 
 -> **VaporWave**: <!-- TODO: Elaborate on this section -->
@@ -433,7 +435,6 @@ Something with the high-detail resolution trick w/ blocks https://en.wikipedia.o
 Newton's Cradle Balls Swinging / Clacking
 3D Galton Board?  Like giant pyramid of 3D to make 
 2D Scene of an Aquarium / Coral Reef?
-2D Scene of Oasis in the desert
 Something to do with Lehigh
 Something to do with CCSU (Blue Devil?)
 Roman Collesseum

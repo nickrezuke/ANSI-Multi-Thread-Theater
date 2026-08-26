@@ -1,5 +1,3 @@
-// TODO: Some faces not dense enough, seeing lines and patterns through some walls.  Tighten step sizes...
-
 import java.util.Arrays;
 
 public class HubbleTelescopeLoader extends Loader {
@@ -95,9 +93,9 @@ public class HubbleTelescopeLoader extends Loader {
     private void renderCylinder(double cx, double cy, double cz, double radius, double height, String color,
                                 double cosX, double sinX, double cosY, double sinY,
                                 double lx, double ly, double lz, String[] out, double[] zb) {
-        for (double y = cy - height / 2.0; y <= cy + height / 2.0; y += 0.08) {
-            for (int step = 0; step < 24; step++) {
-                double rad = step * (2.0 * Math.PI / 24.0);
+        for (double y = cy - height / 2.0; y <= cy + height / 2.0; y += 0.04) {
+            for (int step = 0; step < 48; step++) {
+                double rad = step * (2.0 * Math.PI / 48.0);
                 double nx = Math.cos(rad);
                 double nz = Math.sin(rad);
                 double px = cx + radius * nx;
@@ -112,7 +110,7 @@ public class HubbleTelescopeLoader extends Loader {
                             double nx, double ny, double nz, String color,
                             double cosX, double sinX, double cosY, double sinY,
                             double lx, double ly, double lz, String[] out, double[] zb) {
-        for (double r = 0; r <= maxRadius; r += 0.05) {
+        for (double r = 0; r <= maxRadius; r += 0.03) {
             int steps = (int)(24 * (r / maxRadius)) + 1;
             for (int step = 0; step < steps; step++) {
                 double rad = step * (2.0 * Math.PI / steps);
@@ -169,8 +167,8 @@ public class HubbleTelescopeLoader extends Loader {
             }
 
             // Blue Solar Blankets (above and below the central boom)
-            for (double x = 0.6; x <= 2.5; x += 0.06) {
-                for (double y = -0.4; y <= 0.2; y += 0.06) {
+            for (double x = 0.6; x <= 2.5; x += 0.03) {
+                for (double y = -0.4; y <= 0.2; y += 0.03) {
                     if (y > -0.15 && y < -0.05) continue; // Gap for the central boom
                     
                     String color = C_SOLAR_BLUE;

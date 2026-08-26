@@ -48,6 +48,7 @@ public class LoaderFactory {
         register(List.of("PlayStationIntro", "PlayStation1Intro", "PlayStationLogo", "PlayStation1Logo", "PS1Intro", "PS1"), PlayStation1IntroLoader::new);
         register("Butterfly", ButterflyLoader::new);
         register("Pluto", PlutoLoader::new);
+        register("Oasis", OasisLoader::new);
         register("SlotMachine", SlotMachineLoader::new);
         register(List.of("Pinball", "PinballMachine"), PinballLoader::new);
         register("ChromeCheckerboardSphere", ChromeCheckerboardSphereLoader::new);

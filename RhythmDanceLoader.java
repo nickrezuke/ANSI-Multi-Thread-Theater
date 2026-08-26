@@ -1,5 +1,3 @@
-// TODO: Make sure the timing of the helper is accurate to the timing of the actual button push window
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -101,7 +99,11 @@ public class RhythmDanceLoader extends InteractiveLoader {
         this.feedbackColor = COLOR_CYAN;
         this.feedbackTimer = 35;
         this.activeNotes.clear();
-        this.noteSpawnTimer = 10;
+        
+        // FIX 1: Lock the initial spawn timer to exactly one beat period 
+        // so it perfectly aligns mathematically with the drop speed logic.
+        this.noteSpawnTimer = BEAT_PERIOD; 
+        
         this.globalTick = 0;
     }
 
@@ -109,15 +111,14 @@ public class RhythmDanceLoader extends InteractiveLoader {
     protected void handleKeyInput(int keyCode) {
         int targetLane = -1;
 
-        // ANSI Arrow Keys ('D'=Left, 'B'=Down, 'A'=Up, 'C'=Right), WASD, & Swing Codes
         if (keyCode == 'D' || keyCode == 'd' || keyCode == 'a' || keyCode == 37) {
-            targetLane = 0; // Left Arrow
+            targetLane = 0; 
         } else if (keyCode == 'B' || keyCode == 'b' || keyCode == 's' || keyCode == 40) {
-            targetLane = 1; // Down Arrow
+            targetLane = 1; 
         } else if (keyCode == 'A' || keyCode == 'a' || keyCode == 'w' || keyCode == 38) {
-            targetLane = 2; // Up Arrow
+            targetLane = 2; 
         } else if (keyCode == 'C' || keyCode == 'c' || keyCode == 'd' || keyCode == 39) {
-            targetLane = 3; // Right Arrow
+            targetLane = 3; 
         }
 
         if (targetLane == -1) return;
@@ -147,7 +148,9 @@ public class RhythmDanceLoader extends InteractiveLoader {
             this.hasHitRecently = true;
             evaluateHitTiming(minimumDistance);
         } else {
-            triggerMiss(true); // Early tap or empty lane press
+            // Check if the tap was physically below the target zone
+            boolean wasLate = (closestNote != null && signedOffset > 0);
+            triggerMiss(true, wasLate); 
         }
     }
 
@@ -185,14 +188,15 @@ public class RhythmDanceLoader extends InteractiveLoader {
         feedbackTimer = 22;
     }
 
-    private void triggerMiss(boolean isActiveTap) {
+    private void triggerMiss(boolean isActiveTap, boolean wasLateTap) {
         this.combo = 0;
         this.currentMultiplier = 1;
         this.countMiss++;
         this.grooveMeter = Math.max(0, grooveMeter - 10);
 
         if (isActiveTap) {
-            this.feedbackText = "EARLY TAP";
+            // Now accurately reports if you swung too late!
+            this.feedbackText = wasLateTap ? "LATE TAP" : "EARLY TAP";
             this.feedbackColor = COLOR_RED;
             this.feedbackTimer = 16;
         } else if (feedbackTimer <= 5) {
@@ -217,10 +221,11 @@ public class RhythmDanceLoader extends InteractiveLoader {
                 Note n = activeNotes.get(i);
                 n.posY += DROP_SPEED;
 
-                // Cutoff threshold cleanly triggers miss before array cleanup
-                if (!n.processed && n.posY > TARGET_ZONE_Y + 1.5) {
+                // FIX: Cull threshold strictly matches MAX_HIT_WINDOW (2.5)
+                // This ensures notes aren't killed before you can tap them late!
+                if (!n.processed && n.posY > TARGET_ZONE_Y + MAX_HIT_WINDOW) {
                     n.processed = true;
-                    triggerMiss(false);
+                    triggerMiss(false, false); 
                 }
 
                 if (n.posY > HEIGHT - 1) {
@@ -229,7 +234,6 @@ public class RhythmDanceLoader extends InteractiveLoader {
             }
         }
 
-        // Synchronized Note Spawner on Beat Boundaries
         noteSpawnTimer--;
         if (noteSpawnTimer <= 0) {
             Note newNote = new Note();
@@ -239,7 +243,6 @@ public class RhythmDanceLoader extends InteractiveLoader {
                 activeNotes.add(newNote);
             }
 
-            // Spawn every 2 or 3 beats (40 or 60 ticks)
             int beatsToWait = random.nextBoolean() ? 2 : 3;
             noteSpawnTimer = beatsToWait * BEAT_PERIOD;
         }
@@ -284,7 +287,6 @@ public class RhythmDanceLoader extends InteractiveLoader {
             }
         }
 
-        // Target Zone
         renderText(buffer, "╠═══════════════════════╣", 41, TARGET_ZONE_Y, COLOR_TARGET);
         for (int l = 0; l < 4; l++) {
             int x = LANE_X_START[l];
@@ -338,26 +340,49 @@ public class RhythmDanceLoader extends InteractiveLoader {
     }
 
     private void renderRightHUD(String[] buffer) {
-        // VISUAL BEAT SYNC MONITOR (Rhythm Sound Sync Test Indicator)
-        renderText(buffer, "┌── BEAT SYNC MONITOR ──┐", 72, 2, COLOR_BORDER);
-        renderText(buffer, "│  EARLY   [BEAT]   LATE │", 72, 3, COLOR_DIM);
+        // FIX 2: Note Sync Monitor now tracks the exact physical distance 
+        // of the closest falling note, ignoring arbitrary background timing loops.
+        renderText(buffer, "┌── NOTE SYNC MONITOR ──┐", 72, 2, COLOR_BORDER);
+        renderText(buffer, "│  EARLY   [ZONE]   LATE │", 72, 3, COLOR_DIM);
 
-        // Sweep marker position relative to beat (-5 to +5)
-        int ticksInBeat = globalTick % BEAT_PERIOD;
-        int beatOffset = ticksInBeat <= (BEAT_PERIOD / 2) ? ticksInBeat : (ticksInBeat - BEAT_PERIOD);
-        boolean isOnBeat = Math.abs(beatOffset) <= 1;
+        Note closestNote = null;
+        double minAbsDist = 999.0;
+        double signedDist = 0.0;
 
-        // Build 15-character sync track
-        char[] syncTrack = "───░░░  🎯  ░░░───".toCharArray();
-        int cursorIdx = 8 + beatOffset;
-        if (cursorIdx >= 0 && cursorIdx < syncTrack.length) {
-            syncTrack[cursorIdx] = '█';
+        synchronized (activeNotes) {
+            for (Note n : activeNotes) {
+                if (!n.processed) {
+                    double dist = n.posY - TARGET_ZONE_Y;
+                    if (Math.abs(dist) < minAbsDist) {
+                        minAbsDist = Math.abs(dist);
+                        signedDist = dist;
+                        closestNote = n;
+                    }
+                }
+            }
         }
 
-        renderText(buffer, "│ [" + new String(syncTrack) + "] │", 72, 4, isOnBeat ? COLOR_GOLD + "\u001B[1m" : COLOR_WHITE);
+        // Generate the 16-character track: ───░░░  🎯  ░░░───
+        char[] syncTrack = "───░░░  🎯  ░░░───".toCharArray();
+        boolean isInWindow = false;
+        boolean isPerfect = false;
 
-        if (isOnBeat) {
+        if (closestNote != null && minAbsDist < 4.0) {
+            // Sweep marker mathematically mapped to the note's Y-position distance
+            int cursorIdx = 8 + (int) Math.round(signedDist * 2.0);
+            cursorIdx = Math.max(0, Math.min(syncTrack.length - 1, cursorIdx));
+            syncTrack[cursorIdx] = '█';
+
+            isInWindow = minAbsDist <= MAX_HIT_WINDOW;
+            isPerfect = minAbsDist <= WINDOW_PERFECT;
+        }
+
+        renderText(buffer, "│ [" + new String(syncTrack) + "] │", 72, 4, isPerfect ? COLOR_GOLD + "\u001B[1m" : (isInWindow ? COLOR_CYAN : COLOR_WHITE));
+
+        if (isPerfect) {
             renderText(buffer, "│    >>> HIT NOW! <<<    │", 72, 5, COLOR_GREEN + "\u001B[1m");
+        } else if (isInWindow) {
+            renderText(buffer, "│    >> IN WINDOW <<     │", 72, 5, COLOR_CYAN);
         } else {
             renderText(buffer, "│      APPROACHING...    │", 72, 5, COLOR_DIM);
         }
@@ -382,15 +407,16 @@ public class RhythmDanceLoader extends InteractiveLoader {
             renderText(buffer, "WAITING FOR TAP...", 72, 13, COLOR_DIM);
         }
 
-        // BEAT-PULSED AUDIO EQUALIZER
+        // BEAT-PULSED AUDIO EQUALIZER (Left on global tick to represent background audio)
         renderText(buffer, "BEAT EQUALIZER", 72, 16, COLOR_WHITE);
         renderText(buffer, "────────────────────", 72, 17, COLOR_BORDER);
 
         String[] eqBars = { " ", "▂", "▄", "▅", "▆", "▇", "█" };
         StringBuilder eqLine = new StringBuilder();
 
-        // Decay amplitude between beats, spike on beat
+        int ticksInBeat = globalTick % BEAT_PERIOD;
         double beatDecay = 1.0 - ((double) ticksInBeat / BEAT_PERIOD);
+        boolean isOnBeat = Math.abs(ticksInBeat <= (BEAT_PERIOD / 2) ? ticksInBeat : (ticksInBeat - BEAT_PERIOD)) <= 1;
 
         for (int i = 0; i < 18; i++) {
             double wave = (Math.sin((globalTick + i * 3) * 0.4) + 1.0) / 2.0;

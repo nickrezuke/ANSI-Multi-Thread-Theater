@@ -71,8 +71,6 @@ public class ExampleTask {
             // 6. Fresh clear so our completion message prints cleanly
             // Clear Screen + Cursor Home + Show Cursor
             loader.forceTerminalCleanup();
-            System.out.print(CLEAR_SCREEN + CURSOR_HOME + SHOW_CURSOR);
-            System.out.flush();
         }
     }
 
