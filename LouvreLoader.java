@@ -14,7 +14,7 @@ public class LouvreLoader extends Loader {
 
     // Some color choicess for the Day / Night cycle to fade between
     // Gleaming, modern, brushed aluminum/stainless steel structures 
-    private static final int[] DAY_STRUT = { 210, 215, 218 }; 
+    private static final int[] DAY_STRUT = { 100, 105, 110 }; 
     // Transparent, highly reflective extra-clear glass (Saint-Gobain Diamond Glass) catching the Parisian sky
     private static final int[] DAY_GLASS = { 165, 195, 210 }; 
     // The famous historic Cour Napoléon sandy French limestone (Charentes/Oise stone)
@@ -32,7 +32,7 @@ public class LouvreLoader extends Loader {
     private double rotationY = 0.0;
 
     private static final double STATIC_TILT_X = 0.1;
-    private static final double CAMERA_DISTANCE = 3.2;
+    private static final double CAMERA_DISTANCE = 3.3;
 
     public LouvreLoader() {
         // This uses 80x22 specifically
@@ -111,7 +111,7 @@ public class LouvreLoader extends Loader {
 
         // STEP 2: Sort pyramid faces from BACK to FRONT
         double[][] vertices = {
-                { 0.0, -1.1, 0.0 }, // 0: Apex
+                { 0.0, -1.5, 0.0 }, // 0: Apex
                 { -1.4, 0.2, -1.4 }, // 1: Front-Left
                 { 1.4, 0.2, -1.4 }, // 2: Front-Right
                 { 1.4, 0.2, 1.4 }, // 3: Back-Right

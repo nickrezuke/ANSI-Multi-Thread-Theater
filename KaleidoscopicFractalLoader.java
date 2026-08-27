@@ -1,4 +1,5 @@
-// TODO Fix this Kaleidoscopic Fractal Loader It "jumps" and is a little hard to see the details
+import java.util.stream.IntStream;
+import java.util.Arrays;
 
 public class KaleidoscopicFractalLoader extends Loader {
     private static final StatusStage[] FRACTAL_STAGES = {
@@ -9,8 +10,19 @@ public class KaleidoscopicFractalLoader extends Loader {
     };
 
     private static final char[] SHADE_RAMP = { ' ', '.', ',', '-', '~', ':', ';', '=', '!', '*', '#', '$', '@' };
+    private static final double[] SCALE_POWERS = { 3.0, 9.0, 27.0 };
+
+    private static final double L1X = 0.577, L1Y = -0.577, L1Z = -0.577;
+    private static final double L2X = -0.577, L2Y = 0.577, L2Z = 0.577;
+
     private double zoomTimer = 0.0;
     private double rotationAngle = 0.0;
+
+    private final double[] rawBrightnessValues = new double[4032];
+    private final int[] hitR = new int[4032];
+    private final int[] hitG = new int[4032];
+    private final int[] hitB = new int[4032];
+    private final boolean[] pixelHits = new boolean[4032];
 
     public KaleidoscopicFractalLoader() {
         super(FRACTAL_STAGES, 126, 32);
@@ -22,21 +34,15 @@ public class KaleidoscopicFractalLoader extends Loader {
         rotationAngle = 0.0;
     }
 
-    // --- KALEIDOSCOPIC SIGNED DISTANCE FIELD ---
-    private double evaluateSDF(double px, double py, double pz, double twistAngle) {
+    private double evaluateSDF(double px, double py, double pz, double cosT, double sinT) {
         double spacing = 2.0;
         px = (px % spacing + spacing) % spacing - spacing * 0.5;
         py = (py % spacing + spacing) % spacing - spacing * 0.5;
         pz = (pz % spacing + spacing) % spacing - spacing * 0.5;
 
-        double fractalScale = 3.0;
         double d = Math.max(Math.abs(px) - 0.75, Math.max(Math.abs(py) - 0.75, Math.abs(pz) - 0.75));
 
-        // Active dynamic rotation matrices for internal folds
-        double cosT = Math.cos(twistAngle), sinT = Math.sin(twistAngle);
-
-        for (int i = 0; i < 4; i++) { // Boosted iterations for richer kaleidoscope detailing
-            // 1. Kaleidoscope planar mirroring folds
+        for (int i = 0; i < 3; i++) {
             px = Math.abs(px);
             py = Math.abs(py);
             pz = Math.abs(pz);
@@ -57,58 +63,51 @@ public class KaleidoscopicFractalLoader extends Loader {
                 pz = t;
             }
 
-            // 2. Psychedelic spatial twist (rotates space as it moves deeper)
             double tx = px * cosT - py * sinT;
             py = px * sinT + py * cosT;
             px = tx;
 
-            // 3. Sub-grid scaling transformation
-            px = px * fractalScale - 1.4;
-            py = py * fractalScale - 1.4;
-            pz = pz * fractalScale;
+            px = px * 3.0 - 1.4;
+            py = py * 3.0 - 1.4;
+            pz = pz * 3.0;
 
-            if (pz > 0.5 * (fractalScale - 1.0))
-                pz -= (fractalScale - 1.0);
+            if (pz > 1.0)
+                pz -= 2.0;
 
             double subBoxDist = Math.max(Math.abs(px) - 0.6, Math.max(Math.abs(py) - 0.6, Math.abs(pz) - 0.6));
-            d = Math.max(d, subBoxDist / Math.pow(fractalScale, i + 1));
+            d = Math.max(d, subBoxDist / SCALE_POWERS[i]);
         }
         return d;
     }
 
     @Override
     protected void renderGeometry(String[] outputBuffer, double[] zBuffer) {
-        zoomTimer += 0.012; // Slowed down slightly for smooth visual immersion
+        zoomTimer += 0.012;
         rotationAngle += 0.008;
 
-        // CRITICAL FIX: Match the modulo calculation to the logarithmic scale of the
-        // geometric folds
-        double progress = zoomTimer % 1.0;
+        double cyclePosition = zoomTimer % 2.0;
+        double progress = cyclePosition <= 1.0 ? cyclePosition : 2.0 - cyclePosition;
         double currentScale = Math.pow(3.0, progress);
 
         double cosA = Math.cos(rotationAngle), sinA = Math.sin(rotationAngle);
         double cosB = Math.cos(rotationAngle * 0.3), sinB = Math.sin(rotationAngle * 0.3);
 
-        // Light tracking coordinates
-        double l1X = 0.577, l1Y = -0.577, l1Z = -0.577;
-        double l2X = -0.577, l2Y = 0.577, l2Z = 0.577;
+        double twistAngle = Math.sin(zoomTimer * 0.5) * 0.001;
+        double cosT = Math.cos(twistAngle);
+        double sinT = Math.sin(twistAngle);
+        double cameraZ = -2.0 / currentScale;
 
-        double[] rawBrightnessValues = new double[4032];
-        int[][] hitRGBs = new int[4032][3];
-        boolean[] pixelHits = new boolean[4032];
-        double maxCalculatedBrightness = 0.01;
+        Arrays.fill(pixelHits, false);
+        Arrays.fill(rawBrightnessValues, 0.0);
+        Arrays.fill(zBuffer, 0.0);
 
-        // Trippy Twist variance based on time
-        double twistAngle = Math.sin(zoomTimer * 0.5) * 0.4;
-
-        // --- SPHERE TRACING ENGINE ---
-        for (int screenY = 0; screenY < 22; screenY++) {
-            double uvY = (screenY - 11.0) / 11.0;
-            for (int screenX = 0; screenX < 80; screenX++) {
+        IntStream.range(0, 32).parallel().forEach(screenY -> {
+            for (int screenX = 0; screenX < 126; screenX++) {
                 int index = screenX + 126 * screenY;
-                double uvX = (screenX - 40.0) / 40.0 * 2.1;
 
-                // Ray Direction setup
+                double uvY = (screenY - 16.0) / 16.0;
+                double uvX = (screenX - 83.0) / 83.0 * 2.4;
+
                 double rxDir = uvX, ryDir = uvY, rzDir = 1.6;
                 double rLen = Math.sqrt(rxDir * rxDir + ryDir * ryDir + rzDir * rzDir);
                 rxDir /= rLen;
@@ -119,160 +118,140 @@ public class KaleidoscopicFractalLoader extends Loader {
                 double ry = -(rxDir * cosA - rzDir * sinA) * sinB + ryDir * cosB;
                 double rz = rxDir * sinA + rzDir * cosA;
 
-                // CRITICAL FIX: Scale the camera's Z starting position along with space
-                // This eliminates the sudden "jump-frame" flash completely!
-                double cameraX = 0.0, cameraY = 0.0;
-                double cameraZ = -2.0 / currentScale;
-
                 double distanceMarched = 0.01;
-                boolean hitFound = false;
                 int stepCount = 0;
-                int maxMarchSteps = 70; // More depth accuracy
+                int maxMarchSteps = 150;
+                boolean hitFound = false;
 
                 for (int step = 0; step < maxMarchSteps; step++) {
                     stepCount++;
-                    double curX = cameraX + rx * distanceMarched;
-                    double curY = cameraY + ry * distanceMarched;
+                    double curX = rx * distanceMarched;
+                    double curY = ry * distanceMarched;
                     double curZ = cameraZ + rz * distanceMarched;
 
-                    // Evaluate world mapping
                     double safeDistance = evaluateSDF(curX * currentScale, curY * currentScale, curZ * currentScale,
-                            twistAngle) / currentScale;
+                            cosT, sinT) / currentScale;
 
                     if (safeDistance < 0.0003) {
                         hitFound = true;
                         break;
                     }
-                    distanceMarched += safeDistance;
+                    distanceMarched += Math.max(safeDistance, 0.002 / currentScale);
                     if (distanceMarched > 4.0)
                         break;
                 }
 
                 if (hitFound) {
+                    double hitX = rx * distanceMarched;
+                    double hitY = ry * distanceMarched;
+                    double hitZ = cameraZ + rz * distanceMarched;
+
+                    double eps = 0.0015 / currentScale;
+                    double baseSDF = evaluateSDF(hitX * currentScale, hitY * currentScale, hitZ * currentScale, cosT,
+                            sinT);
+
+                    double nX = evaluateSDF((hitX + eps) * currentScale, hitY * currentScale, hitZ * currentScale, cosT,
+                            sinT) - baseSDF;
+                    double nY = evaluateSDF(hitX * currentScale, (hitY + eps) * currentScale, hitZ * currentScale, cosT,
+                            sinT) - baseSDF;
+                    double nZ = evaluateSDF(hitX * currentScale, hitY * currentScale, (hitZ + eps) * currentScale, cosT,
+                            sinT) - baseSDF;
+
+                    double nMag = Math.sqrt(nX * nX + nY * nY + nZ * nZ);
+                    if (nMag > 0.0) {
+                        nX /= nMag;
+                        nY /= nMag;
+                        nZ /= nMag;
+                    }
+
+                    double diffuse1 = Math.max(0.0, nX * L1X + nY * L1Y + nZ * L1Z);
+                    double diffuse2 = Math.max(0.0, nX * L2X + nY * L2Y + nZ * L2Z);
+                    double totalDiffuse = diffuse1 + diffuse2 * 0.40;
+                    double aoFactor = 1.0 - ((double) stepCount / maxMarchSteps * 0.40);
+                    double luminance = (0.40 + 0.60 * totalDiffuse) * aoFactor;
+
+                    double colorHue = (zoomTimer * 0.12 + distanceMarched * 0.25) % 1.0;
+
+                    int iHue = (int) (colorHue * 6);
+                    double f = colorHue * 6 - iHue;
+                    double p = 0.95 * (1 - 0.95);
+                    double q = 0.95 * (1 - f * 0.95);
+                    double t = 0.95 * (1 - (1 - f) * 0.95);
+
+                    double r = 0, g = 0, b = 0;
+                    switch (iHue % 6) {
+                        case 0 -> {
+                            r = 0.95;
+                            g = t;
+                            b = p;
+                        }
+                        case 1 -> {
+                            r = q;
+                            g = 0.95;
+                            b = p;
+                        }
+                        case 2 -> {
+                            r = p;
+                            g = 0.95;
+                            b = t;
+                        }
+                        case 3 -> {
+                            r = p;
+                            g = q;
+                            b = 0.95;
+                        }
+                        case 4 -> {
+                            r = t;
+                            g = p;
+                            b = 0.95;
+                        }
+                        case 5 -> {
+                            r = 0.95;
+                            g = p;
+                            b = q;
+                        }
+                    }
+
                     double inverseDepth = 1.0 / distanceMarched;
                     if (inverseDepth > zBuffer[index]) {
                         zBuffer[index] = inverseDepth;
                         pixelHits[index] = true;
-
-                        double hitX = cameraX + rx * distanceMarched;
-                        double hitY = cameraY + ry * distanceMarched;
-                        double hitZ = cameraZ + rz * distanceMarched;
-
-                        // High fidelity structural normals
-                        double eps = 0.0005;
-                        double nX = evaluateSDF((hitX + eps) * currentScale, hitY * currentScale, hitZ * currentScale,
-                                twistAngle)
-                                - evaluateSDF((hitX - eps) * currentScale, hitY * currentScale, hitZ * currentScale,
-                                        twistAngle);
-                        double nY = evaluateSDF(hitX * currentScale, (hitY + eps) * currentScale, hitZ * currentScale,
-                                twistAngle)
-                                - evaluateSDF(hitX * currentScale, (hitY - eps) * currentScale, hitZ * currentScale,
-                                        twistAngle);
-                        double nZ = evaluateSDF(hitX * currentScale, hitY * currentScale, (hitZ + eps) * currentScale,
-                                twistAngle)
-                                - evaluateSDF(hitX * currentScale, hitY * currentScale, (hitZ - eps) * currentScale,
-                                        twistAngle);
-
-                        double nMag = Math.sqrt(nX * nX + nY * nY + nZ * nZ);
-                        if (nMag > 0.0) {
-                            nX /= nMag;
-                            nY /= nMag;
-                            nZ /= nMag;
-                        }
-
-                        double diffuse1 = Math.max(0.0, nX * l1X + nY * l1Y + nZ * l1Z);
-                        double diffuse2 = Math.max(0.0, nX * l2X + nY * l2Y + nZ * l2Z);
-                        double totalDiffuse = (diffuse1 * 1.0) + (diffuse2 * 0.40);
-
-                        // Ambient Occlusion rendering tweak
-                        double aoFactor = 1.0 - ((double) stepCount / maxMarchSteps * 0.40);
-                        double rawLuminance = (0.40 + 0.60 * totalDiffuse) * aoFactor;
-                        rawBrightnessValues[index] = rawLuminance;
-
-                        if (rawLuminance > maxCalculatedBrightness) {
-                            maxCalculatedBrightness = rawLuminance;
-                        }
-
-                        // TRIPPY COLOR SHIFT: Blend position, depth, and time together for
-                        // hyper-vibrant rainbows
-                        double colorHue = (zoomTimer * 0.12 + (distanceMarched * 0.25) + (double) stepCount * 0.01)
-                                % 1.0;
-                        // Boosted saturation (0.95) and brightness value (0.95) to fight the dark
-                        // frames
-                        hitRGBs[index] = hsvToRgb(colorHue, 0.95, 0.95);
+                        rawBrightnessValues[index] = luminance;
+                        hitR[index] = (int) (r * 255);
+                        hitG[index] = (int) (g * 255);
+                        hitB[index] = (int) (b * 255);
                     }
                 }
             }
+        });
+
+        double maxCalculatedBrightness = 0.01;
+        for (int k = 0; k < 4032; k++) {
+            if (pixelHits[k] && rawBrightnessValues[k] > maxCalculatedBrightness) {
+                maxCalculatedBrightness = rawBrightnessValues[k];
+            }
         }
 
-        // --- RENDER PASS: AMPLIFIED AUTO-GAIN BLITTING ---
+        maxCalculatedBrightness = Math.max(0.5, Math.min(maxCalculatedBrightness, 2.0));
+
+        StringBuilder sb = new StringBuilder(32);
         for (int k = 0; k < 4032; k++) {
             if (!pixelHits[k])
                 continue;
 
-            double normalizedLuminance = rawBrightnessValues[k] / maxCalculatedBrightness;
-            normalizedLuminance = Math.pow(normalizedLuminance, 0.65); // Aggressive gamma curve to lift shadows
+            double normalizedLuminance = Math.pow(rawBrightnessValues[k] / maxCalculatedBrightness, 0.65);
 
-            // Apply color gain amplification multiplier
-            int r = (int) (hitRGBs[k][0] * normalizedLuminance * 1.5);
-            int g = (int) (hitRGBs[k][1] * normalizedLuminance * 1.5);
-            int b = (int) (hitRGBs[k][2] * normalizedLuminance * 1.5);
+            int r = Math.min(255, (int) (hitR[k] * normalizedLuminance * 1.1));
+            int g = Math.min(255, (int) (hitG[k] * normalizedLuminance * 1.1));
+            int b = Math.min(255, (int) (hitB[k] * normalizedLuminance * 1.1));
 
-            if (r > 255)
-                r = 255;
-            if (g > 255)
-                g = 255;
-            if (b > 255)
-                b = 255;
+            int shadeIndex = Math.clamp((int) (normalizedLuminance * (SHADE_RAMP.length - 1)), 0,
+                    SHADE_RAMP.length - 1);
 
-            int shadeIndex = (int) (normalizedLuminance * (SHADE_RAMP.length - 1));
-            shadeIndex = Math.clamp(shadeIndex, 0, SHADE_RAMP.length - 1);
-
-            char renderChar = SHADE_RAMP[shadeIndex];
-            String colorCode = String.format("\u001B[38;2;%d;%d;%dm", r, g, b);
-            outputBuffer[k] = colorCode + renderChar + RESET;
+            sb.setLength(0);
+            sb.append("\u001B[38;2;").append(r).append(';').append(g).append(';').append(b).append('m')
+                    .append(SHADE_RAMP[shadeIndex]).append("\u001B[0m"); // Replaced RESET with literal if missing
+            outputBuffer[k] = sb.toString();
         }
-    }
-
-    private int[] hsvToRgb(double h, double s, double v) {
-        int r = 0, g = 0, b = 0;
-        int i = (int) (h * 6);
-        double f = h * 6 - i;
-        double p = v * (1 - s);
-        double q = v * (1 - f * s);
-        double t = v * (1 - (1 - f) * s);
-        switch (i % 6) {
-            case 0:
-                r = (int) (v * 255);
-                g = (int) (t * 255);
-                b = (int) (p * 255);
-                break;
-            case 1:
-                r = (int) (q * 255);
-                g = (int) (v * 255);
-                b = (int) (p * 255);
-                break;
-            case 2:
-                r = (int) (p * 255);
-                g = (int) (v * 255);
-                b = (int) (t * 255);
-                break;
-            case 3:
-                r = (int) (p * 255);
-                g = (int) (q * 255);
-                b = (int) (v * 255);
-                break;
-            case 4:
-                r = (int) (t * 255);
-                g = (int) (p * 255);
-                b = (int) (v * 255);
-                break;
-            case 5:
-                r = (int) (v * 255);
-                g = (int) (p * 255);
-                b = (int) (q * 255);
-                break;
-        }
-        return new int[] { r, g, b };
     }
 }
