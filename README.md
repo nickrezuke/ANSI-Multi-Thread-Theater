@@ -4,7 +4,7 @@
 
 This project is a collection of real-time 3D ASCII / ANSI graphics, able to be viewed with this rendering engine built entirely in vanilla Java. Depending on the loading screen selected, it introduces full ANSI TrueColor ray-lit compositing, geometric abstractions, advanced math/physics simulations, and sometimes even real-time input handling, all controlled under asynchronous thread messaging to serve as a functional and visually stunning "loading screen" for active Java background processes.
 
-The idea for this project came from the famous Andy Sloane’s `donut.c`, definitely check out the [original code by Andy Sloane](https://www.a1k0n.net/2006/09/15/obfuscated-c-donut.html) inspirtion behind this. The [explanation page here](https://www.a1k0n.net/2011/07/20/donut-math.html) shows the math behind it. While the original concept certainly proved that 3D graphics could be projected onto a flat text grid for animating 3D graphics from within the terminal itself, this project goes a little bit farther and transforms that novelty into a proper loading-screen framework for use in Java, along with a sizable library of high quality artwork. 
+The idea for this "ANSI amphitheater", or "ANSItheater" project actually initially came from the famous Andy Sloane’s `donut.c`, definitely check out the [original code by Andy Sloane](https://www.a1k0n.net/2006/09/15/obfuscated-c-donut.html) inspirtion behind this. The [explanation page here](https://www.a1k0n.net/2011/07/20/donut-math.html) shows the math behind it. While the original concept certainly proved that 3D graphics could be projected onto a flat text grid for animating 3D graphics from within the terminal itself, and while other "terminal renderer" projects certainly exist to some minimal popularity, this project attempts to transform that novelty into a proper loading-screen framework for use in Java, along with a sizable library of high quality artwork. 
 
 ---
 
@@ -74,6 +74,8 @@ This project comes packed with a ton of different variants, all derived from a c
 -> **SpiderWeb**: <!-- TODO: Elaborate on this section -->
 
 -> **Fish**: <!-- TODO: Elaborate on this section -->
+
+-> **CatsEyeMarble** <!-- TODO: Elaborate on this section -->
 
 ### Real Models
 I also included a few classic "graphics processing" loaders
@@ -451,14 +453,30 @@ Accretion Disk
 Comet / Meteor / Shooting Star?
 Gravitational Lensing Simulation?
 Structural Resonance Frequency vs Height of several lolipop weights
+Doppler Effect Simulation
+Zooming 3D Starfield
 Something with the high-detail resolution trick w/ blocks https://en.wikipedia.org/wiki/Block_Elements 
 Newton's Cradle Balls Swinging / Clacking
 3D Galton Board?  Like giant pyramid of 3D to make a 3D gaussian curve?
 2D Scene of an Aquarium / Coral Reef?
+Portal?  Like idk the simulated light going through blue / orange portals?
 Tower of Hanoi Solver?
+Fireworks
+Factorio-style conveyor belt factory like things moving around making new things
 Something to do with Lehigh or CCSU (3D model of The Blue Devil Itself??)
 Sunflower? or flowers in general?
+Pokeball?
 Andy's Fire https://www.a1k0n.net/2007/08/24/obfuscated-c-fire.html
+Jawbreaker
+Teacup on a plate
+Ship in a bottle
+Yoyo goin up and down
+Merry go round
+Ferris Wheel
+Jimmothy????
+Rick Roll?
+Lissajous Oscilloscope
+CRT Scanlines & Phosphor Decay (Like use scanline sweep with bloom and phosphor persistence; simulate interlacing and curvature warp for a retro monitor look.  Use fast column sweep and exponential decay on brightness buffer.)
 Interactive Tanks-like Aiming & Shooting game w/ breakable ground
 Interactive Tile Sliding Puzzle (like pokemon ice dungeon)
 Interactive Sokoban game

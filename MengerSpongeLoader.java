@@ -1,5 +1,3 @@
-// TODO: Move camera to fall "through" the fractal?
-
 public class MengerSpongeLoader extends Loader { 
     private static final StatusStage[] FRACTAL_STAGES = { 
         new StatusStage(25, "Seeding recursive coordinate cells:"), 
@@ -73,16 +71,14 @@ public class MengerSpongeLoader extends Loader {
 
     @Override 
     protected void renderGeometry(String[] outputBuffer, double[] zBuffer) { 
-        // BACK TO ORIGINAL: Relaxed pacing parameters
         zoomTimer += 0.015; 
         rotationAngle += 0.008; 
 
         double progress = zoomTimer % 1.0; 
         double currentScale = Math.pow(3.0, progress); 
 
-        // BACK TO ORIGINAL: Free-tumbling camera matrix rotation scales
+        // We only need one rotation angle now for the barrel roll effect
         double cosA = Math.cos(rotationAngle), sinA = Math.sin(rotationAngle); 
-        double cosB = Math.cos(rotationAngle * 0.5), sinB = Math.sin(rotationAngle * 0.5); 
 
         double lightX = 0.577, lightY = -0.577, lightZ = -0.577; 
 
@@ -104,15 +100,12 @@ public class MengerSpongeLoader extends Loader {
                 double rLen = Math.sqrt(rayDirX * rayDirX + rayDirY * rayDirY + rayDirZ * rayDirZ); 
                 rayDirX /= rLen; rayDirY /= rLen; rayDirZ /= rLen; 
 
-                // BACK TO ORIGINAL: Wild tumbling camera viewport look paths
-                double rx1 = rayDirX * cosA - rayDirZ * sinA; 
-                double rz1 = rayDirX * sinA + rayDirZ * cosA; 
-                double rx = rx1 * cosB + rayDirY * sinB; 
-                double ry = -rx1 * sinB + rayDirY * cosB; 
-                double rz = rz1; 
+                // Stare straight down the Z-axis (tunnel) and apply a barrel roll to X/Y.
+                double rx = rayDirX * cosA - rayDirY * sinA; 
+                double ry = rayDirX * sinA + rayDirY * cosA; 
+                double rz = rayDirZ; 
 
-                // THE SIMPLE FIX: Keep the camera anchored at (0.5, 0.5) inside the open airway lane.
-                // Scaled dynamically by currentScale only to keep the infinite looping smooth.
+                // Camera remains perfectly anchored inside the open airway lane.
                 double cameraX = 0.50 / currentScale; 
                 double cameraY = 0.50 / currentScale;
                 double cameraZ = -1.5 / currentScale; 
@@ -191,7 +184,7 @@ public class MengerSpongeLoader extends Loader {
 
             char renderChar = SHADE_RAMP[shadeIndex]; 
             String colorCode = String.format("\u001B[38;2;%d;%d;%dm", r, g, b); 
-            outputBuffer[k] = colorCode + renderChar + RESET; 
+            outputBuffer[k] = colorCode + renderChar + "\u001B[0m"; // Replaced RESET with exact ANSI
         } 
     } 
 

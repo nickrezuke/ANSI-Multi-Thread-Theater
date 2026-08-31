@@ -23,6 +23,7 @@ public class LoaderFactory {
         // Define all loaders here.... (w/ lists of multiple possible names)
         register("Chladni", ChladniLoader::new);
         register("Apple", AppleLoader::new);
+        register("DogHead", DogHeadLoader::new);
         register("RefractiveMagnifierLake", RefractiveMagnifierLakeLoader::new);
         register("SpiderWeb", SpiderWebLoader::new);
         register("InternetDino", InternetDinoLoader::new);
@@ -162,6 +163,7 @@ public class LoaderFactory {
         register("BigBen", BigBenLoader::new);
         register("TexelKevinCube", TexelKevinCubeLoader::new);
         register("NyanCat", NyanCatLoader::new);
+        register("CatsEyeMarble", CatsEyeMarbleLoader::new);
         //register("MtFuji", MtFujiLoader::new); TODO Make a Mt. Fuji loader
         register("BouncingSpinner", BouncingSpinnerLoader::new);
         register("TexelHyperchromaticKaleidoscope", TexelHyperchromaticKaleidoscopeLoader::new);

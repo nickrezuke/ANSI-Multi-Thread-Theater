@@ -1,5 +1,4 @@
-// TODO: Variant 3 Tabby Cat is too stripey, looks like peppermint
-// TODO: Add more Cat Breed Variants?
+// TODO: Add more Cat Breed Variants (Bengal?  Silver?  One with two different colored eyes?  Orange Cat?)?
 
 public class CatHeadLoader extends Loader {
     private static final StatusStage[] CAT_STAGES = {
@@ -22,17 +21,6 @@ public class CatHeadLoader extends Loader {
     private int breedVariant = 1;
     private double A = 0;
 
-    // Per-instance randomization so markings aren't perfectly repeating/mathematical.
-    // NOTE: these drive fixed-duty-cycle patterns (angle/direction based, not raw
-    // sine-threshold luck) so coverage stays visible regardless of which random
-    // phase gets rolled - see resolveBreedMarking().
-    private static final int CALICO_BLOB_COUNT = 5;
-    private double[] blobDirX = new double[CALICO_BLOB_COUNT];
-    private double[] blobDirY = new double[CALICO_BLOB_COUNT];
-    private double[] blobDirZ = new double[CALICO_BLOB_COUNT];
-    private double[] blobThreshold = new double[CALICO_BLOB_COUNT];
-    private boolean[] blobIsBlack = new boolean[CALICO_BLOB_COUNT];
-
     private int tabbyStripeCount;
     private double tabbyPhase, tabbyWarpFreq, tabbyWarpPhase;
     private double foreheadMOffset, foreheadMWave;
@@ -47,24 +35,10 @@ public class CatHeadLoader extends Loader {
         // Randomly select a cat breed variant on initialization, inspired by DonutLoader[cite: 2]
         breedVariant = (int) (Math.random() * 4) + 1;
 
-        // Randomize marking "genetics" per instance so patterns feel organic instead of a fixed formula.
-        // Calico patches: pick blob directions on the unit sphere (avoiding the exact poles so
-        // every blob is reachable) with a threshold band tuned so total coverage never collapses
-        // to near-zero, no matter which random draw comes up.
-        for (int i = 0; i < CALICO_BLOB_COUNT; i++) {
-            double t = 0.25 + Math.random() * (Math.PI - 0.5);
-            double p = Math.random() * Math.PI * 2;
-            blobDirX[i] = Math.sin(t) * Math.cos(p);
-            blobDirY[i] = Math.cos(t);
-            blobDirZ[i] = Math.sin(t) * Math.sin(p);
-            blobThreshold[i] = 0.35 + Math.random() * 0.25; // cosine-similarity cutoff (smaller = bigger patch)
-            blobIsBlack[i] = Math.random() < 0.35;
-        }
-
         // Tabby stripes are generated from the point's angle around the head rather than raw
         // local coordinates, so the on-screen stripe fraction stays consistent through the
         // rotation instead of depending on lucky phase alignment.
-        tabbyStripeCount = 7 + (int) (Math.random() * 5);  // 7-11 stripes, varies cat to cat
+        tabbyStripeCount = 5 + (int) (Math.random() * 4);  // 5-8 stripes, varies cat to cat
         tabbyPhase = Math.random() * Math.PI * 2;
         tabbyWarpFreq = 2.0 + Math.random() * 1.5;         // makes stripes waver instead of ruler-straight
         tabbyWarpPhase = Math.random() * Math.PI * 2;
@@ -348,31 +322,43 @@ public class CatHeadLoader extends Loader {
 
     /**
      * Procedural breed markings, redesigned to read as actual fur patterns rather than
-     * a repeating math grid: organic multi-frequency "noise" for calico blotches, and
+     * a repeating math grid: a fixed, stereotypical patch layout for calico, and
      * warped/wavering stripes plus a classic forehead "M" for the tabby.
      */
     private String resolveBreedMarking(double localX, double localY, double localZ, String baseColor) {
         if (breedVariant == 2) {
-            // CALICO: a handful of irregular patches placed by direction on the unit sphere
-            // (not by raw sine threshold), so coverage is guaranteed regardless of which
-            // random phase this instance happened to roll.
-            double ux = localX / 1.35, uy = localY / 0.95, uz = localZ / 0.95;
-            double mag = Math.sqrt(ux * ux + uy * uy + uz * uz);
-            if (mag > 0) {
-                ux /= mag; uy /= mag; uz /= mag;
+            // CALICO: hardcoded classic layout, a black cap over the
+            // crown and left side of the head, a ginger patch over the right cheek and ear,
+            // and one smaller ginger patch on the back-left haunch to break up the symmetry.
+            // A small deterministic wave (not per-instance random) keeps the patch edges from
+            // looking like ruled-off regions.
+            double edgeJitter = 0.05 * Math.sin(localY * 9.0 + localZ * 5.0);
+
+            // Black cap: crown and left side of the head.
+            boolean blackPatch = (localX < -0.05 + edgeJitter) && (localY < 0.10);
+            if (blackPatch) {
+                return tertiaryFurColor;
             }
-            for (int i = 0; i < CALICO_BLOB_COUNT; i++) {
-                double dot = ux * blobDirX[i] + uy * blobDirY[i] + uz * blobDirZ[i];
-                if (dot > blobThreshold[i]) {
-                    return blobIsBlack[i] ? tertiaryFurColor : secondaryFurColor;
-                }
+
+            // Ginger patch: right cheek sweeping up over the right ear.
+            boolean gingerPatch = (localX > 0.15 + edgeJitter) && (localY < 0.40);
+            if (gingerPatch) {
+                return secondaryFurColor;
             }
+
+            // Smaller ginger patch on the back-left haunch for a less perfectly-bisected look.
+            boolean rearPatch = (localX < -0.55) && (localY > -0.05) && (localY < 0.55) && (localZ > 0.15);
+            if (rearPatch) {
+                return secondaryFurColor;
+            }
+
             return baseColor; // white base showing through
         }
 
         if (breedVariant == 3) {
             // Classic tabby "M" on the forehead: two soft, wavering strokes just above
-            // the eyes/nose bridge, close to center.
+            // the eyes/nose bridge, close to center. This is the single most recognizable
+            // tabby cue, so it's kept bold and untouched by anything below.
             boolean onForehead = localY < -0.25 && localY > -0.72 && localZ < -0.45;
             if (onForehead) {
                 double stroke = Math.abs(Math.abs(localX) - (foreheadMOffset + 0.10 * Math.sin(localY * foreheadMWave)));
@@ -380,20 +366,41 @@ public class CatHeadLoader extends Loader {
                     return secondaryFurColor;
                 }
             }
-
-            // Body stripes: driven by the point's angle around the head (like real mackerel
-            // tabby banding wrapping the body) rather than raw local X, so the on-screen
-            // stripe fraction stays roughly constant through the whole rotation instead of
-            // depending on lucky phase alignment. A gentle vertical warp keeps them from
-            // looking ruler-straight.
-            double angle = Math.atan2(localZ, localX);
-            double warp = 0.15 * Math.sin(localY * tabbyWarpFreq + tabbyWarpPhase);
-            double band = Math.sin((angle + warp) * tabbyStripeCount + tabbyPhase);
-            if (band > 0.25) {
+ 
+            // Cheek stripes: a couple of short, fixed diagonal strokes fanning back from
+            // each eye toward the ear - the second most recognizable tabby cue. Tightly
+            // confined to the front-facing cheek zone so they read as "face markings"
+            // rather than bleeding into the body pattern below.
+            boolean onCheek = localZ < -0.10 && localZ > -0.75 && localY > -0.55 && localY < 0.05
+                    && Math.abs(localX) > 0.34 && Math.abs(localX) < 0.85;
+            if (onCheek) {
+                double cheekLine = Math.abs(localX) - (0.55 + 0.30 * (localY + 0.25));
+                if (Math.abs(cheekLine) < 0.045) {
+                    return secondaryFurColor;
+                }
+            }
+ 
+            // Keep the muzzle bridge and the underside of the chin/throat clear of any
+            // striping so the face itself still reads as a solid-colored cat face.
+            boolean onMuzzle = localZ < -0.35 && Math.abs(localX) < 0.34;
+            boolean onChin = localY > 0.55;
+            if (onMuzzle || onChin) {
+                return baseColor;
+            }
+ 
+            // Crown / sides / back: even bands keyed ONLY off head height (localY), with a
+            // small wobble tied to X for an organic, non-ruler-straight edge. Critically,
+            // this never depends on localZ (depth around the skull) the way the old
+            // angle-based version did, so the exact same clean ring pattern shows on the
+            // sides AND the back of the head - no more spiral wraparound that made it read
+            // as a swirling cat's-eye marble from behind.
+            double wobble = 0.10 * Math.sin(localX * tabbyWarpFreq + tabbyWarpPhase);
+            double band = Math.sin(localY * tabbyStripeCount * 2.6 + wobble + tabbyPhase);
+            if (band > 0.55) {
                 return secondaryFurColor;
             }
         }
-
+ 
         return baseColor;
     }
 }

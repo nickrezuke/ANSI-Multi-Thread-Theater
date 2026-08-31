@@ -1,5 +1,3 @@
-// TODO: Venus is a little boring, anything we can do?
-
 import java.util.Random;
 
 public class VenusLoader extends Loader {

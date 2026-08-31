@@ -1,5 +1,3 @@
-// TODO: Improve the water shimmering
-
 public class OasisLoader extends Loader {
     private static final StatusStage[] OASIS_STAGES = {
             new StatusStage(25, "Calculating atmospheric light scattering:"),
@@ -62,12 +60,12 @@ public class OasisLoader extends Loader {
                 double distToLight = Math.sqrt(lightDx * lightDx + lightDy * lightDy);
 
                 double glowWeight = Math.max(0.0, 1.0 - (distToLight / 140.0));
-                if(distToLight < 8.0)
+                if (distToLight < 8.0)
                     glowWeight = 1.2;
 
                 int[] skyRGB = blendColors(RGB_SKY_DEEP, RGB_SKY_GLOW, Math.pow(Math.min(1.0, glowWeight), 2.0));
 
-                if(0.10 > zBuffer[index]) {
+                if (0.10 > zBuffer[index]) {
                     zBuffer[index] = 0.10;
 
                     char skyChar = (noise > glowWeight * 2.0) ? '▓' : '█';
@@ -83,26 +81,26 @@ public class OasisLoader extends Loader {
                 double frontDune = 24.0 + Math.cos((x + 40) * 0.03) * 6.0;
 
                 double activeDune = height;
-                if(y >= backDune)
+                if (y >= backDune)
                     activeDune = backDune;
-                if(y >= midDune && midDune > backDune)
+                if (y >= midDune && midDune > backDune)
                     activeDune = midDune;
-                if(y >= frontDune && frontDune > midDune)
+                if (y >= frontDune && frontDune > midDune)
                     activeDune = frontDune;
 
-                if(y >= activeDune && 0.40 > zBuffer[index]) {
+                if (y >= activeDune && 0.40 > zBuffer[index]) {
                     zBuffer[index] = 0.40;
 
                     double slope = Math.sin(x * 0.05 + y * 0.1);
                     int[] sandRGB;
                     char sandChar;
 
-                    if(slope > 0.2) {
+                    if (slope > 0.2) {
                         sandRGB = blendColors(RGB_SAND_SHADOW, RGB_SAND_MID, 0.4 + noise * 0.2);
                         sandChar = (noise > 0.6) ? '▓' : '▒';
                     } else {
                         double ripple = Math.sin(y * 3.0 + x * 0.1) + noise * 0.5;
-                        if(ripple > 0.8) {
+                        if (ripple > 0.8) {
                             sandRGB = blendColors(RGB_SAND_MID, RGB_SAND_LIT, 0.5);
                             sandChar = '▒';
                         } else {
@@ -126,33 +124,59 @@ public class OasisLoader extends Loader {
                 double distOuter = (dx * dx) / (40.0 * 40.0) + (dy * dy) / (10.0 * 10.0) + edgeWarp;
                 double distInner = (dx * dx) / (28.0 * 28.0) + (dy * dy) / (5.5 * 5.5) + (edgeWarp * 1.5);
 
-                if(distOuter < 1.0 && 0.60 > zBuffer[index]) {
+                if (distOuter < 1.0 && 0.60 > zBuffer[index]) {
                     zBuffer[index] = 0.60;
 
-                    if(distInner < 1.0) {
+                    if (distInner < 1.0) {
                         // SHIMMERING WATER SURFACE (Animated with timeClock)
                         int[] waterRGB = RGB_WATER;
                         char waterChar = '█';
 
-                        double waveShimmer = Math.sin(x * 0.3 + timeClock * 3.0 + y * 0.5);
-                        if(waveShimmer > 0.5) {
-                            waterChar = '=';
-                        } else if(waveShimmer < -0.5) {
+                        // 1. Multi-layered organic wave interference
+                        double wave1 = Math.sin(x * 0.4 + timeClock * 2.5 + y * 0.5);
+                        double wave2 = Math.cos(x * 0.15 - timeClock * 1.2 + y * 0.3);
+                        double wave3 = Math.sin((x - y) * 0.25 + timeClock * 1.8);
+
+                        // Combine frequencies and add spatial noise for chaos
+                        double waveHeight = (wave1 * 0.4) + (wave2 * 0.4) + (wave3 * 0.2);
+                        waveHeight += (noise - 0.5) * 0.3;
+
+                        // 2. Map ASCII chars to wave topography (peaks and troughs)
+                        if (waveHeight > 0.3) {
                             waterChar = '~';
+                        } else if (waveHeight < -0.3) {
+                            waterChar = '=';
+                        } else if (noise > 0.8) {
+                            waterChar = '-';
                         }
 
-                        // Dynamic moving glint reflection
-                        double glintPos = Math.sin(timeClock * 1.5) * 5.0;
-                        if(dx < (-5 + glintPos) && dx > (-15 + glintPos) && dy < 0) {
-                            double glint = Math.max(0, 1.0 - (distInner * 1.2));
-                            waterRGB = blendColors(RGB_WATER, RGB_WATER_GLINT, glint * 0.8);
-                            if(glint > 0.4)
+                        // 3. Dynamic Specular Sunlight Glint
+                        // Creates a sweeping reflection band that only illuminates wave peaks
+                        double glintSweep = Math.sin(timeClock * 0.8) * 5.0;
+                        double sunBand = Math.exp(-Math.pow((dx + 8.0 + glintSweep) / 7.0, 2.0));
+
+                        if (waveHeight > 0.0 && sunBand > 0.1) {
+                            double glintIntensity = Math.min(1.0, waveHeight * sunBand * 2.5);
+                            waterRGB = blendColors(RGB_WATER, RGB_WATER_GLINT, glintIntensity);
+
+                            // High intensity specular glints
+                            if (glintIntensity > 0.5)
+                                waterChar = '▒';
+                            if (glintIntensity > 0.8)
                                 waterChar = '▓';
+                        } else {
+                            // Subsurface depth coloring (troughs become slightly darker turquoise)
+                            int[] deepWater = { 35, 95, 115 };
+                            double depthRatio = Math.max(0.0, Math.min(1.0, (waveHeight + 1.0) / 2.0));
+                            waterRGB = blendColors(deepWater, RGB_WATER, depthRatio);
                         }
 
-                        // Palm tree reflections in water
-                        if(x > 75 && x < 105 && (noise > 0.3) && (x % 12 < 4)) {
-                            waterRGB = blendColors(RGB_WATER, RGB_LEAF_SHADOW, 0.5);
+                        // 4. Distorted Palm Tree Reflections
+                        if (x > 75 && x < 105 && (noise > 0.3) && (x % 12 < 4)) {
+                            // Reflection breaks up on the highest wave peaks
+                            if (waveHeight < 0.5) {
+                                waterRGB = blendColors(waterRGB, RGB_LEAF_SHADOW, 0.5);
+                            }
                         }
 
                         outputBuffer[index] = colorStr(waterRGB) + waterChar + RESET;
@@ -161,7 +185,7 @@ public class OasisLoader extends Loader {
                         int[] rimRGB = (dx < 0) ? RGB_CRATER_SHADOW : RGB_CRATER_LIT;
                         char rimChar = (noise > 0.5) ? '▓' : '▒';
 
-                        if(distOuter > 0.7) {
+                        if (distOuter > 0.7) {
                             int[] adjacentSand = (dx < 0) ? RGB_SAND_SHADOW : RGB_SAND_LIT;
                             rimRGB = blendColors(rimRGB, adjacentSand, (distOuter - 0.7) / 0.3);
                         }
@@ -173,12 +197,12 @@ public class OasisLoader extends Loader {
                 // -------------------------------------------------------------
                 // LAYER 4: CAST SHADOWS (Z-Depth: 0.70)
                 // -------------------------------------------------------------
-                if(y > 18 && x > 75 && 0.70 > zBuffer[index]) {
+                if (y > 18 && x > 75 && 0.70 > zBuffer[index]) {
                     double shadowWarp = Math.sin(y * 0.5) * 1.5 + noise * 1.0;
                     double shadow1 = Math.abs(y - (21 + (x - 85 + shadowWarp) * 0.28));
                     double shadow2 = Math.abs(y - (18 + (x - 98 + shadowWarp) * 0.25));
 
-                    if((shadow1 < 1.0 || shadow2 < 1.0) && distOuter > 1.1) {
+                    if ((shadow1 < 1.0 || shadow2 < 1.0) && distOuter > 1.1) {
                         zBuffer[index] = 0.70;
                         outputBuffer[index] = colorStr(RGB_PALM_CAST) + ((noise > 0.4) ? "▓" : "▒") + RESET;
                     }
@@ -207,7 +231,7 @@ public class OasisLoader extends Loader {
             int curX = (int) (topX + t * (baseX - topX) + Math.sin(t * Math.PI) * 2.0);
 
             int index = curX + width * y;
-            if(index >= 0 && index < width * height && 0.80 > zBuffer[index]) {
+            if (index >= 0 && index < width * height && 0.80 > zBuffer[index]) {
                 zBuffer[index] = 0.80;
                 int[] trunkColor = blendColors(RGB_PALM_TRUNK, RGB_SAND_LIT, 0.15);
                 outputBuffer[index] = colorStr(trunkColor) + "█" + RESET;
@@ -218,21 +242,21 @@ public class OasisLoader extends Loader {
         for (int dy = -4; dy <= 4; dy++) {
             for (int dx = -7; dx <= 7; dx++) {
                 double dist = Math.sqrt(dx * dx + dy * dy);
-                if(dist > 1.5 && dist < 7.5) {
+                if (dist > 1.5 && dist < 7.5) {
                     double arc = -Math.abs(dx) * 0.6 + 2.0;
-                    if(Math.abs(dy - arc) < 1.5) {
-                        if(spatialHash(topX + dx, topY + dy) > 0.3) {
+                    if (Math.abs(dy - arc) < 1.5) {
+                        if (spatialHash(topX + dx, topY + dy) > 0.3) {
                             int fx = topX + dx;
                             int fy = topY + dy;
                             int index = fx + width * fy;
 
-                            if(index >= 0 && index < width * height && 0.80 > zBuffer[index]) {
+                            if (index >= 0 && index < width * height && 0.80 > zBuffer[index]) {
                                 zBuffer[index] = 0.80;
                                 int[] leafColor = (dx < 0 && dy < 0) ? RGB_LEAF_LIT : RGB_LEAF_SHADOW;
                                 char leaf = (Math.abs(dx) > Math.abs(dy)) ? '≈' : '║';
-                                if(dx < 0 && dy > 0)
+                                if (dx < 0 && dy > 0)
                                     leaf = '/';
-                                if(dx > 0 && dy > 0)
+                                if (dx > 0 && dy > 0)
                                     leaf = '\\';
 
                                 outputBuffer[index] = colorStr(leafColor) + leaf + RESET;
@@ -248,7 +272,7 @@ public class OasisLoader extends Loader {
         int[][] grassOffsets = { { 0, 0 }, { -1, -1 }, { 1, -1 }, { 0, -2 } };
         for (int[] offset : grassOffsets) {
             int index = (cx + offset[0]) + width * (cy + offset[1]);
-            if(index >= 0 && index < width * height && 0.80 > zBuffer[index]) {
+            if (index >= 0 && index < width * height && 0.80 > zBuffer[index]) {
                 zBuffer[index] = 0.80;
                 int[] grassColor = (offset[0] < 0) ? RGB_LEAF_LIT : RGB_LEAF_SHADOW;
                 outputBuffer[index] = colorStr(grassColor) + "│" + RESET;

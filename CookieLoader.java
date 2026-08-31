@@ -1,5 +1,3 @@
-// TODO: Improve step size rendering of all cookies some have some little gaps / see through
-
 public class CookieLoader extends Loader {
 
     private static final StatusStage[] COOKIE_STAGES = {
@@ -20,6 +18,9 @@ public class CookieLoader extends Loader {
     private static final int ACCENT_B = 4; 
     private static final int ACCENT_C = 5; 
 
+    private static final int cookieShuffleTime = 800;
+    private long lastShuffle = System.currentTimeMillis();
+
     private static final double[][] CHOC_CHIPS = {
             { -1.6, 0.4 }, { -1.1, -0.7 }, { -0.6, 0.9 }, { -0.15, -0.25 }, { 0.35, 0.65 },
             { 0.75, -0.85 }, { 1.15, 0.2 }, { 1.5, -0.45 }, { 1.7, 0.7 }, { -1.9, -0.15 },
@@ -32,7 +33,7 @@ public class CookieLoader extends Loader {
             { -0.8, 1.3 }, { 1.5, 0.9 }, { -0.3, -1.4 }, { 1.0, 1.15 }, { -1.4, -1.0 }
     };
 
-    private int cookieType;
+    private int cookieType = -1;
     private String[][] cellCache;
 
     private double A = 1.05; 
@@ -48,10 +49,14 @@ public class CookieLoader extends Loader {
 
     @Override
     protected void initialize() {
-        cookieType = (int) (Math.random() * 8) + 1;
+        int oldCookieType = cookieType;
+        while (cookieType == oldCookieType) {
+            // Never get two in a row
+            cookieType = (int) (Math.random() * 8) + 1;
+        }
 
         String primary, secondary, filling, accentA, accentB, accentC;
-
+        //cookieType = 4; // TODO REMOVE THIS
         switch (cookieType) {
             case 1: // CHOCOLATE CHIP
                 primary = "\u001B[38;5;222m";
@@ -63,7 +68,7 @@ public class CookieLoader extends Loader {
                 break;
 
             case 2: // OREO
-                // TODO: Add a design to the oreo cookie
+                // TODO: Add a design to the oreo cookie instead of circles
                 primary = "\u001B[38;5;235m"; 
                 secondary = "\u001B[38;5;239m"; 
                 filling = "\u001B[38;5;230m"; 
@@ -90,7 +95,7 @@ public class CookieLoader extends Loader {
             }
 
             case 4: // STROOPWAFEL
-                // TODO improve this one
+                // TODO improve this one its not visually striking...
                 primary = "\u001B[38;5;179m"; 
                 secondary = "\u001B[38;5;136m"; 
                 filling = "\u001B[38;5;166m"; 
@@ -156,6 +161,12 @@ public class CookieLoader extends Loader {
 
     @Override
     protected void renderGeometry(String[] outputBuffer, double[] zBuffer) {
+        long now = System.currentTimeMillis();
+        if(now > lastShuffle + cookieShuffleTime) {
+            lastShuffle = now;
+            initialize();
+        }
+
         double sinA = Math.sin(A), cosA = Math.cos(A);
         double sinB = Math.sin(B), cosB = Math.cos(B);
 
@@ -182,7 +193,7 @@ public class CookieLoader extends Loader {
         final double RADIUS = 2.5;
         final double BASE_H = 0.25;
         final double DOME_H = 0.40;
-        final double step = 0.07;
+        final double step = 0.04;
 
         for (double x = -RADIUS; x <= RADIUS; x += step) {
             for (double y = -RADIUS; y <= RADIUS; y += step) {
@@ -246,7 +257,7 @@ public class CookieLoader extends Loader {
         final double CREAM_H = 0.45; // Double Stuf
         final double zTop = CREAM_H / 2 + WAFER_H;
         final double zBot = -zTop;
-        final double step = 0.07;
+        final double step = 0.04;
 
         for (double x = -WAFER_R; x <= WAFER_R; x += step) {
             for (double y = -WAFER_R; y <= WAFER_R; y += step) {
@@ -271,7 +282,7 @@ public class CookieLoader extends Loader {
             for (double z = zBot; z <= zBot + WAFER_H; z += 0.04) {
                 drawPoint(WAFER_R * cosT, WAFER_R * sinT, z, cosT, sinT, 0.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, PRIMARY);
             }
-            for (double z = -CREAM_H / 2; z <= CREAM_H / 2; z += 0.04) {
+            for (double z = -CREAM_H / 2; z <= CREAM_H / 2; z += 0.02) {
                 drawPoint(CREAM_R * cosT, CREAM_R * sinT, z, cosT, sinT, 0.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, FILLING);
             }
             for (double z = CREAM_H / 2; z <= zTop; z += 0.04) {
@@ -337,7 +348,7 @@ public class CookieLoader extends Loader {
         final double cell = 0.7;
         final double pi2C = 2.0 * Math.PI / cell;
         final double amp = 0.035;
-        final double step = 0.06;
+        final double step = 0.035;
 
         for (double x = -SW_R; x <= SW_R; x += step) {
             for (double y = -SW_R; y <= SW_R; y += step) {
@@ -382,7 +393,7 @@ public class CookieLoader extends Loader {
         final double CB_R = 2.4; 
         final double CB_H = 0.65;
         final double cell = 0.5;
-        final double step = 0.06;
+        final double step = 0.035;
 
         // Flat Top and Bottom faces spanning the whole square
         for (double x = -CB_R; x <= CB_R; x += step) {
@@ -417,7 +428,7 @@ public class CookieLoader extends Loader {
         final double DOME_H = 0.35;
         final double FROST_H = 0.09;
         final double FROST_R = SC_R * 0.90;
-        final double step = 0.07;
+        final double step = 0.04;
 
         for (double x = -SC_R; x <= SC_R; x += step) {
             for (double y = -SC_R; y <= SC_R; y += step) {
@@ -486,7 +497,7 @@ public class CookieLoader extends Loader {
         final double SD_R = 2.5;
         final double BASE_H = 0.25;
         final double DOME_H = 0.35;
-        final double step = 0.07;
+        final double step = 0.04;
 
         for (double x = -SD_R; x <= SD_R; x += step) {
             for (double y = -SD_R; y <= SD_R; y += step) {
@@ -530,7 +541,7 @@ public class CookieLoader extends Loader {
         final double HOLE_R = 0.55;
         final double zTop = JAM_H / 2 + DOUGH_H;
         final double zBot = -zTop;
-        final double step = 0.06;
+        final double step = 0.035;
 
         for (double x = -LZ_R; x <= LZ_R; x += step) {
             for (double y = -LZ_R; y <= LZ_R; y += step) {
