@@ -1,10 +1,10 @@
-# ANSI Multi-Thread Theater: An Advanced Real-Time ASCII Shading Engine
+# ANSI Multi-Thread Theater: A Real-Time ASCII Shading Engine
 
 <img width="1634" height="977" alt="LoaderSpinners" src="https://github.com/user-attachments/assets/e1518dbc-a493-4cf1-9bb0-5b938c9f6fb6" />
 
-This project is a collection of real-time 3D ASCII / ANSI graphics, able to be viewed with this rendering engine built entirely in vanilla Java. Depending on the loading screen selected, it introduces full ANSI TrueColor ray-lit compositing, geometric abstractions, advanced math/physics simulations, and sometimes even real-time input handling, all controlled under asynchronous thread messaging to serve as a functional and visually stunning "loading screen" for active Java background processes.
+The ANSI Multi-Thread Theater (ANSItheater) is a collection of real-time 3D ASCII / ANSI graphics, able to be viewed with this rendering engine built entirely in vanilla Java. Depending on the loading screen selected, it introduces full ANSI TrueColor ray-lit compositing, geometric abstractions, advanced math/physics simulations, and sometimes even real-time input handling, all controlled under asynchronous thread messaging to serve as a functional and visually stunning "loading screen" for active Java background processes.
 
-The idea for this "ANSI amphitheater", or "ANSItheater" project actually initially came from the famous Andy Sloane’s `donut.c`, definitely check out the [original code by Andy Sloane](https://www.a1k0n.net/2006/09/15/obfuscated-c-donut.html) inspirtion behind this. The [explanation page here](https://www.a1k0n.net/2011/07/20/donut-math.html) shows the math behind it. While the original concept certainly proved that 3D graphics could be projected onto a flat text grid for animating 3D graphics from within the terminal itself, and while other "terminal renderer" projects certainly exist to some minimal popularity, this project attempts to transform that novelty into a proper loading-screen framework for use in Java, along with a sizable library of high quality artwork. 
+The idea for this "ANSI amphitheater", (or "ANSItheater") project actually initially came from the famous Andy Sloane’s `donut.c`, definitely check out the [original code by Andy Sloane](https://www.a1k0n.net/2006/09/15/obfuscated-c-donut.html) inspirtion behind this. The [explanation page here](https://www.a1k0n.net/2011/07/20/donut-math.html) shows the math behind it. While the original concept certainly proved that 3D graphics could be projected onto a flat text grid for animating 3D graphics from within the terminal itself, and while other "terminal renderer" projects certainly exist to some minimal popularity, this project attempts to transform that novelty into a proper loading-screen framework for use in Java, along with a sizable library of high quality artwork. 
 
 ---
 
@@ -494,8 +494,8 @@ Interactive Type & Text appears Loader (other than the alphabet loader?)
 ### Running the Project Standalone
 ->1. Clone the repository to your local machine:
    ```bash
-   git clone https://github.com/nickrezuke/Loading-Spinners.git
-   cd Loading-Spinners
+   git clone https://github.com/nickrezuke/ANSI-Multi-Thread-Theater.git
+   cd ANSI-Multi-Thread-Theater
    ```
 ->2a. Compile and Run the java files:
    ```bash

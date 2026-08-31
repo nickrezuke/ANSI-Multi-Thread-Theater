@@ -92,7 +92,6 @@ public class LoaderFactory {
         //register("StatueOfLiberty", StatueOfLibertyLoader::new); TODO Make a "Statue Of Liberty" Loader
         register("Taco", TacoLoader::new);
         register("Jupiter", JupiterLoader::new);
-        //register("Cupcake", CupcakeLoader::new); TODO Make a Cupcake loader (with flavor variants??)
         register(List.of("GreyScottReactionDiffusion", "ReactionDiffusion", "DiffusionReaction"), ReactionDiffusionLoader::new);
         register("MotorcycleRacer", MotorcycleRacerLoader::new);
         register("TexelEldritchAetherCube", TexelEldritchAetherCubeLoader::new);
@@ -174,6 +173,7 @@ public class LoaderFactory {
         register(List.of("HyperSphere", "4D Sphere"), HypersphereLoader::new);
         register("HopfFibration", HopfFibrationLoader::new);
         register("Snake", SnakeLoader::new);
+        register("Cupcake", CupcakeLoader::new);
         register("Pong", PongLoader::new);
         register(List.of("BrickBreakout", "Breakout"), BrickBreakoutLoader::new);
         register("SpaceInvaders", SpaceInvadersLoader::new);
