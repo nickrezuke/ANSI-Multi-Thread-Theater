@@ -1,4 +1,5 @@
 // TODO: Fix visual clarity / angle of this....
+// TODO: Change the variant colors theyre just ripped straight from  the donut right now
 
 public class CupcakeLoader extends Loader {
 
@@ -149,7 +150,7 @@ public class CupcakeLoader extends Loader {
                 double nz_rot = nx * sinA + nz * cosA;
 
                 // Perspective projection onto standard terminal layout
-                double z_proj = z_rot + 4.5;
+                double z_proj = z_rot + 1.9;
                 double D = 1.0 / z_proj;
 
                 int screen_x = (int) (window_width / 2.0 + 35 * D * x_rot);

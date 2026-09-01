@@ -53,17 +53,23 @@ This project comes packed with a ton of different variants, all derived from a c
 
 -> **TurkeyLeg**: <!-- TODO: Elaborate on this section -->
 
+-> **BouquetOfFlowers**: <!-- TODO: Elaborate on this section -->
+
 -> **Sushi**: <!-- TODO: Elaborate on this section -->
 
 -> **SnowGlobe**: <!-- TODO: Elaborate on this section -->
+
+-> **Fireworks**: <!-- TODO: Elaborate on this section -->
 
 -> **Butterfly**: <!-- TODO: Elaborate on this section -->
 
 -> **HotDog**: <!-- TODO: Elaborate on this section -->
 
--> **Cookie** <!-- TODO: Elaborate on this section -->
+-> **Cookie**: <!-- TODO: Elaborate on this section -->
 
 -> **CosmicBrownie**: <!-- TODO: Elaborate on this section -->
+
+-> **Jawbreaker**: <!-- TODO: Elaborate on this section -->
 
 -> **ToyCar**: <!-- TODO: Elaborate on this section -->
 
@@ -73,9 +79,17 @@ This project comes packed with a ton of different variants, all derived from a c
 
 -> **SpiderWeb**: <!-- TODO: Elaborate on this section -->
 
+-> **Sunflower**: <!-- TODO: Elaborate on this section -->
+
 -> **Fish**: <!-- TODO: Elaborate on this section -->
 
--> **CatsEyeMarble** <!-- TODO: Elaborate on this section -->
+-> **ShipInABottle**: <!-- TODO: Elaborate on this section -->
+
+-> **CatsEyeMarble**: <!-- TODO: Elaborate on this section -->
+
+-> **Carousel**: <!-- TODO: Elaborate on this section -->
+
+-> **FerrisWheel**: <!-- TODO: Elaborate on this section -->
 
 ### Real Models
 I also included a few classic "graphics processing" loaders
@@ -176,6 +190,8 @@ I also included a few classic "graphics processing" loaders
 
 -> **SonicRings**: <!-- TODO: Elaborate on this section -->
 
+-> **Pokéball**: <!-- TODO: elaborate on this section -->
+
 ### Surface Light Reflection Logic
 
 -> **RainbowWhispPyramid**: <!-- TODO: Elaborate on this section -->
@@ -214,7 +230,7 @@ I also included a few classic "graphics processing" loaders
 
 -> **Moon**: <!-- TODO: Elaborate on this section -->
 
--> **ApolloLunarModule** <!-- TODO: Elaborate on this section -->
+-> **ApolloLunarModule**: <!-- TODO: Elaborate on this section -->
 
 -> **Satellite**: <!-- TODO: Elaborate on this section -->
 
@@ -278,6 +294,8 @@ I also included a few classic "graphics processing" loaders
 
 -> **PerlinNoiseB**: <!-- TODO: Elaborate on this section -->
 
+-> **DopplerEffect**: <!-- TODO: Elaborate on this section -->
+
 -> **Aizawa**: <!-- TODO: Elaborate on this section -->
 
 -> **Lorenz**: <!-- TODO: Elaborate on this section -->
@@ -301,6 +319,8 @@ I also included a few classic "graphics processing" loaders
 -> **NavierStokes**: <!-- TODO: Elaborate on this section -->
 
 -> **GreyScottReactionDiffusion**: <!-- TODO: Elaborate on this section -->
+
+-> **NewtonsCradle**: <!-- TODO: Elaborate on this section -->
 
 -> **Boids**: <!-- TODO: Elaborate on this section -->
 
@@ -453,26 +473,17 @@ Accretion Disk
 Comet / Meteor / Shooting Star?
 Gravitational Lensing Simulation?
 Structural Resonance Frequency vs Height of several lolipop weights
-Doppler Effect Simulation
 Zooming 3D Starfield
 Something with the high-detail resolution trick w/ blocks https://en.wikipedia.org/wiki/Block_Elements 
-Newton's Cradle Balls Swinging / Clacking
 3D Galton Board?  Like giant pyramid of 3D to make a 3D gaussian curve?
 2D Scene of an Aquarium / Coral Reef?
-Portal?  Like idk the simulated light going through blue / orange portals?
+Valve's Portal?  Like idk the simulated light "seeing" through blue / orange portals?
 Tower of Hanoi Solver?
-Fireworks
 Factorio-style conveyor belt factory like things moving around making new things
 Something to do with Lehigh or CCSU (3D model of The Blue Devil Itself??)
-Sunflower? or flowers in general?
-Pokeball?
 Andy's Fire https://www.a1k0n.net/2007/08/24/obfuscated-c-fire.html
-Jawbreaker
 Teacup on a plate
-Ship in a bottle
 Yoyo goin up and down
-Merry go round
-Ferris Wheel
 Jimmothy????
 Rick Roll?
 Lissajous Oscilloscope
@@ -481,7 +492,7 @@ Interactive Tanks-like Aiming & Shooting game w/ breakable ground
 Interactive Tile Sliding Puzzle (like pokemon ice dungeon)
 Interactive Sokoban game
 Interactive Type & Text appears Loader (other than the alphabet loader?)
-(MAKE SOME OF THE EXISTING GAMES PLAYABLE / INTERACTIVE????)
+(MAYBE MAKE SOME OF THE EXISTING GAMES PLAYABLE / INTERACTIVE????)
 
 ---
 
@@ -521,4 +532,4 @@ Interactive Type & Text appears Loader (other than the alphabet loader?)
 
 ## 🏗 Utilizing this Project (in your own projects)
 
-These `Loader`s operate concurrently with whatever called them.  To use a loader, you (the calling method) need to pass down an active thread token, spin up the canvas lifecycle, and feed numeric ticks over thread pipelines.  An example of this is shown in the `ExampleTask.java` file, either use similar logic or even just edit that file out into working with your project's archetecture.
+These `Loader`s operate concurrently with whatever called them (As can be seen above how we are literally calling "ExampleTask" in order to see these loaders in action...).  To use a loader to cover your own lenghty task in your own code, you (the calling method) need to pass down to the loader (callee) an active thread token, spin up the canvas lifecycle, and feed numeric "0-100 progress" ticks to the loader.  An example of this is shown in the `ExampleTask.java` file, either use similar logic or even just edit that file out into working with your project's archetecture.

@@ -42,11 +42,13 @@ public class LoaderFactory {
         register("TropicalIsland", TropicalIslandLoader::new);
         register("QuantumOrbital", QuantumOrbitalLoader::new);
         register("QuantumSpectrograph",QuantumSpectrographLoader::new);
+        //register("DopplerEffect", DopplerEffectLoader::new); TODO Make a "Doppler Effect" Loader
         register(List.of("GifPlayer", "GifFilePlayer"), GifFilePlayerLoader::new);
         register(List.of("MarioKart64", "MarioKart64ItemBox", "MarioKartItemBox"), MarioKart64ItemBoxLoader::new);
         register(List.of("Nintendo64", "Nintendo64Logo", "N64Logo"), Nintendo64LogoLoader::new);
         register(List.of("Xbox1Logo", "XboxLogo"), XboxLogoLoader::new);
         register(List.of("PlayStationIntro", "PlayStation1Intro", "PlayStationLogo", "PlayStation1Logo", "PS1Intro", "PS1"), PlayStation1IntroLoader::new);
+        //register("BouquetOfFlowers", BouquetOfFlowersLoader::new); TODO Make a Loader for a "Bouquet of Flowers"
         register("Butterfly", ButterflyLoader::new);
         register("Pluto", PlutoLoader::new);
         register("Oasis", OasisLoader::new);
@@ -125,17 +127,20 @@ public class LoaderFactory {
         register(List.of("HotDog", "Glizzy"), HotDogLoader::new);
         register("RainbowRing", RainbowRingLoader::new);
         register("CosmicBrownie", CosmicBrownieLoader::new);
+        //register(List.of("Pokeball", "Pokéball"), PokeballLoader::new); TODO Make a "Pokéball" loader
         register(List.of("SonicRing", "SonicRings"), SonicRingLoader::new);
         register("HaloRing", HaloRingLoader::new);
         register("KleinRing", KleinRingLoader::new);
         register("RockPaperScissors", RockPaperScissorsAutomatonLoader::new);
         register("FrutigerAero", FrutigerAeroLoader::new);
         register("Labyrinth3D", Labyrinth3DLoader::new);
+        //register(List.of("NewtonsCradle", "NewtonsBalls"), NewtonsCradleLoader::new); TODO Make a Loader for "Newton's Cradle"
         register("RainbowWhispSphere", RainbowWhispSphereLoader::new);
         register(List.of("Pizza", "PizzaSlice", "SliceOfPizza"), PizzaLoader::new);
         register(List.of("ImageFolder", "ImagePlayer"), ImageFolderLoader::new);
         register("TexelMuseumCube", TexelMuseumCubeLoader::new);
         register("PacManSphere", PacManSphereLoader::new);
+        //register("ShipInABottle", ShipInABottleLoader::new); TODO Make a "Ship in a Bottle" Loader
         register(List.of("InternationalSpaceStation", "ISS"), InternationalSpaceStationLoader::new);
         register("PsychedelicOctahedron", PsychedelicOctahedronLoader::new);
         register("RainbowWhispPyramid", RainbowWhispPyramidLoader::new);
@@ -162,6 +167,7 @@ public class LoaderFactory {
         register("BigBen", BigBenLoader::new);
         register("TexelKevinCube", TexelKevinCubeLoader::new);
         register("NyanCat", NyanCatLoader::new);
+        //register("Fireworks", FireworksLoader::new); TODO Make a "Fireworks" loader
         register("CatsEyeMarble", CatsEyeMarbleLoader::new);
         //register("MtFuji", MtFujiLoader::new); TODO Make a Mt. Fuji loader
         register("BouncingSpinner", BouncingSpinnerLoader::new);
@@ -170,11 +176,13 @@ public class LoaderFactory {
         register("ThreeBody", ThreeBodyLoader::new);
         register("Mars", MarsLoader::new);
         register("WireframeCube", WireframeCubeLoader::new);
+        //register("FerrisWheel", FerrisWheelLoader::new); TODO Make a "Ferris Wheel" Loader
         register(List.of("HyperSphere", "4D Sphere"), HypersphereLoader::new);
         register("HopfFibration", HopfFibrationLoader::new);
         register("Snake", SnakeLoader::new);
         register("Cupcake", CupcakeLoader::new);
         register("Pong", PongLoader::new);
+        //register("Jawbreaker", JawbreakerLoader::new); TODO Make a "Jawbreaker" loader
         register(List.of("BrickBreakout", "Breakout"), BrickBreakoutLoader::new);
         register("SpaceInvaders", SpaceInvadersLoader::new);
         register("Chess", ChessLoader::new);
@@ -190,6 +198,7 @@ public class LoaderFactory {
         register("Galaga", GalagaLoader::new);
         register("LangtonsAnt", LangtonsAntLoader::new);
         register("UtahTeapot", UtahTeapotLoader::new);
+        //register(List.of("Carousel", "MerryGoRound"), CarouselLoader::new); TODO Make a "Merry-Go-Round" or "Carousel" loader
         register(List.of("Boids", "HerdingAndFlocking"), BoidsLoader::new);
         register(List.of("TriColorChromeSpheres", "TriColorSpheres", "TriColorCheckerboard"), TriColorChromeSpheresLoader::new);
         register("BriansBrain", BriansBrainLoader::new);
@@ -209,6 +218,7 @@ public class LoaderFactory {
         register("GravityFabric", GravityFabricLoader::new); 
         register("TexelMagicalGlyph", TexelMagicalGlyphCubeLoader::new); 
         register("MengerSponge", MengerSpongeLoader::new); 
+        //register("Sunflower", SunflowerLoader::new); TODO Make a Loader for a "Sunflower"
         register("KaleidoscopicFractal", KaleidoscopicFractalLoader::new);
 
         // Derive names list automatically from unique registered keys
