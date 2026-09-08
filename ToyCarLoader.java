@@ -1,5 +1,5 @@
-// TODO: Increase size of the passengar area / window chasis
-// TODO: Is the windshield floating just above the other surface? I think i can see between them...
+// TODO: Increase size of the passenger area / window chasis
+// TODO: Is the windshield floating just above the other surface? I think I can see between them if I look carefully enough the angle isnt perfect...
 
 public class ToyCarLoader extends Loader {
 

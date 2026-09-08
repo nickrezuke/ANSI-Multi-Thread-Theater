@@ -1,5 +1,3 @@
-// TODO: Add "close" trees to the left and right to make it look like we're behind trees in the forest
-
 public class CampfireLoader extends Loader {
     private static final StatusStage[] CAMP_STAGES = {
             new StatusStage(25, "Dimming starry night sky matrices:"),
@@ -29,7 +27,7 @@ public class CampfireLoader extends Loader {
     private static final int[] RGB_KNIGHT_BASE = { 25, 28, 42 }; // Dark Armor / Cloak Shadow
     private static final int[] RGB_KNIGHT_LIGHT = { 220, 130, 45 }; // Dynamic Rim Lighting
 
-    // Framing Pine Forest Layout: { centerX, topY }
+    // Midground Framing Pine Forest Layout: { centerX, topY }
     private static final int[][] PINE_TREES = {
             // Far Left Forest Wall
             { -4, 2 }, { 2, 0 }, { 7, 4 }, { 13, 1 }, { 18, 5 }, { 24, 3 }, { 29, 7 }, { 35, 10 }, { 41, 12 },
@@ -38,6 +36,18 @@ public class CampfireLoader extends Loader {
             { 51, 9 }, { 57, 11 }, { 63, 12 }, { 69, 9 }, { 74, 10 },
             // Far Right Forest Wall
             { 79, 11 }, { 85, 8 }, { 90, 7 }, { 96, 2 }, { 101, 5 }, { 107, 1 }, { 112, 4 }, { 118, 0 }, { 123, 3 }
+    };
+
+    // Foreground Framing Pine Trees: { centerX, topY, height }
+    private static final int[][] FOREGROUND_TREES = {
+            // Left Foreground Trees
+            { -2, -3, 30 },
+            { 4, 18, 20 },
+            { 12, 2, 26 },
+            // Right Foreground Trees
+            { 122, -3, 28 },
+            { 116, 20, 18 },
+            { 108, 1, 28 }
     };
 
     public CampfireLoader() {
@@ -73,6 +83,81 @@ public class CampfireLoader extends Loader {
 
             for (int x = 0; x < width; x++) {
                 int index = x + width * y;
+
+                // -------------------------------------------------------------
+                // LAYER 0: FOREGROUND PINE TREE SILHOUETTES (Z-Depth: 0.99)
+                // -------------------------------------------------------------
+                boolean isFgPine = false;
+                boolean isFgTip = false;
+                int fgEdgeDistance = 0;
+                int hitFgTx = -1;
+
+                for (int[] tree : FOREGROUND_TREES) {
+                    int tx = tree[0];
+                    int topY = tree[1];
+                    int treeHeight = tree[2];
+
+                    if (y >= topY && y < topY + treeHeight) {
+                        int relY = y - topY;
+
+                        int tierH = 5;
+                        int tierIndex = relY / tierH;
+                        int inTierY = relY % tierH;
+                        
+                        double halfWidth = 1.2 + tierIndex * 1.8 + inTierY * 1.3;
+                        halfWidth += Math.sin(relY * 0.7) * 0.6;
+
+                        int dxTree = Math.abs(x - tx);
+                        if (dxTree <= halfWidth) {
+                            isFgPine = true;
+                            hitFgTx = tx;
+
+                            if (relY == 0 && dxTree == 0) {
+                                isFgTip = true;
+                            }
+                            fgEdgeDistance = (int) (halfWidth - dxTree);
+                            break;
+                        }
+                    }
+                }
+
+                if (isFgPine && 0.99 > zBuffer[index]) {
+                    zBuffer[index] = 0.99;
+
+                    double distToFireX = Math.abs(x - fireBaseX);
+                    double distToFireY = Math.abs(y - fireBaseY);
+                    double fireDist = Math.sqrt(distToFireX * distToFireX + distToFireY * distToFireY * 0.4);
+
+                    // Fixed: Expanded range threshold from 50.0 to 85.0 so edge trees catch light
+                    double fgGlow = Math.max(0.0, 1.0 - (fireDist / 85.0)) * 0.55 * flicker;
+
+                    boolean facesFire = (hitFgTx < fireBaseX && x >= hitFgTx) || (hitFgTx > fireBaseX && x <= hitFgTx);
+
+                    int[] fgRGB = blendColors(RGB_PINE_DARK, new int[] { 14, 20, 16 }, 0.4);
+                    if (facesFire) {
+                        fgGlow += 0.20 * flicker;
+                        fgRGB = blendColors(fgRGB, RGB_FIRE_MID, fgGlow);
+                    } else {
+                        // Fixed: Softer shadow blend so the back/off-side doesn't go pitch black
+                        fgRGB = blendColors(fgRGB, RGB_SHADOW_TONE, 0.45 + (fgGlow * 0.3));
+                    }
+
+                    char fgChar;
+                    double noise = spatialHash(x, y);
+                    if (isFgTip) {
+                        fgChar = '▲';
+                    } else if (facesFire && fgGlow > 0.15) {
+                        fgChar = (noise > 0.4) ? '▓' : '▒';
+                    } else if (fgEdgeDistance == 0) {
+                        fgChar = '▒';
+                    } else {
+                        fgChar = (noise > 0.5) ? '█' : '▓';
+                    }
+
+                    String tColor = String.format("\u001B[38;2;%d;%d;%dm", fgRGB[0], fgRGB[1], fgRGB[2]);
+                    outputBuffer[index] = tColor + fgChar + RESET;
+                    continue;
+                }
 
                 // -------------------------------------------------------------
                 // LAYER 1: DYNAMIC FLAME & DRIFTING EMBERS (Z-Depth: 0.95)
@@ -225,7 +310,7 @@ public class CampfireLoader extends Loader {
                         int dxTree = Math.abs(x - tx);
                         if (dxTree <= halfWidth) {
                             isPine = true;
-                            hitTx = tx; // RECORD THE TREE CENTER
+                            hitTx = tx;
 
                             if (relY == 0 && dxTree == 0) {
                                 isTreeTip = true;
@@ -243,19 +328,12 @@ public class CampfireLoader extends Loader {
                     double distToFireY = Math.abs(y - fireBaseY);
                     double fireDist = Math.sqrt(distToFireX * distToFireX + distToFireY * distToFireY * 0.4);
 
-                    // Base radial glow
                     double fireTreeGlow = Math.max(0.0, 1.0 - (fireDist / 45.0)) * 0.42 * flicker;
 
-                    // NEW: True Directional Rim Lighting
-                    // If tree is on the left, light the right side (x >= hitTx).
-                    // If tree is on the right, light the left side (x <= hitTx).
                     boolean facesFire = (hitTx < fireBaseX && x >= hitTx) || (hitTx > fireBaseX && x <= hitTx);
 
                     if (facesFire) {
-                        // Give the fire-facing side a stronger base glow
                         fireTreeGlow += 0.12 * flicker;
-
-                        // Add a subtle dither only to the illuminated side to simulate bark texture
                         if (x % 2 == 0) {
                             fireTreeGlow += 0.05 * flicker;
                         }
@@ -282,7 +360,6 @@ public class CampfireLoader extends Loader {
 
                 // -------------------------------------------------------------
                 // LAYER 5: ATMOSPHERIC AIR GLOW SHADER (Z-Depth: 0.60)
-                // Fills sky gap pixels behind the pine branches
                 // -------------------------------------------------------------
                 double glowDx = (x - fireBaseX) * 0.45;
                 double glowDy = ((fireBaseY - 3) - y) * 1.8;

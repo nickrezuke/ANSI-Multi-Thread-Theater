@@ -36,7 +36,7 @@ public class CookieLoader extends Loader {
     private int cookieType = -1;
     private String[][] cellCache;
 
-    private double A = 1.05; 
+    private double A = 1.20; 
     private double B = 0.0;
 
     public CookieLoader() {
@@ -50,13 +50,11 @@ public class CookieLoader extends Loader {
     @Override
     protected void initialize() {
         int oldCookieType = cookieType;
-        while (cookieType == oldCookieType) {
-            // Never get two in a row
+        do { // Never get two in a row
             cookieType = (int) (Math.random() * 8) + 1;
-        }
+        } while (cookieType == oldCookieType);
 
         String primary, secondary, filling, accentA, accentB, accentC;
-        //cookieType = 4; // TODO REMOVE THIS
         switch (cookieType) {
             case 1: // CHOCOLATE CHIP
                 primary = "\u001B[38;5;222m";
@@ -68,7 +66,6 @@ public class CookieLoader extends Loader {
                 break;
 
             case 2: // OREO
-                // TODO: Add a design to the oreo cookie instead of circles
                 primary = "\u001B[38;5;235m"; 
                 secondary = "\u001B[38;5;239m"; 
                 filling = "\u001B[38;5;230m"; 
@@ -95,7 +92,6 @@ public class CookieLoader extends Loader {
             }
 
             case 4: // STROOPWAFEL
-                // TODO improve this one its not visually striking...
                 primary = "\u001B[38;5;179m"; 
                 secondary = "\u001B[38;5;136m"; 
                 filling = "\u001B[38;5;166m"; 
@@ -105,7 +101,6 @@ public class CookieLoader extends Loader {
                 break;
 
             case 5: // CHECKERBOARD
-                // TODO Improve this it looks like a chessboard lmao
                 primary = "\u001B[38;5;94m"; 
                 secondary = "\u001B[38;5;230m"; 
                 filling = "\u001B[38;5;215m"; 
@@ -247,14 +242,14 @@ public class CookieLoader extends Loader {
     }
 
     // ==========================================
-    // 2. OREO - Double stuf, outer ridges, inner embossed geometric noise
+    // 2. OREO - Double stuf, classic embossed design
     // ==========================================
     private void renderOreo(double sinA, double cosA, double sinB, double cosB,
             String[] outputBuffer, double[] zBuffer) {
         final double WAFER_R = 2.3;
         final double CREAM_R = 2.38; 
         final double WAFER_H = 0.16;
-        final double CREAM_H = 0.45; // Double Stuf
+        final double CREAM_H = 0.45; 
         final double zTop = CREAM_H / 2 + WAFER_H;
         final double zBot = -zTop;
         final double step = 0.04;
@@ -265,19 +260,25 @@ public class CookieLoader extends Loader {
                 if (r > WAFER_R) continue;
 
                 double angle = Math.atan2(y, x);
-                // Creates ridged edge, ring border, and a center embossed graphic
-                boolean isRidge = (r > WAFER_R * 0.82 && Math.sin(angle * 70.0) > 0.0);
-                boolean isRing = Math.abs(r - WAFER_R * 0.55) < 0.1;
-                boolean isCenterNoise = r < WAFER_R * 0.45 && (hashNoise(Math.floor(x * 7.0), Math.floor(y * 7.0)) > 0.6);
-                boolean emboss = isRidge || isRing || isCenterNoise;
+                
+                // 1. Outer ridges
+                boolean isRidge = (r > WAFER_R * 0.85 && Math.sin(angle * 48.0) > 0.2);
+                // 2. Dashed inner ring
+                boolean isDashedRing = (Math.abs(r - WAFER_R * 0.62) < 0.06) && (Math.sin(angle * 24.0) > 0.0);
+                // 3. Center four-leaf clover/cross
+                boolean isCenterClover = (r < WAFER_R * 0.35) && (Math.cos(4.0 * angle) > 0.4);
+                // 4. Tiny center dot
+                boolean isCenterDot = r < 0.08;
 
-                int topColor = emboss ? SECONDARY : PRIMARY;
-                drawPoint(x, y, zTop, 0.0, 0.0, 1.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, topColor);
-                drawPoint(x, y, zBot, 0.0, 0.0, -1.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, PRIMARY);
+                boolean emboss = isRidge || isDashedRing || isCenterClover || isCenterDot;
+                int drawColor = emboss ? SECONDARY : PRIMARY;
+
+                drawPoint(x, y, zTop, 0.0, 0.0, 1.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, drawColor);
+                drawPoint(x, y, zBot, 0.0, 0.0, -1.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, drawColor);
             }
         }
 
-        for (double theta = 0; theta < 2 * Math.PI; theta += 0.03) {
+        for (double theta = 0; theta < 2 * Math.PI; theta += 0.01) {
             double cosT = Math.cos(theta), sinT = Math.sin(theta);
             for (double z = zBot; z <= zBot + WAFER_H; z += 0.04) {
                 drawPoint(WAFER_R * cosT, WAFER_R * sinT, z, cosT, sinT, 0.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, PRIMARY);
@@ -300,25 +301,16 @@ public class CookieLoader extends Loader {
         final double DOME_H = 0.55;
         final double FOOT_H = 0.22;
 
-        for (double t = 0; t <= Math.PI / 2.0; t += 0.05) {
+        for (double t = 0; t <= Math.PI / 2.0; t += 0.03) {
             double sinT = Math.sin(t), cosT = Math.cos(t);
-            for (double p = 0; p < 2 * Math.PI; p += 0.04) {
+            for (double p = 0; p < 2 * Math.PI; p += 0.03) {
                 double sinP = Math.sin(p), cosP = Math.cos(p);
                 double x = SHELL_R * sinT * cosP;
                 double y = SHELL_R * sinT * sinP;
-                double z = FOOT_H / 2 + DOME_H * cosT;
-                drawPoint(x, y, z, sinT * cosP, sinT * sinP, cosT, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, PRIMARY);
-            }
-        }
-
-        for (double t = 0; t <= Math.PI / 2.0; t += 0.05) {
-            double sinT = Math.sin(t), cosT = Math.cos(t);
-            for (double p = 0; p < 2 * Math.PI; p += 0.04) {
-                double sinP = Math.sin(p), cosP = Math.cos(p);
-                double x = SHELL_R * sinT * cosP;
-                double y = SHELL_R * sinT * sinP;
-                double z = -FOOT_H / 2 - DOME_H * cosT;
-                drawPoint(x, y, z, sinT * cosP, sinT * sinP, -cosT, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, PRIMARY);
+                double zt = FOOT_H / 2 + DOME_H * cosT;
+                double zb = -FOOT_H / 2 - DOME_H * cosT;
+                drawPoint(x, y, zt, sinT * cosP, sinT * sinP, cosT, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, PRIMARY);
+                drawPoint(x, y, zb, sinT * cosP, sinT * sinP, -cosT, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, PRIMARY);
             }
         }
 
@@ -334,86 +326,115 @@ public class CookieLoader extends Loader {
     }
 
     // ==========================================
-    // 4. STROOPWAFEL - 3D cosine wave intersecting waffle pattern
+    // 4. STROOPWAFEL - Deep waffle grid with oozing caramel edges
     // ==========================================
     private void renderStroopwafel(double sinA, double cosA, double sinB, double cosB,
             String[] outputBuffer, double[] zBuffer) {
         final double SW_R = 2.7;
-        final double WAFER_H = 0.10;
-        final double CARAMEL_H = 0.14;
-        final double PEEK = 0.05;
+        final double WAFER_H = 0.12;
+        final double CARAMEL_H = 0.16;
         final double zTop = CARAMEL_H / 2 + WAFER_H;
         final double zBot = -zTop;
         
-        final double cell = 0.7;
+        final double cell = 0.6;
         final double pi2C = 2.0 * Math.PI / cell;
-        final double amp = 0.035;
-        final double step = 0.035;
+        final double amp = 0.05; 
+        final double step = 0.015;
 
         for (double x = -SW_R; x <= SW_R; x += step) {
             for (double y = -SW_R; y <= SW_R; y += step) {
                 if (x * x + y * y > SW_R * SW_R) continue;
 
-                double U = pi2C * (x + y);
-                double V = pi2C * (x - y);
-                double wave = Math.cos(U) + Math.cos(V); // Interfering waves for the waffle block grid
-
-                // Top Waffle
-                double dzdx = -amp * pi2C * (Math.sin(U) + Math.sin(V));
-                double dzdy = -amp * pi2C * (Math.sin(U) - Math.sin(V));
+                // Diamond waffle grid
+                double wave = Math.sin(pi2C * x / 2.8) * Math.sin(pi2C * y / 2.8);
+                
+                double dzdx = amp * pi2C * Math.cos(pi2C * x) * Math.sin(pi2C * y);
+                double dzdy = amp * pi2C * Math.sin(pi2C * x) * Math.cos(pi2C * y);
                 double len = Math.sqrt(dzdx * dzdx + dzdy * dzdy + 1.0);
-                int color = wave < -0.5 ? SECONDARY : PRIMARY; // Grooves are slightly darker
+                
+                int color = PRIMARY;
+                if (wave < -0.2) color = SECONDARY; // Deep toasted pockets
+                else if (wave > 0.7) color = ACCENT_A; // Highlighted ridges
 
                 drawPoint(x, y, zTop + amp * wave, -dzdx/len, -dzdy/len, 1.0/len, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, color);
-                
-                // Bottom Waffle (normal points outwards and wave points down)
-                drawPoint(x, y, zBot - amp * wave, -dzdx/len, -dzdy/len, -1.0/len, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, color);
+                drawPoint(x, y, zBot - amp * wave, dzdx/len, dzdy/len, -1.0/len, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, color);
             }
         }
 
-        for (double theta = 0; theta < 2 * Math.PI; theta += 0.03) {
+        for (double theta = 0; theta < 2 * Math.PI; theta += 0.0075) {
             double cosT = Math.cos(theta), sinT = Math.sin(theta);
-            for (double z = zBot; z <= zBot + WAFER_H; z += 0.03) {
+            
+            // Organic, uneven caramel ooze
+            double ooze = 0.05 + 0.06 * Math.sin(theta * 7.0) * Math.cos(theta * 11.0);
+            double edgeR = SW_R + Math.max(0, ooze);
+            
+            for (double z = zBot; z <= zBot + WAFER_H; z += 0.02) {
                 drawPoint(SW_R * cosT, SW_R * sinT, z, cosT, sinT, 0.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, PRIMARY);
             }
-            for (double z = -CARAMEL_H / 2; z <= CARAMEL_H / 2; z += 0.03) {
-                drawPoint((SW_R + PEEK) * cosT, (SW_R + PEEK) * sinT, z, cosT, sinT, 0.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, FILLING);
+            for (double z = -CARAMEL_H / 2; z <= CARAMEL_H / 2; z += 0.02) {
+                drawPoint(edgeR * cosT, edgeR * sinT, z, cosT, sinT, 0.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, FILLING);
             }
-            for (double z = CARAMEL_H / 2; z <= zTop; z += 0.03) {
+            for (double z = CARAMEL_H / 2; z <= zTop; z += 0.02) {
                 drawPoint(SW_R * cosT, SW_R * sinT, z, cosT, sinT, 0.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, PRIMARY);
             }
         }
     }
 
     // ==========================================
-    // 5. CHECKERBOARD - Square Schackrutor Swedish checkerboard block
+    // 5. CHECKERBOARD - Puffed superellipse block
     // ==========================================
     private void renderCheckerboard(double sinA, double cosA, double sinB, double cosB,
             String[] outputBuffer, double[] zBuffer) {
-        final double CB_R = 2.4; 
-        final double CB_H = 0.65;
-        final double cell = 0.5;
-        final double step = 0.035;
+        final double CB_R = 2.3; 
+        final double CB_H = 0.7;
+        final double cell = 1.15;
+        final double puffAmp = 0.25; 
+        final double step = 0.025;
 
-        // Flat Top and Bottom faces spanning the whole square
         for (double x = -CB_R; x <= CB_R; x += step) {
             for (double y = -CB_R; y <= CB_R; y += step) {
+                // Bounds using superellipse for rounded square corners
+                if (Math.pow(x/CB_R, 4) + Math.pow(y/CB_R, 4) > 1.0) continue;
+
                 int ix = (int) Math.floor((x + CB_R) / cell);
                 int iy = (int) Math.floor((y + CB_R) / cell);
                 int topColor = ((ix + iy) % 2 == 0) ? PRIMARY : SECONDARY;
+
+                // Center puff factor simulating oven rise
+                double xNorm = x / CB_R;
+                double yNorm = y / CB_R;
+                double puff = puffAmp * Math.cos(xNorm * Math.PI / 2.0) * Math.cos(yNorm * Math.PI / 2.0);
                 
-                drawPoint(x, y, CB_H / 2, 0.0, 0.0, 1.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, topColor);
-                drawPoint(x, y, -CB_H / 2, 0.0, 0.0, -1.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, FILLING);
+                double dzdx = -puffAmp * (Math.PI / (2.0 * CB_R)) * Math.sin(xNorm * Math.PI / 2.0) * Math.cos(yNorm * Math.PI / 2.0);
+                double dzdy = -puffAmp * (Math.PI / (2.0 * CB_R)) * Math.cos(xNorm * Math.PI / 2.0) * Math.sin(yNorm * Math.PI / 2.0);
+                double len = Math.sqrt(dzdx*dzdx + dzdy*dzdy + 1.0);
+
+                drawPoint(x, y, CB_H / 2.0 + puff, -dzdx/len, -dzdy/len, 1.0/len, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, topColor);
+                drawPoint(x, y, -CB_H / 2.0 - puff, dzdx/len, dzdy/len, -1.0/len, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, topColor);
             }
         }
 
-        // Render the 4 square perimeter walls
-        for (double s = -CB_R; s <= CB_R; s += step) {
-            for (double z = -CB_H / 2; z <= CB_H / 2; z += 0.05) {
-                drawPoint(CB_R, s, z, 1.0, 0.0, 0.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, FILLING);
-                drawPoint(-CB_R, s, z, -1.0, 0.0, 0.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, FILLING);
-                drawPoint(s, CB_R, z, 0.0, 1.0, 0.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, FILLING);
-                drawPoint(s, -CB_R, z, 0.0, -1.0, 0.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, FILLING);
+        // Render the rounded perimeter walls
+        for (double theta = 0; theta < 2 * Math.PI; theta += 0.0075) {
+            double cosT = Math.cos(theta);
+            double sinT = Math.sin(theta);
+            double r = CB_R / Math.pow(Math.pow(cosT, 4) + Math.pow(sinT, 4), 0.25);
+            
+            double x = r * cosT;
+            double y = r * sinT;
+            
+            int ix = (int) Math.floor((x + CB_R) / cell);
+            int iy = (int) Math.floor((y + CB_R) / cell);
+            int color = ((ix + iy) % 2 == 0) ? PRIMARY : SECONDARY;
+
+            double nx = Math.pow(x, 3);
+            double ny = Math.pow(y, 3);
+            double len = Math.sqrt(nx*nx + ny*ny);
+            nx /= len;
+            ny /= len;
+
+            for (double z = -CB_H / 2.0; z <= CB_H / 2.0; z += 0.05) {
+                drawPoint(x, y, z, nx, ny, 0.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, color);
             }
         }
     }
@@ -428,7 +449,7 @@ public class CookieLoader extends Loader {
         final double DOME_H = 0.35;
         final double FROST_H = 0.09;
         final double FROST_R = SC_R * 0.90;
-        final double step = 0.04;
+        final double step = 0.02;
 
         for (double x = -SC_R; x <= SC_R; x += step) {
             for (double y = -SC_R; y <= SC_R; y += step) {
@@ -454,9 +475,9 @@ public class CookieLoader extends Loader {
         }
 
         // Cookie Side Walls
-        for (double theta = 0; theta < 2 * Math.PI; theta += 0.03) {
+        for (double theta = 0; theta < 2 * Math.PI; theta += 0.01) {
             double cosT = Math.cos(theta), sinT = Math.sin(theta);
-            for (double z = -BASE_H / 2.0; z <= BASE_H / 2.0; z += 0.05) {
+            for (double z = -BASE_H / 2.0; z <= BASE_H / 2.0; z += 0.02) {
                 drawPoint(SC_R * cosT, SC_R * sinT, z, cosT, sinT, 0.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, PRIMARY);
             }
         }
@@ -497,7 +518,7 @@ public class CookieLoader extends Loader {
         final double SD_R = 2.5;
         final double BASE_H = 0.25;
         final double DOME_H = 0.35;
-        final double step = 0.04;
+        final double step = 0.015;
 
         for (double x = -SD_R; x <= SD_R; x += step) {
             for (double y = -SD_R; y <= SD_R; y += step) {
@@ -521,9 +542,9 @@ public class CookieLoader extends Loader {
             }
         }
 
-        for (double theta = 0; theta < 2 * Math.PI; theta += 0.03) {
+        for (double theta = 0; theta < 2 * Math.PI; theta += 0.01) {
             double cosT = Math.cos(theta), sinT = Math.sin(theta);
-            for (double z = -BASE_H / 2.0; z <= BASE_H / 2.0; z += 0.05) {
+            for (double z = -BASE_H / 2.0; z <= BASE_H / 2.0; z += 0.03) {
                 boolean speck = hashNoise(Math.floor(theta * 11.0), Math.floor(z * 22.0)) > 0.80;
                 drawPoint(SD_R * cosT, SD_R * sinT, z, cosT, sinT, 0.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, speck ? SECONDARY : PRIMARY);
             }
@@ -563,18 +584,18 @@ public class CookieLoader extends Loader {
             }
         }
 
-        for (double theta = 0; theta < 2 * Math.PI; theta += 0.03) {
+        for (double theta = 0; theta < 2 * Math.PI; theta += 0.01) {
             double cosT = Math.cos(theta), sinT = Math.sin(theta);
-            for (double z = zBot; z <= zBot + DOUGH_H; z += 0.03) {
+            for (double z = zBot; z <= zBot + DOUGH_H; z += 0.02) {
                 drawPoint(LZ_R * cosT, LZ_R * sinT, z, cosT, sinT, 0.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, PRIMARY);
             }
-            for (double z = -JAM_H / 2; z <= JAM_H / 2; z += 0.03) {
+            for (double z = -JAM_H / 2; z <= JAM_H / 2; z += 0.02) {
                 drawPoint(LZ_R * cosT, LZ_R * sinT, z, cosT, sinT, 0.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, FILLING);
             }
-            for (double z = JAM_H / 2; z <= zTop; z += 0.03) {
+            for (double z = JAM_H / 2; z <= zTop; z += 0.02) {
                 drawPoint(LZ_R * cosT, LZ_R * sinT, z, cosT, sinT, 0.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, PRIMARY);
             }
-            for (double z = JAM_H / 2; z <= zTop; z += 0.03) {
+            for (double z = JAM_H / 2; z <= zTop; z += 0.02) {
                 drawPoint(HOLE_R * cosT, HOLE_R * sinT, z, -cosT, -sinT, 0.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, PRIMARY);
             }
         }

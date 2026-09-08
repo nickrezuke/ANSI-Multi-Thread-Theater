@@ -127,7 +127,7 @@ public class LoaderFactory {
         register(List.of("HotDog", "Glizzy"), HotDogLoader::new);
         register("RainbowRing", RainbowRingLoader::new);
         register("CosmicBrownie", CosmicBrownieLoader::new);
-        //register(List.of("Pokeball", "Pokéball"), PokeballLoader::new); TODO Make a "Pokéball" loader
+        register(List.of("Pokeball", "Pokéball"), PokeballLoader::new);
         register(List.of("SonicRing", "SonicRings"), SonicRingLoader::new);
         register("HaloRing", HaloRingLoader::new);
         register("KleinRing", KleinRingLoader::new);
@@ -191,8 +191,10 @@ public class LoaderFactory {
         //register("ChickenItza", ChickenItzaLoader::new); TODO Make a "Chicken Itza" loader
         register("Asteroids", AsteroidsLoader::new);
         register("Centepede", CentipedeLoader::new);
+        register("WarpStarfield", WarpStarfieldLoader::new);
         register("Fish", FishLoader::new);
         register("Neptune", NeptuneLoader::new);
+        register(List.of("AndysFire", "Andy'sFire"), AndysFireLoader::new);
         register(List.of("Drumstick", "TurkeyLeg"), DrumstickMeatLoader::new);
         //register("GoldenGateBridge", GoldenGateBridgeLoader::new); TODO Make a "Golden Gate Bridge" loader
         register("BaukusManifold", BaukusManifoldLoader::new);

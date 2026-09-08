@@ -385,6 +385,8 @@ I also included a few classic "graphics processing" loaders
 
 -> **VaporWave**: <!-- TODO: Elaborate on this section -->
 
+-> **AndysFire**: <!-- TODO: Elaborate on this section -->
+
 -> **FrudigerAero**: <!-- TODO: Elaborate on this section -->
 
 -> **Campfire**: <!-- TODO: Elaborate on this section -->
@@ -392,6 +394,8 @@ I also included a few classic "graphics processing" loaders
 -> **DJTurntable**: <!-- TODO: Elaborate on this section -->
 
 -> **Radar**: <!-- TODO: Elaborate on this section -->
+
+-> **WarpStarfield**: <!-- TODO: Elaborate on this section -->
 
 ### Magnifying Glass
 
@@ -475,7 +479,6 @@ Accretion Disk
 Comet / Meteor / Shooting Star?
 Gravitational Lensing Simulation?
 Structural Resonance Frequency vs Height of several lolipop weights
-Zooming 3D Starfield
 Something with the high-detail resolution trick w/ blocks https://en.wikipedia.org/wiki/Block_Elements 
 3D Galton Board?  Like giant pyramid of 3D to make a 3D gaussian curve?
 2D Scene of an Aquarium / Coral Reef?
@@ -483,7 +486,6 @@ Valve's Portal?  Like idk the simulated light "seeing" through blue / orange por
 Tower of Hanoi Solver?
 Factorio-style conveyor belt factory like things moving around making new things
 Something to do with Lehigh or CCSU (3D model of The Blue Devil Itself??)
-Andy's Fire https://www.a1k0n.net/2007/08/24/obfuscated-c-fire.html
 Teacup on a plate
 Yoyo goin up and down
 Jimmothy????
