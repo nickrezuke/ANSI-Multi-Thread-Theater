@@ -346,6 +346,8 @@ I also included a few classic "graphics processing" loaders
 
 -> **PyramidsOfGiza**: <!-- TODO: Elaborate on this section -->
 
+-> **GoldenGateBridge**: <!-- TODO: Elaborate on this section -->
+
 -> **AcropolisOfAthens**: <!-- TODO: Elaborate on this section -->
 
 -> **StatueOfLiberty**: <!-- TODO: Elaborate on this section -->

@@ -194,6 +194,7 @@ public class LoaderFactory {
         register("Fish", FishLoader::new);
         register("Neptune", NeptuneLoader::new);
         register(List.of("Drumstick", "TurkeyLeg"), DrumstickMeatLoader::new);
+        //register("GoldenGateBridge", GoldenGateBridgeLoader::new); TODO Make a "Golden Gate Bridge" loader
         register("BaukusManifold", BaukusManifoldLoader::new);
         register("Galaga", GalagaLoader::new);
         register("LangtonsAnt", LangtonsAntLoader::new);
