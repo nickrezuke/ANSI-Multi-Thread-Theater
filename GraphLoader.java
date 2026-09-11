@@ -63,8 +63,8 @@ public class GraphLoader extends Loader {
             return;
         }
 
-        // Select a random variant from 0 to 11
-        int variant = (int) (Math.random() * 12);
+        // Select a random variant from 0 to 10
+        int variant = (int) (Math.random() * 11);
         switch (variant) {
             case 0:
                 // Represents sin(x + sin(t)) * cos(y + cos(t)) = 0.2
@@ -181,13 +181,13 @@ public class GraphLoader extends Loader {
 
             case 6:
                 // Represents (x^2 + y^2 - 1)^3 - (x^2 * y^3) * scale = 0
-                // TODO: Fix this heart it looks disney lol
+                // where scale = 1.2 + sin(12t + 2.8sin(6t))/2 (to get that heartbeat)
                 // --- THE BEATIN' HEART ---
-                // Visually: A classic mathematical heart shape that rhythmically beats and pulses over time.
+                // Visually: A mathematical heart shape that rhythmically beats and pulses over time.
                 currentEquation = (x, y, t) -> {
-                    double scaledX = x / 1.9;
-                    double scaledY = y / 1.9;
-                    double scale = 1.0 + 0.15 * Math.sin(t * 3.0);
+                    double scaledX = x * 0.7;
+                    double scaledY = y * 0.7;
+                    double scale = 1.2 + 0.5 * Math.sin(12.0 * t + 2.8 * Math.sin(6.0 * t));
                     double term = scaledX * scaledX + scaledY * scaledY - scale;
                     return (term * term * term) - (scaledX * scaledX * scaledY * scaledY * scaledY);
                 };
@@ -195,11 +195,11 @@ public class GraphLoader extends Loader {
 
             case 7:
                 // Represents |x|^(2/3) + |y|^(2/3) = scale^(2/3)
+                // where scale = 1.5 + 0.6 * Math.cos(t * 3.0);
                 // --- THE NEON SHURIKEN (ASTROID) ---
-                // TODO: this one is uninteresting
-                // Visually: A sleek 4-pointed star whose curves bend inward and outward dynamically.
+                // Visually: A breathing 4-pointed star whose curves bend inward and outward dynamically.
                 currentEquation = (x, y, t) -> {
-                    double scale = 1.5 + 0.4 * Math.cos(t * 1.5);
+                    double scale = 1.5 + 0.6 * Math.cos(t * 3.0);
                     double ax = Math.pow(Math.abs(x), 2.0 / 3.0);
                     double ay = Math.pow(Math.abs(y), 2.0 / 3.0);
                     return ax + ay - scale;
@@ -218,21 +218,6 @@ public class GraphLoader extends Loader {
                 break;
 
             case 9:
-                // Represents (x^2 + y^2 + a^2)^2 - 4a^2x^2 = b^4
-                // TODO: Make this cooler
-                // --- THE MITOSIS CELL DIVISION (CASSINI OVAL) ---
-                // Visually: A figure-eight shape that morphs into a dumbbell and splits/merges.
-                currentEquation = (x, y, t) -> {
-                    double a = 1.2;
-                    double b = 1.0 + 0.3 * Math.sin(t * 1.8);
-                    double x2 = x * x;
-                    double y2 = y * y;
-                    double term = x2 + y2 + a * a;
-                    return (term * term) - (4.0 * a * a * x2) - (b * b * b * b);
-                };
-                break;
-
-            case 10:
                 // Represents sin(rotX^2 - rotY^2 + t) * cos(2 * rotX * rotY) = 0.3
                 // --- THE BUBBLE VORTEX ---
                 // Visually: Hyperbolic curved wave patterns shearing across each other in a hypnotic swirl.
@@ -243,10 +228,9 @@ public class GraphLoader extends Loader {
                 };
                 break;
 
-            case 11:
+            case 10:
             default:
-                // Represents (x^2 + y^2)^2 - c^2(x^2 - y^2) = 0
-                // TODO: Make this one cooler
+                // Represents (x^2 + y^2)^2 - c^2(x^2 - y^2) = cos(2t) + 0.5
                 // --- THE INFINITY LOOP (LEMNISCATE) ---
                 // Visually: A classic figure-eight lemniscate that tilts and ripples with time.
                 currentEquation = (x, y, t) -> {
@@ -254,7 +238,7 @@ public class GraphLoader extends Loader {
                     double scaledY = y / 1.8;
                     double r2 = scaledX * scaledX + scaledY * scaledY;
                     double c2 = 2.0 + 0.5 * Math.sin(t);
-                    return (r2 * r2) - (c2 * (scaledX * scaledX - scaledY * scaledY));
+                    return (r2 * r2) - (c2 * (scaledX * scaledX - scaledY * scaledY)) - Math.cos(2 * t) - 0.5;
                 };
                 break;
         }

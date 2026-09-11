@@ -1,31 +1,34 @@
 import java.util.Random;
 import java.util.Arrays;
 
-public class CatsEyeMarbleLoader extends Loader {
+public class SwirlMarbleLoader extends Loader {
     private static final StatusStage[] MARBLE_STAGES = {
-            new StatusStage(20, "Gathering molten glass:"),
-            new StatusStage(50, "Twisting the color vane:"),
-            new StatusStage(80, "Cooling the cat's eye swirl:"),
-            new StatusStage(100, "Cat's Eye Marble Ready!")
+            new StatusStage(20, "Melting high-purity clear glass:"),
+            new StatusStage(50, "Extruding multi-color strand ribbons:"),
+            new StatusStage(80, "Forming smooth interior S-curves:"),
+            new StatusStage(100, "Swirl Strand Marble Ready!")
     };
 
-    // Color attributes initialized dynamically per marble variant
+    // Glass shell tint colors
     private int[] rgbGlass;
     private int[] rgbRim;
     private int[] rgbShade;
-    private int[] rgbVaneCenter;
-    private int[] rgbVaneEdge;
-    private int[] rgbPupil;
-    private int[] rgbSparkle;
-    private int[] rgbBubble;
+    private int[] rgbBubble = { 210, 235, 245 };
+    private int[] rgbSparkle = { 255, 255, 255 };
     private int[] rgbShadow = { 8, 8, 10 };
 
-    private double vaneRadius = 0.90;
-    private double twistTurns = 2.25;
-    private double twistRate;
+    // Multi-color strand band palette for the current marble variant
+    private int[][] strandColors; // [0] = primary strand band, [1] = secondary strand band, [optional 2] = accent band
 
+    private double waveFrequency;
+    private double waveAmplitude;
     private double A = 0.0;
     private final Random rand = new Random();
+
+    private static final int BUBBLE_COUNT = 2;
+    private final double[] bbX = new double[BUBBLE_COUNT];
+    private final double[] bbY = new double[BUBBLE_COUNT];
+    private final double[] bbZ = new double[BUBBLE_COUNT];
 
     private static final int SPARKLE_COUNT = 3;
     private final double[] skX = new double[SPARKLE_COUNT];
@@ -33,92 +36,117 @@ public class CatsEyeMarbleLoader extends Loader {
     private final double[] skZ = new double[SPARKLE_COUNT];
     private final double[] skPhase = new double[SPARKLE_COUNT];
 
-    private static final int BUBBLE_COUNT = 2;
-    private final double[] bbX = new double[BUBBLE_COUNT];
-    private final double[] bbY = new double[BUBBLE_COUNT];
-    private final double[] bbZ = new double[BUBBLE_COUNT];
-
     private final char[] rawCharBuffer = new char[80 * 22];
     private final int[][] rawColorBuffer = new int[80 * 22][3];
 
-    public CatsEyeMarbleLoader() {
+    public SwirlMarbleLoader() {
         super(MARBLE_STAGES, 80, 22);
     }
 
     @Override
     protected void initialize() {
-        // Randomly choose among 3 iconic marble variants
-        int variant = rand.nextInt(3);
+        int variant = rand.nextInt(6);
         switch (variant) {
-            case 0: // Classic Emerald Cat's Eye
-                rgbGlass      = new int[]{ 210, 232, 248 };
-                rgbRim        = new int[]{ 235, 245, 255 };
-                rgbShade      = new int[]{ 25, 35, 50 };
-                rgbVaneCenter = new int[]{ 45, 195, 120 };
-                rgbVaneEdge   = new int[]{ 235, 190, 65 };
-                rgbPupil      = new int[]{ 12, 12, 16 };
-                rgbSparkle    = new int[]{ 255, 255, 255 };
-                rgbBubble     = new int[]{ 190, 225, 235 };
-                twistTurns    = 2.25;
+            case 0: // Red & Blue Ribbon
+                rgbGlass = new int[]{ 220, 235, 248 };
+                rgbRim   = new int[]{ 240, 248, 255 };
+                rgbShade = new int[]{ 25, 35, 55 };
+                strandColors = new int[][]{
+                    { 225, 35, 35 },  // Bold Red
+                    { 35, 95, 225 }   // Deep Royal Blue
+                };
+                waveAmplitude = 0.38;
+                waveFrequency = 1.1;
                 break;
-            case 1: // Cobalt Blue & White Ribbon
-                rgbGlass      = new int[]{ 90, 140, 240 };
-                rgbRim        = new int[]{ 210, 230, 255 };
-                rgbShade      = new int[]{ 15, 25, 60 };
-                rgbVaneCenter = new int[]{ 250, 250, 255 };
-                rgbVaneEdge   = new int[]{ 120, 200, 255 };
-                rgbPupil      = new int[]{ 30, 60, 120 };
-                rgbSparkle    = new int[]{ 255, 255, 255 };
-                rgbBubble     = new int[]{ 180, 210, 255 };
-                twistTurns    = 2.5;
+
+            case 1: // Blue & Yellow Ribbon
+                rgbGlass = new int[]{ 215, 238, 245 };
+                rgbRim   = new int[]{ 245, 250, 255 };
+                rgbShade = new int[]{ 20, 35, 50 };
+                strandColors = new int[][]{
+                    { 30, 110, 220 }, // Cobalt Blue
+                    { 245, 195, 30 }  // Vibrant Yellow
+                };
+                waveAmplitude = 0.42;
+                waveFrequency = 0.95;
                 break;
-            case 2: // Galaxy Nebula
-                rgbGlass      = new int[]{ 150, 130, 215 };
-                rgbRim        = new int[]{ 240, 220, 255 };
-                rgbShade      = new int[]{ 30, 15, 45 };
-                rgbVaneCenter = new int[]{ 220, 50, 180 };
-                rgbVaneEdge   = new int[]{ 50, 220, 240 };
-                rgbPupil      = new int[]{ 20, 10, 35 };
-                rgbSparkle    = new int[]{ 255, 255, 255 };
-                rgbBubble     = new int[]{ 220, 200, 255 };
-                twistTurns    = 3.0;
+
+            case 2: // Green & Red Strand
+                rgbGlass = new int[]{ 210, 235, 240 };
+                rgbRim   = new int[]{ 235, 245, 255 };
+                rgbShade = new int[]{ 20, 40, 35 };
+                strandColors = new int[][]{
+                    { 35, 175, 75 },  // Emerald Green
+                    { 220, 45, 45 }   // Crimson Red
+                };
+                waveAmplitude = 0.36;
+                waveFrequency = 1.25;
+                break;
+
+            case 3: // Pink & Purple Ribbon
+                rgbGlass = new int[]{ 235, 225, 245 };
+                rgbRim   = new int[]{ 250, 240, 255 };
+                rgbShade = new int[]{ 40, 25, 50 };
+                strandColors = new int[][]{
+                    { 240, 110, 170 }, // Hot Pink
+                    { 130, 55, 180 }   // Velvet Purple
+                };
+                waveAmplitude = 0.40;
+                waveFrequency = 1.0;
+                break;
+
+            case 4: // Green & Yellow Ribbon
+                rgbGlass = new int[]{ 220, 240, 230 };
+                rgbRim   = new int[]{ 240, 255, 245 };
+                rgbShade = new int[]{ 25, 45, 30 };
+                strandColors = new int[][]{
+                    { 25, 155, 65 },  // Grass Green
+                    { 245, 210, 35 }  // Canary Yellow
+                };
+                waveAmplitude = 0.35;
+                waveFrequency = 1.15;
+                break;
+
+            case 5: // Navy Blue & Burnt Orange
+                rgbGlass = new int[]{ 210, 225, 245 };
+                rgbRim   = new int[]{ 235, 245, 255 };
+                rgbShade = new int[]{ 15, 25, 45 };
+                strandColors = new int[][]{
+                    { 20, 30, 70 },   // Midnight Navy
+                    { 240, 120, 20 }  // Burnt Orange
+                };
+                waveAmplitude = 0.44;
+                waveFrequency = 0.90;
                 break;
         }
 
-        vaneRadius = 0.90;
-        twistRate = twistTurns * Math.PI * 2.0 / (vaneRadius * 2.0);
-
+        for (int i = 0; i < BUBBLE_COUNT; i++) {
+            resetBubble(i);
+        }
         for (int i = 0; i < SPARKLE_COUNT; i++) {
             resetSparkle(i);
             skPhase[i] = rand.nextDouble() * 2.0 * Math.PI;
         }
-        for (int i = 0; i < BUBBLE_COUNT; i++) {
-            resetBubble(i);
-        }
-    }
-
-    private void resetSparkle(int i) {
-        double t = (rand.nextDouble() * 2.0 - 1.0) * vaneRadius;
-        double crossRadiusMax = 0.80 * Math.sqrt(Math.max(0.0001, vaneRadius * vaneRadius - t * t));
-        double w = (rand.nextDouble() * 2.0 - 1.0) * crossRadiusMax * 0.92;
-        double angle = twistAngleAt(t);
-        skX[i] = w * Math.cos(angle);
-        skY[i] = t;
-        skZ[i] = w * Math.sin(angle);
     }
 
     private void resetBubble(int i) {
-        double t = (rand.nextDouble() * 2.0 - 1.0) * 0.80;
-        double maxR = 0.85 * Math.sqrt(Math.max(0.0001, 0.90 * 0.90 - t * t));
-        double r = (0.25 + rand.nextDouble() * 0.65) * maxR;
+        double t = (rand.nextDouble() * 2.0 - 1.0) * 0.75;
+        double maxR = 0.80 * Math.sqrt(Math.max(0.0001, 0.90 * 0.90 - t * t));
+        double r = (0.2 + rand.nextDouble() * 0.7) * maxR;
         double angle = rand.nextDouble() * 2.0 * Math.PI;
         bbX[i] = r * Math.cos(angle);
         bbY[i] = t;
         bbZ[i] = r * Math.sin(angle);
     }
 
-    private double twistAngleAt(double t) {
-        return twistRate * t;
+    private void resetSparkle(int i) {
+        double t = (rand.nextDouble() * 2.0 - 1.0) * 0.80;
+        double maxR = 0.75 * Math.sqrt(Math.max(0.0001, 0.85 * 0.85 - t * t));
+        double r = rand.nextDouble() * maxR;
+        double angle = rand.nextDouble() * 2.0 * Math.PI;
+        skX[i] = r * Math.cos(angle);
+        skY[i] = t;
+        skZ[i] = r * Math.sin(angle);
     }
 
     private boolean withinGlobe(double x, double y, double z, double limit) {
@@ -131,12 +159,11 @@ public class CatsEyeMarbleLoader extends Loader {
         double lightX = 0.577, lightY = -0.707, lightZ = -0.408;
         double glassRadius = 0.95;
 
+        // Slow zoom cycle
         double zoomPeriodMillis = 11000.0;
         double zoomT = (System.currentTimeMillis() % (long) zoomPeriodMillis) / zoomPeriodMillis;
         double zoomPhase = 0.5 - 0.5 * Math.cos(2.0 * Math.PI * zoomT);
-        double farDistance = 2.4;
-        double nearDistance = 1.7;
-        double distanceToCamera = farDistance - (farDistance - nearDistance) * zoomPhase;
+        double distanceToCamera = 2.4 - 0.7 * zoomPhase;
 
         Arrays.fill(rawCharBuffer, ' ');
         for (int i = 0; i < rawColorBuffer.length; i++) {
@@ -145,12 +172,13 @@ public class CatsEyeMarbleLoader extends Loader {
             rawColorBuffer[i][2] = 0;
         }
 
-        // 1. Ground Shadow
+        // 1. Soft Ground Shadow
         renderShadow(outputBuffer, distanceToCamera);
 
-        // 2. Interior Swirl Vane & Inclusions
-        renderVane(cosA, sinA, lightX, lightY, lightZ, distanceToCamera, zBuffer, glassRadius);
+        // 2. Interior S-Curve Strand Ribbon
+        renderStrandRibbon(cosA, sinA, lightX, lightY, lightZ, distanceToCamera, zBuffer, glassRadius);
 
+        // Bubbles inside glass
         for (int i = 0; i < BUBBLE_COUNT; i++) {
             if (withinGlobe(bbX[i], bbY[i], bbZ[i], glassRadius)) {
                 plotRawElement(bbX[i], bbY[i], bbZ[i], 0, -1, 0, rgbBubble, '○', false,
@@ -158,18 +186,19 @@ public class CatsEyeMarbleLoader extends Loader {
             }
         }
 
+        // Glints / Sparkles inside glass
         double nowSeconds = System.currentTimeMillis() / 1000.0;
         for (int i = 0; i < SPARKLE_COUNT; i++) {
             double twinkle = 0.5 + 0.5 * Math.sin(nowSeconds * 3.0 + skPhase[i]);
-            if (twinkle < 0.35) continue;
-            char glyph = twinkle > 0.75 ? '*' : '.';
+            if (twinkle < 0.40) continue;
+            char glyph = twinkle > 0.80 ? '*' : '.';
             if (withinGlobe(skX[i], skY[i], skZ[i], glassRadius)) {
                 plotRawElement(skX[i], skY[i], skZ[i], 0, -1, 0, rgbSparkle, glyph, true,
                         cosA, sinA, lightX, lightY, lightZ, distanceToCamera, zBuffer);
             }
         }
 
-        // 3. Chromatic Glass Shell Pass (with Front Surface Reflection Overrides)
+        // 3. Chromatic Glass Shell Pass with Front Surface Reflection Overrides
         int thetaSteps = 110;
         int phiSteps = 200;
         for (int tIndex = 0; tIndex <= thetaSteps; tIndex++) {
@@ -195,16 +224,14 @@ public class CatsEyeMarbleLoader extends Loader {
                     int bufferIndex = xp + 80 * yp;
 
                     if (ooz > zBuffer[bufferIndex]) {
-                        // World surface normals
                         double gNx = sinTheta * Math.cos(phi) * cosA + sinTheta * Math.sin(phi) * sinA;
                         double gNy = cosTheta;
                         double gNz = -sinTheta * Math.cos(phi) * sinA + sinTheta * Math.sin(phi) * cosA;
-                        
+
                         double luminance = gNx * lightX + gNy * lightY + gNz * lightZ;
                         double rim = 1.0 - Math.abs(gNz);
                         boolean isFrontFace = (rz < 0);
 
-                        // Calculate front surface specular highlight dot
                         double specular = 0.0;
                         if (luminance > 0) {
                             double rzSpec = 2 * luminance * gNz - lightZ;
@@ -219,17 +246,14 @@ public class CatsEyeMarbleLoader extends Loader {
 
                         if (rawCharBuffer[bufferIndex] != ' ' && rawCharBuffer[bufferIndex] != 0) {
                             if (isFrontFace && specular > 0.60) {
-                                // Direct specular glint sits ON TOP of the interior
-                                r = (int) Math.min(255, rgbRim[0] * 0.6 + 255 * 0.4);
-                                g = (int) Math.min(255, rgbRim[1] * 0.6 + 255 * 0.4);
-                                b = (int) Math.min(255, rgbRim[2] * 0.6 + 255 * 0.4);
+                                r = (int) Math.min(255, rgbRim[0] * 0.5 + 255 * 0.5);
+                                g = (int) Math.min(255, rgbRim[1] * 0.5 + 255 * 0.5);
+                                b = (int) Math.min(255, rgbRim[2] * 0.5 + 255 * 0.5);
                                 finalChar = specular > 0.82 ? '*' : '░';
                             } else if (isFrontFace && rim > 0.93) {
-                                // Front-surface rim reflection sits ON TOP of interior
                                 r = rgbRim[0]; g = rgbRim[1]; b = rgbRim[2];
                                 finalChar = '░';
                             } else {
-                                // Smooth clear glass color tint over interior
                                 double alpha = 0.25;
                                 r = (int) (rawColorBuffer[bufferIndex][0] * (1.0 - alpha) + rgbGlass[0] * alpha);
                                 g = (int) (rawColorBuffer[bufferIndex][1] * (1.0 - alpha) + rgbGlass[1] * alpha);
@@ -244,7 +268,6 @@ public class CatsEyeMarbleLoader extends Loader {
                                 }
                             }
                         } else {
-                            // Background glass surface profile
                             if (specular > 0.60) {
                                 r = 255; g = 255; b = 255;
                                 finalChar = specular > 0.82 ? '*' : '░';
@@ -270,7 +293,7 @@ public class CatsEyeMarbleLoader extends Loader {
             }
         }
 
-        // 4. Fill uncovered swirl pixels
+        // 4. Safety net cleanup
         for (int i = 0; i < 80 * 22; i++) {
             if (outputBuffer[i] == null || outputBuffer[i].isEmpty() || outputBuffer[i].equals(" ")) {
                 if (rawCharBuffer[i] != ' ' && rawCharBuffer[i] != 0) {
@@ -283,7 +306,57 @@ public class CatsEyeMarbleLoader extends Loader {
             }
         }
 
-        A += 0.012;
+        A += 0.014;
+    }
+
+    // Renders a smooth, wavy multi-colored ribbon strand inside the marble
+    private void renderStrandRibbon(double cosA, double sinA, double lightX, double lightY, double lightZ,
+            double distanceToCamera, double[] zBuffer, double glassRadius) {
+        
+        double ribbonHeightLimit = 0.82;
+        
+        for (double t = -ribbonHeightLimit; t <= ribbonHeightLimit; t += 0.016) {
+            // S-curve wave trajectory along height t
+            double wavePhase = t * Math.PI * waveFrequency;
+            double offsetX = waveAmplitude * Math.sin(wavePhase);
+            double offsetZ = (waveAmplitude * 0.6) * Math.cos(wavePhase * 0.8);
+
+            // Ribbon width contracts near top & bottom poles
+            double heightScale = Math.sqrt(Math.max(0.0001, 1.0 - (t * t) / (ribbonHeightLimit * ribbonHeightLimit)));
+            double ribbonWidth = 0.55 * heightScale;
+
+            // Surface normal for lighting the ribbon face
+            double dXdt = waveAmplitude * Math.PI * waveFrequency * Math.cos(wavePhase);
+            double nx = -dXdt;
+            double ny = 1.0;
+            double nz = 0.3;
+            double nLen = Math.sqrt(nx * nx + ny * ny + nz * nz);
+            nx /= nLen; ny /= nLen; nz /= nLen;
+
+            for (double w = -ribbonWidth / 2.0; w <= ribbonWidth / 2.0; w += 0.018) {
+                double localX = offsetX + w;
+                double localY = t;
+                double localZ = offsetZ;
+
+                if (!withinGlobe(localX, localY, localZ, glassRadius * 0.88)) {
+                    continue;
+                }
+
+                // Determine parallel color strand band based on position across ribbon width
+                double normW = (w + (ribbonWidth / 2.0)) / ribbonWidth; // 0.0 to 1.0
+                int colorIdx = normW < 0.50 ? 0 : 1;
+                int[] rgb = strandColors[colorIdx];
+
+                // Smooth ASCII glyphs across the ribbon face
+                char glyph = (normW > 0.44 && normW < 0.56) ? '▒' : '█';
+
+                // Thin ribbon front & back surfaces
+                for (double d = -0.02; d <= 0.02; d += 0.02) {
+                    plotRawElement(localX, localY, localZ + d, nx, ny, nz, rgb, glyph, false,
+                            cosA, sinA, lightX, lightY, lightZ, distanceToCamera, zBuffer);
+                }
+            }
+        }
     }
 
     private void renderShadow(String[] outputBuffer, double distanceToCamera) {
@@ -303,57 +376,12 @@ public class CatsEyeMarbleLoader extends Loader {
                     int bufferIndex = xp + 80 * yp;
                     if (outputBuffer[bufferIndex].equals(" ")) {
                         char glyph = fade > 0.55 ? '▓' : (fade > 0.22 ? '▒' : '░');
-                        String esc = String.format("\u001B[38;2;%d;%d;%dm", rgbShadow[0], rgbShadow[1],
-                                rgbShadow[2]);
+                        String esc = String.format("\u001B[38;2;%d;%d;%dm", rgbShadow[0], rgbShadow[1], rgbShadow[2]);
                         outputBuffer[bufferIndex] = esc + glyph + RESET;
                     }
                 }
             }
         }
-    }
-
-    private void renderVane(double cosA, double sinA, double lightX, double lightY, double lightZ,
-            double distanceToCamera, double[] zBuffer, double glassRadius) {
-        for (double t = -vaneRadius; t <= vaneRadius; t += 0.018) {
-            double crossRadiusMax = 0.80 * Math.sqrt(Math.max(0.0001, vaneRadius * vaneRadius - t * t));
-            double angle = twistAngleAt(t);
-            double cosAngle = Math.cos(angle), sinAngle = Math.sin(angle);
-
-            double nx = -sinAngle, ny = 0.10, nz = cosAngle;
-
-            for (double w = -crossRadiusMax; w <= crossRadiusMax; w += 0.02) {
-                double localX = w * cosAngle;
-                double localY = t;
-                double localZ = w * sinAngle;
-
-                if (!withinGlobe(localX, localY, localZ, glassRadius)) {
-                    continue;
-                }
-
-                double u = crossRadiusMax > 0.0001 ? Math.abs(w) / crossRadiusMax : 0.0;
-                int[] rgb;
-                char glyph;
-                if (u < 0.09) {
-                    rgb = rgbPupil;
-                    glyph = '█';
-                } else {
-                    rgb = lerpColor(rgbVaneCenter, rgbVaneEdge, (u - 0.09) / 0.91);
-                    glyph = u > 0.85 ? '▒' : '▓';
-                }
-
-                plotRawElement(localX, localY, localZ, nx, ny, nz, rgb, glyph, false,
-                        cosA, sinA, lightX, lightY, lightZ, distanceToCamera, zBuffer);
-            }
-        }
-    }
-
-    private int[] lerpColor(int[] a, int[] b, double f) {
-        f = Math.max(0.0, Math.min(1.0, f));
-        return new int[] {
-                (int) (a[0] + (b[0] - a[0]) * f),
-                (int) (a[1] + (b[1] - a[1]) * f),
-                (int) (a[2] + (b[2] - a[2]) * f)
-        };
     }
 
     private void plotRawElement(double localX, double localY, double localZ, double rNx, double rNy, double rNz,

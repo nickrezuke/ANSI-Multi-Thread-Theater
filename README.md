@@ -85,6 +85,8 @@ This project comes packed with a ton of different variants, all derived from a c
 
 -> **ShipInABottle**: <!-- TODO: Elaborate on this section -->
 
+-> **SwirlMarble**: <!-- TODO: Elaborate on this section -->
+
 -> **CatsEyeMarble**: <!-- TODO: Elaborate on this section -->
 
 -> **Carousel**: <!-- TODO: Elaborate on this section -->
@@ -490,6 +492,9 @@ Teacup on a plate
 Yoyo goin up and down
 Jimmothy????
 Rick Roll?
+Super Mario Mushroom
+Single Image from folder -> spinning 3D icon token?
+Wireframe rainbow cube with a rainbow triangle inside?
 Lissajous Oscilloscope
 CRT Scanlines & Phosphor Decay (Like use scanline sweep with bloom and phosphor persistence; simulate interlacing and curvature warp for a retro monitor look.  Use fast column sweep and exponential decay on brightness buffer.)
 Interactive Tanks-like Aiming & Shooting game w/ breakable ground

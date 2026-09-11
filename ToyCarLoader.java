@@ -1,6 +1,3 @@
-// TODO: Increase size of the passenger area / window chasis
-// TODO: Is the windshield floating just above the other surface? I think I can see between them if I look carefully enough the angle isnt perfect...
-
 public class ToyCarLoader extends Loader {
 
     private static final StatusStage[] CAR_STAGES = {
@@ -85,34 +82,62 @@ public class ToyCarLoader extends Loader {
         }
 
         // ==========================================
-        // 2. CABIN & TINTED WINDOWS (Roof Bubble)
+        // 2. PASSENGER CABIN & GLASS (ENLARGED)
         // ==========================================
-        double cabinStartX = -0.9, cabinEndX = 0.4;
-        double cabinW = 1.4, cabinH = 0.75;
+        double cabinW = 1.55;
+        double roofZ = 0.95;
+        double roofStartX = -1.0;
+        double roofEndX = 0.35;
 
-        for (double cx = cabinStartX; cx <= cabinEndX; cx += 0.04) {
-            double t = (cx - cabinStartX) / (cabinEndX - cabinStartX);
-            // Sloped roof bubble curve
-            double currentRoofZ = 0.25 + cabinH * Math.sin(t * Math.PI * 0.85 + 0.25);
-
+        // Yellow Roof Top
+        for (double cx = roofStartX; cx <= roofEndX; cx += 0.04) {
             for (double cy = -cabinW / 2; cy <= cabinW / 2; cy += 0.04) {
-                // Roof Surface (Yellow)
-                drawPoint(cx, cy, currentRoofZ, 0.0, 0.0, 1.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, 0);
-            }
-
-            // Side Glass Windows
-            for (double cz = 0.3; cz < currentRoofZ - 0.05; cz += 0.04) {
-                drawPoint(cx, -cabinW / 2, cz, 0.0, -1.0, 0.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, 2);
-                drawPoint(cx,  cabinW / 2, cz, 0.0,  1.0, 0.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, 2);
+                drawPoint(cx, cy, roofZ, 0.0, 0.0, 1.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, 0);
             }
         }
 
-        // Front Windshield (Angled Glass)
-        for (double wy = -cabinW / 2 + 0.05; wy <= cabinW / 2 - 0.05; wy += 0.04) {
-            for (double step = 0; step <= 1.0; step += 0.08) {
-                double wx = cabinEndX + step * 0.35;
-                double wz = 0.8 - step * 0.55;
-                drawPoint(wx, wy, wz, 1.0, 0.0, 0.5, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, 2);
+        // Flush Front Windshield (Angled seamlessly from roof edge to hood deck)
+        double wsStartX = roofEndX;
+        double wsEndX = 0.95;
+        double wsStartZ = roofZ;
+        double wsEndZ = 0.20;
+
+        for (double step = 0; step <= 1.0; step += 0.03) {
+            double wx = wsStartX + step * (wsEndX - wsStartX);
+            double wz = wsStartZ + step * (wsEndZ - wsStartZ);
+            for (double wy = -cabinW / 2 + 0.03; wy <= cabinW / 2 - 0.03; wy += 0.04) {
+                drawPoint(wx, wy, wz, 0.78, 0.0, 0.62, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, 2);
+            }
+        }
+
+        // Rear Slanted Window (Angles down to trunk deck)
+        double rwStartX = roofStartX;
+        double rwEndX = -1.45;
+        double rwStartZ = roofZ;
+        double rwEndZ = 0.25;
+
+        for (double step = 0; step <= 1.0; step += 0.04) {
+            double rx = rwStartX + step * (rwEndX - rwStartX);
+            double rz = rwStartZ + step * (rwEndZ - rwStartZ);
+            for (double ry = -cabinW / 2 + 0.03; ry <= cabinW / 2 - 0.03; ry += 0.04) {
+                drawPoint(rx, ry, rz, -0.84, 0.0, 0.54, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, 2);
+            }
+        }
+
+        // Side Glass Windows (Fills beneath roof profile flush down to chassis deck)
+        for (double cx = rwEndX; cx <= wsEndX; cx += 0.04) {
+            double topZ;
+            if (cx < roofStartX) {
+                topZ = rwEndZ + (cx - rwEndX) / (roofStartX - rwEndX) * (roofZ - rwEndZ);
+            } else if (cx <= roofEndX) {
+                topZ = roofZ;
+            } else {
+                topZ = wsStartZ + (cx - wsStartX) / (wsEndX - wsStartX) * (wsEndZ - wsStartZ);
+            }
+
+            for (double cz = 0.28; cz < topZ - 0.03; cz += 0.04) {
+                drawPoint(cx, -cabinW / 2, cz, 0.0, -1.0, 0.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, 2);
+                drawPoint(cx,  cabinW / 2, cz, 0.0,  1.0, 0.0, sinA, cosA, sinB, cosB, outputBuffer, zBuffer, 2);
             }
         }
 

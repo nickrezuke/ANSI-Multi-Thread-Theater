@@ -1,5 +1,3 @@
-// TODO: This pokeball needs the "Dot" of the ball to be facing towards the camera
-
 public class PokeballLoader extends Loader {
     private static final StatusStage[] POKEBALL_STAGES = {
             new StatusStage(20, "Identifying wild Pokémon..."),
@@ -53,33 +51,31 @@ public class PokeballLoader extends Loader {
                 double uy = sinTheta * sinPhi;
                 double uz = cosTheta;
 
-                // Button is permanently anchored at the front center of the equator (uy = 1)
-                double angleFromButton = Math.acos(Math.max(-1.0, Math.min(1.0, uy)));
+                // Anchored at uy = -1 (front face pointing towards the camera)
+                double angleFromButton = Math.acos(Math.max(-1.0, Math.min(1.0, -uy)));
 
                 double localRadius = 1.0;
                 double contourShade = 1.0; 
                 int[] baseColor;
 
-                if (angleFromButton < 0.09) {
-                    localRadius = 1.03;     
+                // Center button dot
+                if (angleFromButton < 0.16) {
+                    localRadius = 1.04;     
                     baseColor = C_WHITE;
-                } else if (angleFromButton < 0.16) {
-                    localRadius = 0.95;     
-                    contourShade = 0.3;
+                // Extra thick black bezel around the button
+                } else if (angleFromButton < 0.36) {
+                    localRadius = 0.94;     
+                    contourShade = 0.25;
                     baseColor = C_BLACK;
-                } else if (angleFromButton < 0.26) {
-                    localRadius = 1.02;     
-                    baseColor = C_WHITE;
-                } else if (angleFromButton < 0.32) {
-                    localRadius = 0.95;     
-                    contourShade = 0.3;
+                // Thicker black equatorial belt
+                } else if (Math.abs(uz) < 0.13) {
+                    localRadius = 0.94;     
+                    contourShade = 0.25;
                     baseColor = C_BLACK;
-                } else if (Math.abs(uz) < 0.07) {
-                    localRadius = 0.95;     
-                    contourShade = 0.3;
-                    baseColor = C_BLACK;
+                // Top hemisphere (Red)
                 } else if (uz > 0) {
                     baseColor = C_RED;      
+                // Bottom hemisphere (White)
                 } else {
                     baseColor = C_WHITE;    
                 }

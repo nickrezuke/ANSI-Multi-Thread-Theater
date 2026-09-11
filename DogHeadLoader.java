@@ -1,4 +1,4 @@
-//TODO: Mke these looks like dogs right now theyre complete trash lmao
+//TODO: Make these looks like dogs right now they're complete trash lmao
 
 public class DogHeadLoader extends Loader {
     private static final StatusStage[] DOG_STAGES = {

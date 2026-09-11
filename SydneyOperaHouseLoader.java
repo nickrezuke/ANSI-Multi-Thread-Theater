@@ -1,13 +1,3 @@
-// TODO: Finish this implementation of the Sydney Opera House
-//
-// GEOMETRY NOTE: every shell below is rendered as a SECTOR OF ONE SHARED SPHERE
-// (see SPHERE_R). That mirrors Utzon's real "spherical solution" for the roof:
-// despite looking like different sizes, every shell in the real building is cut
-// from the surface of a single common sphere. Varying just two bounds per shell
-// -- phiMax (how much of the sphere you expose, i.e. how tall/open the shell is)
-// and halfTheta (how wide the wedge is) -- reproduces the tapering, curved-rib
-// silhouette with one reusable formula instead of hand-fitting a curve per shell.
-
 public class SydneyOperaHouseLoader extends Loader {
     private static final StatusStage[] OPERA_HOUSE_STAGES = {
             new StatusStage(20, "Pouring the Tarana granite podium terraces:"),
@@ -108,31 +98,25 @@ public class SydneyOperaHouseLoader extends Loader {
         // STEP 4: GLAZED CURTAIN WALL running beneath the shells
         renderPodiumRing(PODIUM_TOP_Y - 0.14, 0.80, 0.42, CH_GLASS, cosX, sinX, cosY, sinY, outputBuffer, zBuffer);
 
-        // STEP 5: SHELLS -- every one is a sector of the SAME sphere (SPHERE_R).
-        // halfTheta is wide relative to phiMax now, so each shell reads as a full,
-        // rounded sail (more sphere exposed) rather than a thin spike.
-        // Concert Hall group (larger, taller shells, fanned toward the left):
-        renderShell(-0.85, -0.08, 0.66, 0.42, 0.10, 6, cosX, sinX, cosY, sinY, outputBuffer, zBuffer);
-        renderShell(-0.55, 0.02, 0.85, 0.48, 0.13, 7, cosX, sinX, cosY, sinY, outputBuffer, zBuffer);
-        renderShell(-0.24, 0.12, 1.05, 0.55, 0.16, 8, cosX, sinX, cosY, sinY, outputBuffer, zBuffer);
-
-        // Joan Sutherland Theatre group (smaller, fewer shells, 
-        // fanned toward the right):
-        renderShell(0.45, -0.05, 0.60, 0.38, 0.09, 6, cosX, sinX, cosY, sinY, outputBuffer, zBuffer);
-        renderShell(0.72, 0.05, 0.76, 0.44, 0.12, 7, cosX, sinX, cosY, sinY, outputBuffer, zBuffer);
-
-        // Bennelong Restaurant group -- smaller still, and note the NEGATIVE lean:
-        // these two shells are genuinely rotated to open the opposite way from the
-        // other two groups in the real building, which is a big part of why the
-        // roofline reads as asymmetric in photos instead of one uniform fan.
-        renderShell(1.05, 0.30, 0.45, 0.30, -0.10, 5, cosX, sinX, cosY, sinY, outputBuffer, zBuffer);
-        renderShell(1.28, 0.42, 0.55, 0.34, -0.13, 6, cosX, sinX, cosY, sinY, outputBuffer, zBuffer);
+        // STEP 5: SHELLS -- 10 total shells cut from the greater sphere (SPHERE_R)
+        // Concert Hall group (4 telescoping shells, largest vault on left peak):
+        renderShell(-1.08, -0.15, 0.48, 0.34, 0.08, 5, cosX, sinX, cosY, sinY, outputBuffer, zBuffer);
+        renderShell(-0.82, -0.06, 0.68, 0.42, 0.11, 6, cosX, sinX, cosY, sinY, outputBuffer, zBuffer);
+        renderShell(-0.54,  0.04, 0.88, 0.48, 0.14, 7, cosX, sinX, cosY, sinY, outputBuffer, zBuffer);
+        renderShell(-0.24,  0.14, 1.08, 0.55, 0.17, 8, cosX, sinX, cosY, sinY, outputBuffer, zBuffer);
+        // Joan Sutherland Theatre group (4 telescoping shells, parallel smaller peak):
+        renderShell( 0.12, -0.12, 0.44, 0.32, 0.07, 5, cosX, sinX, cosY, sinY, outputBuffer, zBuffer);
+        renderShell( 0.36, -0.04, 0.62, 0.38, 0.10, 6, cosX, sinX, cosY, sinY, outputBuffer, zBuffer);
+        renderShell( 0.60,  0.05, 0.78, 0.44, 0.13, 7, cosX, sinX, cosY, sinY, outputBuffer, zBuffer);
+        renderShell( 0.86,  0.13, 0.94, 0.50, 0.15, 8, cosX, sinX, cosY, sinY, outputBuffer, zBuffer);
+        // Bennelong Restaurant group (2 counter-angled shells bridging the rear):
+        renderShell( 1.14,  0.28, 0.45, 0.30, -0.10, 5, cosX, sinX, cosY, sinY, outputBuffer, zBuffer);
+        renderShell( 1.36,  0.40, 0.55, 0.34, -0.13, 6, cosX, sinX, cosY, sinY, outputBuffer, zBuffer);
     }
 
     
-    // A rectangular terrace/glass ring using pink-granite 
-    // podium coloring by default.
-    
+    // A rectangular terrace/glass ring using 
+    // pink-granite podium coloring by default
     private void renderPodiumRing(double y, double halfX, double halfZ, double cosX, double sinX, double cosY,
             double sinY, String[] outputBuffer, double[] zBuffer) {
         renderPodiumRing(y, halfX, halfZ, CH_PODIUM, cosX, sinX, cosY, sinY, outputBuffer, zBuffer);

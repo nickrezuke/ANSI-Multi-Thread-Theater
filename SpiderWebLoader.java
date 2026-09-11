@@ -1,5 +1,3 @@
-// TODO make this a little brighter to see details better (slower?)
-
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -277,7 +275,9 @@ public class SpiderWebLoader extends Loader {
     @Override
     protected void renderGeometry(String[] outputBuffer, double[] zBuffer) {
         // --- STEP 1: ADVANCE THE CONSTRUCTION ALGORITHM ---
-        for (int cycle = 0; cycle < 3; cycle++) {
+        
+        // Changed from 3 cycles to 2 to run at 2/3rds the previous speed
+        for (int cycle = 0; cycle < 2; cycle++) { 
             if (phase == 3) {
                 if (rand.nextDouble() < 0.004) initialize();
             } else {
@@ -380,22 +380,26 @@ public class SpiderWebLoader extends Loader {
         // stays correctly calibrated as the dolly moves.
         double near = 1.0 / (cameraDistance - 20.0);
         double far = 1.0 / (cameraDistance + 20.0);
-        double depthT = clamp((ooz - far) / (near - far), 0.15, 1.0);
+        
+        // Increased the minimum clamp threshold from 0.15 to 0.5 to keep everything much brighter
+        double depthT = clamp((ooz - far) / (near - far), 0.5, 1.0);
 
         int r, g, b;
         char glyph;
+        
+        // Shifted base RGB values upward to brighten all thread types
         switch (type) {
             case BRIDGE:
-                r = 230; g = 200; b = 120; glyph = '=';
+                r = 255; g = 230; b = 150; glyph = '='; 
                 break;
             case FRAME:
-                r = 150; g = 155; b = 160; glyph = '#';
+                r = 200; g = 205; b = 210; glyph = '#'; 
                 break;
             case RADIAL:
-                r = 180; g = 185; b = 190; glyph = '.';
+                r = 230; g = 235; b = 240; glyph = '.'; 
                 break;
             default: // SPIRAL
-                r = 110; g = 210; b = 235; glyph = '-';
+                r = 160; g = 240; b = 255; glyph = '-'; 
                 break;
         }
         r = (int) (r * depthT);

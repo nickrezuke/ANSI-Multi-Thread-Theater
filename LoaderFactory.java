@@ -102,7 +102,7 @@ public class LoaderFactory {
         register(List.of("NASAShuttle", "SpaceShuttle"), SpaceShuttleLoader::new);
         register("PsychedelicIcosahedron", PsychedelicIcosahedronLoader::new);
         register("HillTree", HillTreeLoader::new);
-        //register(List.of("AcropolisOfAthens", "Acropolis"), AcropolisOfAthensLoader::new); TODO Make an "Acropolis Of Athens" Loader
+        register(List.of("AcropolisOfAthens", "Acropolis"), AcropolisOfAthensLoader::new);
         register("StanfordBunny", StanfordBunnyLoader::new);
         register("MandelbrotZoom", MandelbrotZoomLoader::new);
         register("DNA", DNALoader::new);
@@ -121,7 +121,7 @@ public class LoaderFactory {
         register(List.of("CorridorWaveGuide", "CorridorWave"), CorridorWaveLoader::new);
         register("SeifertSurface", SeifertLoader::new);
         register("TextFall", TextFallLoader::new);
-        register(List.of("GraphPlot", "Desmos"), GraphLoader::new);
+        register(List.of("GraphPlot", "XYGraph", "Desmos", "XYPlot"), GraphLoader::new);
         register("WireframeFisheyeGlobe", WireframeFisheyeGlobeLoader::new);
         register("Bad Apple", () -> new ImageFolderLoader("Bad Apple"));
         register(List.of("HotDog", "Glizzy"), HotDogLoader::new);
@@ -169,6 +169,7 @@ public class LoaderFactory {
         register("NyanCat", NyanCatLoader::new);
         //register("Fireworks", FireworksLoader::new); TODO Make a "Fireworks" loader
         register("CatsEyeMarble", CatsEyeMarbleLoader::new);
+        register("SwirlMarble", SwirlMarbleLoader::new);
         //register("MtFuji", MtFujiLoader::new); TODO Make a Mt. Fuji loader
         register("BouncingSpinner", BouncingSpinnerLoader::new);
         register("TexelHyperchromaticKaleidoscope", TexelHyperchromaticKaleidoscopeLoader::new);
