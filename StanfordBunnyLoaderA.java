@@ -1,4 +1,4 @@
-public class StanfordBunnyLoader extends Loader {
+public class StanfordBunnyLoaderA extends Loader {
     private static final StatusStage[] STAGES = {
         new StatusStage(15, "Loading bun_zipper_res3.ply (1,888 scanned points)..."),
         new StatusStage(40, "Nearest-neighbor search across the point cloud..."),
@@ -504,13 +504,13 @@ public class StanfordBunnyLoader extends Loader {
         MESH_NORMALS = baked[1];
     }
 
-    public StanfordBunnyLoader(StatusStage[] stages, int width, int height) {
+    public StanfordBunnyLoaderA(StatusStage[] stages, int width, int height) {
         super(stages, width, height);
         this.width = width;
         this.height = height;
     }
 
-    public StanfordBunnyLoader() {
+    public StanfordBunnyLoaderA() {
         super(STAGES, 80, 22);
         this.height = this.window_height;
         this.width = this.window_width;

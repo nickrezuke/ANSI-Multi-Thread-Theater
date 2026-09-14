@@ -1,12 +1,18 @@
-// TODO: Improve this... Maybe make surfaces instead of points??
+// "B" variant of SuzanneTheMonkeyLoader: instead of plotting each mesh
+// vertex as an isolated character, this reconstructs actual triangular
+// faces from the raw point cloud (see buildFaces() below) and fills
+// them in, Gouraud-shaded from the same per-vertex normals the original
+// loader already estimated -- so the point cloud actually reads as a
+// continuous lit surface instead of a scatter of dots.
 
-public class SuzanneTheMonkeyLoader extends Loader {
+public class SuzanneTheMonkeyLoaderB extends Loader {
     private static final StatusStage[] STAGES = {
-        new StatusStage(15, "Loading suzanne.obj (507 mesh vertices)..."),
-        new StatusStage(40, "Nearest-neighbor search across the point cloud..."),
-        new StatusStage(65, "Estimating normals via local PCA (Jacobi eigensolve)..."),
-        new StatusStage(85, "Z-Buffer occlusion test successful..."),
-        new StatusStage(100, "Orthographic Rasterization Complete!")
+        new StatusStage(10, "Loading suzanne.obj (507 mesh vertices)..."),
+        new StatusStage(25, "Nearest-neighbor search across the point cloud..."),
+        new StatusStage(45, "Estimating normals via local PCA (Jacobi eigensolve)..."),
+        new StatusStage(70, "Fan-triangulating neighborhoods into surface faces..."),
+        new StatusStage(90, "Z-Buffer occlusion test successful..."),
+        new StatusStage(100, "Gouraud-Shaded Rasterization Complete!")
     };
 
 
@@ -161,27 +167,68 @@ public class SuzanneTheMonkeyLoader extends Loader {
     // features (eyes, ear rims, the nose point) and over-smooth them.
     private static final int NEIGHBOR_COUNT = 10;
 
-    // Baked once at class-load: centered/scaled positions plus a real,
-    // locally-estimated normal for every one of the 507 mesh vertices.
+    // Tuning knobs for buildFaces()'s fan triangulation, defined here
+    // rather than down next to that method: MAX_ANGULAR_GAP isn't a
+    // compile-time constant (Math.toRadians() is a real method call),
+    // and Java runs non-constant static field initializers in strict
+    // textual order -- if this sat below the "static { FACES = ... }"
+    // block instead of above it, buildFaces() would read it as its
+    // not-yet-initialized default of 0.0 and reject almost every
+    // candidate triangle.
+    private static final int FAN_NEIGHBOR_COUNT = 9;
+    private static final double MAX_EDGE_FACTOR = 2.3;
+    private static final double MAX_ANGULAR_GAP = Math.toRadians(150);
+
+    // Baked once at class-load: centered/scaled positions, a real
+    // locally-estimated normal for every one of the 507 mesh vertices,
+    // and the triangular faces reconstructed from that point cloud
+    // (see buildFaces() near the bottom of this file).
     private static final double[][] MESH_POSITIONS;
     private static final double[][] MESH_NORMALS;
+    private static final int[][] FACES;
 
     static {
         double[][][] baked = bakeMesh();
         MESH_POSITIONS = baked[0];
         MESH_NORMALS = baked[1];
+        FACES = buildFaces(MESH_POSITIONS, MESH_NORMALS);
     }
 
-    public SuzanneTheMonkeyLoader(StatusStage[] stages, int width, int height) {
+    // Reusable per-vertex scratch buffers (screen position, depth, and
+    // shaded luminance), computed ONCE per frame in renderGeometry()'s
+    // first pass and then read many times over by the triangle
+    // rasterizer in its second pass -- allocated once here, per
+    // instance (not static/shared -- see the frameTimeNanos comment in
+    // Loader.java for why that matters), to keep this at 0% GC pressure
+    // per frame just like the rest of the pipeline.
+    private final double[] screenX;
+    private final double[] screenY;
+    private final double[] depthBuf;
+    private final double[] vertexLum;
+    private final double[] rotNormalY;
+
+    public SuzanneTheMonkeyLoaderB(StatusStage[] stages, int width, int height) {
         super(stages, width, height);
         this.width = width;
         this.height = height;
+        int vertexCount = MESH_POSITIONS.length;
+        this.screenX = new double[vertexCount];
+        this.screenY = new double[vertexCount];
+        this.depthBuf = new double[vertexCount];
+        this.vertexLum = new double[vertexCount];
+        this.rotNormalY = new double[vertexCount];
     }
 
-    public SuzanneTheMonkeyLoader() {
+    public SuzanneTheMonkeyLoaderB() {
         super(STAGES, 80, 22);
         this.height = this.window_height;
         this.width = this.window_width;
+        int vertexCount = MESH_POSITIONS.length;
+        this.screenX = new double[vertexCount];
+        this.screenY = new double[vertexCount];
+        this.depthBuf = new double[vertexCount];
+        this.vertexLum = new double[vertexCount];
+        this.rotNormalY = new double[vertexCount];
     }
 
     @Override
@@ -204,72 +251,120 @@ public class SuzanneTheMonkeyLoader extends Loader {
         double lightX = 0.577, lightY = -0.577, lightZ = 0.577;
         double fillX = -0.4, fillY = 0.4, fillZ = -0.5;
 
+        // Pass 1: transform every vertex exactly once per frame --
+        // rotated screen position, depth, and shaded luminance -- and
+        // cache the results in the scratch buffers above. FACES only
+        // ever references vertices by index, so nothing here is
+        // recomputed per-triangle-corner in pass 2 below.
         for (int i = 0; i < MESH_POSITIONS.length; i++) {
             double[] p = MESH_POSITIONS[i];
-            double[] n = MESH_NORMALS[i];
-            projectMonkeyVertex(p[0], p[1], p[2], n[0], n[1], n[2],
-                    cosX, sinX, cosY, sinY, lightX, lightY, lightZ, fillX, fillY, fillZ, outputBuffer, zBuffer);
+            double[] nrm = MESH_NORMALS[i];
+
+            double r1x = p[0] * cosY - p[1] * sinY;
+            double r1y = p[0] * sinY + p[1] * cosY;
+            double r1z = p[2];
+            double rotX = r1x;
+            double rotY = r1y * cosX - r1z * sinX;
+            double rotZ = r1y * sinX + r1z * cosX;
+
+            double n1x = nrm[0] * cosY - nrm[1] * sinY;
+            double n1y = nrm[0] * sinY + nrm[1] * cosY;
+            double n1z = nrm[2];
+            double rotNX = n1x;
+            double rotNY = n1y * cosX - n1z * sinX;
+            double rotNZ = n1y * sinX + n1z * cosX;
+            double nLen = Math.sqrt(rotNX * rotNX + rotNY * rotNY + rotNZ * rotNZ);
+            if (nLen > 0) {
+                rotNX /= nLen;
+                rotNY /= nLen;
+                rotNZ /= nLen;
+            }
+
+            double cameraDepth = rotY + 5.0;
+            double D = 1.0 / cameraDepth;
+
+            this.screenX[i] = width / 2.0 + (width * 0.62) * D * rotX;
+            this.screenY[i] = height / 2.0 - (height * 1.05) * D * (rotZ + 0.1);
+            this.depthBuf[i] = D;
+            this.rotNormalY[i] = rotNY;
+
+            double dotKey = Math.max(0.0, rotNX * lightX + rotNY * lightY + rotNZ * lightZ);
+            double dotFill = Math.max(0.0, rotNX * fillX + rotNY * fillY + rotNZ * fillZ);
+            double luminance = 0.14 + 0.62 * dotKey + 0.30 * dotFill;
+            if (luminance > 1.0) luminance = 1.0;
+            this.vertexLum[i] = luminance;
+        }
+
+        // Pass 2: fill in every reconstructed triangular face, z-buffered
+        // and Gouraud-shaded from the three cached vertex luminances
+        // above instead of only ever touching three isolated pixels.
+        for (int[] face : FACES) {
+            rasterizeTriangle(face[0], face[1], face[2], outputBuffer, zBuffer);
         }
     }
 
-    private void projectMonkeyVertex(double lx, double ly, double lz, double nx, double ny, double nz,
-                                    double cosX, double sinX, double cosY, double sinY,
-                                    double lightX, double lightY, double lightZ,
-                                    double fillX, double fillY, double fillZ, String[] out, double[] zb) {
-        // 1. Rotate the Vertex Position Vectors (Yaw around Z, then Pitch around X)
-        double r1x = lx * cosY - ly * sinY;
-        double r1y = lx * sinY + ly * cosY;
-        double r1z = lz;
-
-        double rotX = r1x;
-        double rotY = r1y * cosX - r1z * sinX;
-        double rotZ = r1y * sinX + r1z * cosX;
-
-        // 2. Rotate the Surface Normal Vectors identically so shadows stay pinned to the viewer
-        double n1x = nx * cosY - ny * sinY;
-        double n1y = nx * sinY + ny * cosY;
-        double n1z = nz;
-
-        double rotNX = n1x;
-        double rotNY = n1y * cosX - n1z * sinX;
-        double rotNZ = n1y * sinX + n1z * cosX;
-
-        double nLen = Math.sqrt(rotNX * rotNX + rotNY * rotNY + rotNZ * rotNZ);
-        if (nLen > 0) {
-            rotNX /= nLen;
-            rotNY /= nLen;
-            rotNZ /= nLen;
+    // Fills one triangular face into out/zb using the per-vertex values
+    // pass 1 (above) already cached for its three corner indices.
+    // Barycentric weights across the triangle interpolate depth (for
+    // the z-buffer test) and luminance (for the character chosen from
+    // the palette) the same way a GPU would Gouraud-shade a polygon --
+    // just landing on ASCII cells instead of real pixels.
+    private void rasterizeTriangle(int ia, int ib, int ic, String[] out, double[] zb) {
+        // Backface cull: the camera looks toward +Y (see cameraDepth
+        // in pass 1), so a face whose averaged, rotated normal is
+        // still pointing toward +Y is facing away from the viewer this
+        // frame -- skip it rather than let it fight the z-buffer.
+        double avgNY = (rotNormalY[ia] + rotNormalY[ib] + rotNormalY[ic]) / 3.0;
+        if (avgNY > 0.0) {
+            return;
         }
 
-        // 3. Perspective Projection & Scale calculations (Y represents deep distance away from eye)
-        double cameraDepth = rotY + 5.0;
-        double D = 1.0 / cameraDepth;
+        double x0 = screenX[ia], y0 = screenY[ia], d0 = depthBuf[ia], l0 = vertexLum[ia];
+        double x1 = screenX[ib], y1 = screenY[ib], d1 = depthBuf[ib], l1 = vertexLum[ib];
+        double x2 = screenX[ic], y2 = screenY[ic], d2 = depthBuf[ic], l2 = vertexLum[ic];
 
-        // Project onto the canvas, scaled relative to its actual
-        // dimensions rather than a fixed 80x22 assumption.
-        int sx = (int) (width / 2.0 + (width * 0.62) * D * rotX);
-        int sy = (int) (height / 2.0 - (height * 1.05) * D * (rotZ + 0.1));
-        int o = sx + width * sy;
+        int minX = (int) Math.floor(Math.min(x0, Math.min(x1, x2)));
+        int maxX = (int) Math.ceil(Math.max(x0, Math.max(x1, x2)));
+        int minY = (int) Math.floor(Math.min(y0, Math.min(y1, y2)));
+        int maxY = (int) Math.ceil(Math.max(y0, Math.max(y1, y2)));
+        if (minX < 0) minX = 0;
+        if (minY < 0) minY = 0;
+        if (maxX >= width) maxX = width - 1;
+        if (maxY >= height) maxY = height - 1;
+        if (minX > maxX || minY > maxY) {
+            return;
+        }
 
-        // 4. MONOCHROME LUMINANCE DOT-PRODUCT SHADER (key + fill)
-        double dotKey = Math.max(0.0, rotNX * lightX + rotNY * lightY + rotNZ * lightZ);
-        double dotFill = Math.max(0.0, rotNX * fillX + rotNY * fillY + rotNZ * fillZ);
-        double luminance = 0.14 + 0.62 * dotKey + 0.30 * dotFill;
-        if (luminance > 1.0) luminance = 1.0;
+        double area = (x1 - x0) * (y2 - y0) - (x2 - x0) * (y1 - y0);
+        if (Math.abs(area) < 1e-9) {
+            return;
+        }
+        double invArea = 1.0 / area;
 
-        if (sy < height && sy >= 0 && sx >= 0 && sx < width && D > (zb[o] + 0.0001)) {
-            zb[o] = D;
+        for (int py = minY; py <= maxY; py++) {
+            for (int px = minX; px <= maxX; px++) {
+                double w0 = ((x1 - px) * (y2 - py) - (x2 - px) * (y1 - py)) * invArea;
+                double w1 = ((x2 - px) * (y0 - py) - (x0 - px) * (y2 - py)) * invArea;
+                double w2 = 1.0 - w0 - w1;
+                if (w0 < -1e-6 || w1 < -1e-6 || w2 < -1e-6) {
+                    continue;
+                }
 
-            // Finer-grained grayscale ramp for smoother shading gradients
-            String palette = " .'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$";
-            int charIndex = (int) (luminance * (palette.length() - 1));
-            charIndex = Math.max(0, Math.min(palette.length() - 1, charIndex));
-            char asciiChar = palette.charAt(charIndex);
+                double D = w0 * d0 + w1 * d1 + w2 * d2;
+                int o = px + width * py;
+                if (D > zb[o] + 0.0001) {
+                    zb[o] = D;
 
-            if (asciiChar != ' ') {
-                out[o] = WHITE + asciiChar + RESET;
-            } else {
-                out[o] = " ";
+                    double luminance = w0 * l0 + w1 * l1 + w2 * l2;
+
+                    // Finer-grained grayscale ramp for smoother shading gradients
+                    String palette = " .'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$";
+                    int charIndex = (int) (luminance * (palette.length() - 1));
+                    charIndex = Math.max(0, Math.min(palette.length() - 1, charIndex));
+                    char asciiChar = palette.charAt(charIndex);
+
+                    out[o] = (asciiChar != ' ') ? (WHITE + asciiChar + RESET) : " ";
+                }
             }
         }
     }
@@ -453,5 +548,200 @@ public class SuzanneTheMonkeyLoader extends Loader {
             return new double[] { 0, 0, 1 };
         }
         return new double[] { nx / len, ny / len, nz / len };
+    }
+
+    // -----------------------------------------------------------------
+    // Surface reconstruction: turns the bare point cloud (plus the
+    // per-point normals bakeMesh() already estimated) into an actual
+    // triangle mesh. Suzanne's OBJ source does ship real face data,
+    // but -- like the vertex normals -- it's deliberately not used
+    // here, so this loader shares one reconstruction pipeline with the
+    // Stanford Bunny's raw laser scan, which has no face data at all.
+    //
+    // For each point, its FAN_NEIGHBOR_COUNT nearest neighbors are
+    // projected onto that point's own local tangent plane (the plane
+    // perpendicular to its estimated normal) and sorted by angle around
+    // it, turning the unordered neighborhood into a "fan" of wedges
+    // going all the way around the point; consecutive neighbors in that
+    // fan become a triangle with the point itself. Two guards keep this
+    // from bridging across gaps it shouldn't:
+    //   - a max-edge-length cutoff, scaled to that particular point's
+    //     own local neighbor spacing (density varies a lot across the
+    //     mesh), throws out triangles that would reach across a real
+    //     gap instead of following the surface, and
+    //   - a max-angular-gap cutoff refuses to close the fan across a
+    //     wide empty wedge, which is what a true boundary of the
+    //     sampled surface (or a thin feature like an ear rim) looks
+    //     like locally.
+    // Every point runs this fan independently, so the same physical
+    // triangle is typically rediscovered from two or three different
+    // apex points; a dedup pass (keyed on the triangle's three vertex
+    // indices, order-independent) collapses those back down to one
+    // triangle each. Finally, each surviving triangle's winding order
+    // is flipped if needed so its geometric normal points the same way
+    // as the outward-oriented vertex normals bakeMesh() already
+    // computed -- that shared orientation is what lets
+    // rasterizeTriangle() backface-cull and shade every face correctly.
+    // -----------------------------------------------------------------
+
+    private static int[][] buildFaces(double[][] positions, double[][] normals) {
+        int n = positions.length;
+        int k = Math.min(FAN_NEIGHBOR_COUNT, n - 1);
+        java.util.List<int[]> faces = new java.util.ArrayList<>();
+        java.util.HashSet<Long> seen = new java.util.HashSet<>();
+
+        int[] neighborIdx = new int[k];
+        double[] neighborDist = new double[k];
+
+        for (int i = 0; i < n; i++) {
+            int found = findKNearest(positions, i, k, neighborIdx, neighborDist);
+            if (found < 2) {
+                continue;
+            }
+
+            double sumDist = 0;
+            for (int j = 0; j < found; j++) {
+                sumDist += neighborDist[j];
+            }
+            double maxEdge = (sumDist / found) * MAX_EDGE_FACTOR;
+
+            // Orthonormal (u, v) basis spanning the plane perpendicular
+            // to this point's normal, so neighbors can be sorted by
+            // angle "around" the point along its own local surface.
+            double nx = normals[i][0], ny = normals[i][1], nz = normals[i][2];
+            double ax, ay, az;
+            if (Math.abs(nz) < 0.9) {
+                ax = 0; ay = 0; az = 1;
+            } else {
+                ax = 1; ay = 0; az = 0;
+            }
+            double ux = ny * az - nz * ay;
+            double uy = nz * ax - nx * az;
+            double uz = nx * ay - ny * ax;
+            double ulen = Math.sqrt(ux * ux + uy * uy + uz * uz);
+            ux /= ulen; uy /= ulen; uz /= ulen;
+            double vx = ny * uz - nz * uy;
+            double vy = nz * ux - nx * uz;
+            double vz = nx * uy - ny * ux;
+
+            double[] angle = new double[found];
+            for (int j = 0; j < found; j++) {
+                double[] q = positions[neighborIdx[j]];
+                double rx = q[0] - positions[i][0];
+                double ry = q[1] - positions[i][1];
+                double rz = q[2] - positions[i][2];
+                double pu = rx * ux + ry * uy + rz * uz;
+                double pv = rx * vx + ry * vy + rz * vz;
+                angle[j] = Math.atan2(pv, pu);
+            }
+
+            Integer[] order = new Integer[found];
+            for (int j = 0; j < found; j++) {
+                order[j] = j;
+            }
+            final double[] angleRef = angle;
+            java.util.Arrays.sort(order, (a, b) -> Double.compare(angleRef[a], angleRef[b]));
+
+            for (int t = 0; t < found; t++) {
+                int j0 = order[t];
+                int j1 = order[(t + 1) % found];
+                double gap = angle[j1] - angle[j0];
+                if (gap < 0) {
+                    gap += 2 * Math.PI;
+                }
+                if (gap > MAX_ANGULAR_GAP) {
+                    continue;
+                }
+                if (neighborDist[j0] > maxEdge || neighborDist[j1] > maxEdge) {
+                    continue;
+                }
+
+                int a = neighborIdx[j0];
+                int b = neighborIdx[j1];
+
+                double dx = positions[a][0] - positions[b][0];
+                double dy = positions[a][1] - positions[b][1];
+                double dz = positions[a][2] - positions[b][2];
+                double abDist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+                if (abDist > maxEdge * 1.3) {
+                    continue;
+                }
+
+                // Orient winding to match the already outward-facing
+                // vertex normals, rather than whatever order the
+                // angular sort happened to produce.
+                double e1x = positions[a][0] - positions[i][0];
+                double e1y = positions[a][1] - positions[i][1];
+                double e1z = positions[a][2] - positions[i][2];
+                double e2x = positions[b][0] - positions[i][0];
+                double e2y = positions[b][1] - positions[i][1];
+                double e2z = positions[b][2] - positions[i][2];
+                double fnx = e1y * e2z - e1z * e2y;
+                double fny = e1z * e2x - e1x * e2z;
+                double fnz = e1x * e2y - e1y * e2x;
+                double refx = normals[i][0] + normals[a][0] + normals[b][0];
+                double refy = normals[i][1] + normals[a][1] + normals[b][1];
+                double refz = normals[i][2] + normals[a][2] + normals[b][2];
+                double dot = fnx * refx + fny * refy + fnz * refz;
+
+                int v0 = i, v1, v2;
+                if (dot < 0) {
+                    v1 = b; v2 = a;
+                } else {
+                    v1 = a; v2 = b;
+                }
+
+                // Dedup key: this same physical triangle is typically
+                // rediscovered from two or three different apex points,
+                // so collapse repeats down to one entry regardless of
+                // which vertex order they were found in.
+                int lo = Math.min(v0, Math.min(v1, v2));
+                int hi = Math.max(v0, Math.max(v1, v2));
+                int mid = v0 + v1 + v2 - lo - hi;
+                long key = ((long) lo << 42) | ((long) mid << 21) | (long) hi;
+
+                if (seen.add(key)) {
+                    faces.add(new int[] { v0, v1, v2 });
+                }
+            }
+        }
+
+        return faces.toArray(new int[0][]);
+    }
+
+    // Brute-force k-nearest-neighbor search reused for triangulation --
+    // an independent pass from the one bakeMesh() runs for normal
+    // estimation above. Simple and cheap at these point counts, and
+    // keeps this stage fully decoupled from whatever k tuning normal
+    // estimation ends up needing.
+    private static int findKNearest(double[][] positions, int i, int k, int[] outIdx, double[] outDist) {
+        int found = 0;
+        for (int j = 0; j < positions.length; j++) {
+            if (j == i) {
+                continue;
+            }
+            double dx = positions[j][0] - positions[i][0];
+            double dy = positions[j][1] - positions[i][1];
+            double dz = positions[j][2] - positions[i][2];
+            double d = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+            if (found < k) {
+                outIdx[found] = j;
+                outDist[found] = d;
+                found++;
+            } else {
+                int worst = 0;
+                for (int m = 1; m < k; m++) {
+                    if (outDist[m] > outDist[worst]) {
+                        worst = m;
+                    }
+                }
+                if (d < outDist[worst]) {
+                    outDist[worst] = d;
+                    outIdx[worst] = j;
+                }
+            }
+        }
+        return found;
     }
 }
