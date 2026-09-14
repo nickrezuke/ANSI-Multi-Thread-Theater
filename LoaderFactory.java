@@ -81,7 +81,8 @@ public class LoaderFactory {
         register(List.of("Curiosity", "CuriosityRover", "MarsRover"), CuriosityRoverLoader::new);
         register("MarioCoinBlock", TexelMarioCoinBlockLoader::new);
         //register("CornellBox", CornellBoxLoader::new); TODO Make a "Cornell Box" Loader
-        register(List.of("Suzanne", "SuzanneTheMonkey"), SuzanneTheMonkeyLoader::new);
+        register(List.of("SuzanneA", "SuzanneTheMonkeyA"), SuzanneTheMonkeyLoaderA::new);
+        register(List.of("SuzanneB", "SuzanneTheMonkeyB"), SuzanneTheMonkeyLoaderB::new);
         register("CatHead", CatHeadLoader::new);
         register("IkedaRibbon", IkedaRibbonLoader::new);
         register("Synthwave", SynthWaveLoader::new);
@@ -101,9 +102,11 @@ public class LoaderFactory {
         //register(List.of("RomanColosseum", "Colosseum"), RomanColosseumLoader::new); TODO Make a "Roman Colosseum" Loader
         register(List.of("NASAShuttle", "SpaceShuttle"), SpaceShuttleLoader::new);
         register("PsychedelicIcosahedron", PsychedelicIcosahedronLoader::new);
+        register("Aquarium", AquariumLoader::new);
         register("HillTree", HillTreeLoader::new);
         register(List.of("AcropolisOfAthens", "Acropolis"), AcropolisOfAthensLoader::new);
-        register("StanfordBunny", StanfordBunnyLoader::new);
+        register("StanfordBunnyA", StanfordBunnyLoaderA::new);
+        register("StanfordBunnyB", StanfordBunnyLoaderB::new);
         register("MandelbrotZoom", MandelbrotZoomLoader::new);
         register("DNA", DNALoader::new);
         //register(List.of("TheSun", "Sol", "Sun"), SolarLoader::new); TODO Make a Loader for just the Sun itself
@@ -120,10 +123,12 @@ public class LoaderFactory {
         register("WavePropagation", WavePropagationLoader::new);
         register(List.of("CorridorWaveGuide", "CorridorWave"), CorridorWaveLoader::new);
         register("SeifertSurface", SeifertLoader::new);
+        register("CoralReef", CoralReefLoader::new);
         register("TextFall", TextFallLoader::new);
         register(List.of("GraphPlot", "XYGraph", "Desmos", "XYPlot"), GraphLoader::new);
         register("WireframeFisheyeGlobe", WireframeFisheyeGlobeLoader::new);
-        register("Bad Apple", () -> new ImageFolderLoader("Bad Apple"));
+        register("BadApple", () -> new ImageFolderLoader("Bad Apple"));
+        register("BlueDevil", () -> new GifFilePlayerLoader("Blue Devil"));
         register(List.of("HotDog", "Glizzy"), HotDogLoader::new);
         register("RainbowRing", RainbowRingLoader::new);
         register("CosmicBrownie", CosmicBrownieLoader::new);
@@ -150,7 +155,7 @@ public class LoaderFactory {
         register("Louvre", LouvreLoader::new);
         register(List.of("FluidDynamics", "NavierStokes"), FluidDynamicsLoader::new);
         register(List.of("DJ", "DJTurntable"), DJTurntableLoader::new);
-        //register("MarioCoin", MarioCoinLoader::new); TODO Make a reflective gold "Mario Coin" loader
+        register(List.of("MarioCoin", "SuperMarioCoin"), SuperMarioCoinLoader::new);
         register("Moon", MoonLoader::new);
         register("PerlinNoiseA", PerlinNoiseLoaderA::new);
         register(List.of("ApolloLunarModule", "LunarModule"), ApolloLunarModuleLoader::new);

@@ -383,11 +383,15 @@ I also included a few classic "graphics processing" loaders
 
 -> **Oasis**: <!-- TODO: Elaborate on this section -->
 
+-> **Aquarium**: <!-- TODO: Elaborate on this section -->
+
 -> **SynthWave**: <!-- TODO: Elaborate on this section -->
 
 -> **VaporWave**: <!-- TODO: Elaborate on this section -->
 
 -> **AndysFire**: <!-- TODO: Elaborate on this section -->
+
+-> **CoralReef**: <!-- TODO: Elaborate on this section -->
 
 -> **FrudigerAero**: <!-- TODO: Elaborate on this section -->
 
@@ -483,7 +487,6 @@ Gravitational Lensing Simulation?
 Structural Resonance Frequency vs Height of several lolipop weights
 Something with the high-detail resolution trick w/ blocks https://en.wikipedia.org/wiki/Block_Elements 
 3D Galton Board?  Like giant pyramid of 3D to make a 3D gaussian curve?
-2D Scene of an Aquarium / Coral Reef?
 Valve's Portal?  Like idk the simulated light "seeing" through blue / orange portals?
 Tower of Hanoi Solver?
 Factorio-style conveyor belt factory like things moving around making new things

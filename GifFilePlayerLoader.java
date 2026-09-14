@@ -43,31 +43,49 @@ public class GifFilePlayerLoader extends Loader {
     private int offsetX;
     private int offsetY;
 
+    public GifFilePlayerLoader(String intendedFile) {
+        this(intendedFile, 80, 40);
+    }
+
+    public GifFilePlayerLoader(String intendedFile, int w, int h) {
+        super(GIF_STAGES, w, h);
+        GIF_FILE_NAME = intendedFile;
+        setTargetFps(30); // Speed of usual GIFs
+        if(intendedFile == "Blue Devil") {
+            GIF_FILE_NAME = "ImageFolderGIF/BlueDevilDance.gif";
+            setTargetFps(15); // Speed of Blue Devil GIF
+        } 
+    }
+
+    public GifFilePlayerLoader(int w, int h, String intendedFileString) {
+        this(intendedFileString, w, h); // bc I forget the order sometimes
+    }
+
     public GifFilePlayerLoader() {
-        super(GIF_STAGES, 80, 40);
+        this(null);
     }
 
     public GifFilePlayerLoader(int w, int h) {
-        super(GIF_STAGES, w, h);
+        this(null, w, h);
     }
 
     @Override
     protected void initialize() {
-        setTargetFps(30); // Speed of GIFs
-        int variant = (int)(Math.random() * 4);
-        switch(variant) { // example gifs
-            case 0:
-                GIF_FILE_NAME = "ImageFolderGIF/Skull.gif"; break;
-            case 1:
-                GIF_FILE_NAME = "ImageFolderGIF/HelloWave.gif"; break;
-            case 2:
-                GIF_FILE_NAME = "ImageFolderGIF/GemHeart.gif"; break;
-            case 3:
-            default:
-                GIF_FILE_NAME = "ImageFolderGIF/BlueDevilDance.gif"; break;
-
+        if (GIF_FILE_NAME == null) { // Set a random one if there was no passed preference
+            int variant = (int) (Math.random() * 3);
+            switch (variant) { // example gifs
+                case 0:
+                    GIF_FILE_NAME = "ImageFolderGIF/Skull.gif";
+                    break;
+                case 1:
+                    GIF_FILE_NAME = "ImageFolderGIF/HelloWave.gif";
+                    break;
+                case 2:
+                default:
+                    GIF_FILE_NAME = "ImageFolderGIF/GemHeart.gif";
+                    break;
+            }
         }
-
         try {
             loadAndCacheGifFrames();
             gifLoadedSuccessfully = !cachedFrames.isEmpty();
