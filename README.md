@@ -91,6 +91,8 @@ This project comes packed with a ton of different variants, all derived from a c
 
 -> **Carousel**: <!-- TODO: Elaborate on this section -->
 
+-> **CrystalBall**: <!-- TODO: Elaborate on this section -->
+
 -> **FerrisWheel**: <!-- TODO: Elaborate on this section -->
 
 ### Real Models
@@ -187,6 +189,8 @@ I also included a few classic "graphics processing" loaders
 -> **MarioKart64ItemBox**: <!-- TODO: Elaborate on this section -->
 
 -> **PacManSphere**: <!-- TODO: Elaborate on this section -->
+
+-> **MarioMushroom**: <!-- TODO: Elaborate on this section -->
 
 -> **MarioCoin**: <!-- TODO: Elaborate on this section -->
 
@@ -366,8 +370,11 @@ I also included a few classic "graphics processing" loaders
 
 -> **Sphinx**: <!-- TODO: Elaborate on this section -->
 
+-> **LeaningTowerOfPisa**: <!-- TODO: Elaborate on this section -->
+
 -> **ChickenItza**: <!-- TODO: Elaborate on this section -->
 
+-> **EmpireStateBuilding**: <!-- TODO: Elaborate on this section -->
 
 ### Scenery and Ambience
 
@@ -449,6 +456,8 @@ I also included a few classic "graphics processing" loaders
 
 -> **GifPlayer**: <!-- TODO: Elaborate on this section -->
 
+-> **LogoExtrusion**: <!-- TODO: Elaborate on this section -->
+
 ### Real-Time Interactive (Play the games yourself using keypresses)
 
 -> **KleinRing**: <!-- TODO: Elaborate on this section -->
@@ -495,8 +504,13 @@ Teacup on a plate
 Yoyo goin up and down
 Jimmothy????
 Rick Roll?
-Super Mario Mushroom
-Single Image from folder -> spinning 3D icon token?
+Notre-Dame Cathedral?
+Arc de Triomphe?
+Chrysler Building?
+White House?
+Gherkin Tower?
+Space Needle?
+St Louis Arch?
 Wireframe rainbow cube with a rainbow triangle inside?
 Lissajous Oscilloscope
 CRT Scanlines & Phosphor Decay (Like use scanline sweep with bloom and phosphor persistence; simulate interlacing and curvature warp for a retro monitor look.  Use fast column sweep and exponential decay on brightness buffer.)
