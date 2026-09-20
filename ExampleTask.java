@@ -59,15 +59,18 @@ public class ExampleTask {
             // sleep() for a bit before updating the progress variable in increments
             // from 0% to 100% over a few seconds. This provides us with a nice long time
             // to see the loading screen in this example run.
-            for (int p = 0; p <= 100; p += 1) {
-                loader.setProgress(p); // Push progress values to the loader to update it
+            for (double p = 0; p <= 100; p = p + 0.01) {
                 // This setProgress should be called whenever you have meaningful updates...
-                // i.e. at least try not to call setProgress a million times per second on the
-                // same number...
-                // theres only 101 meaningful values so be only somewhat generous in your
-                // updates
-                Thread.sleep(300); // Simulating 300ms of work time...
+                loader.setProgress(p); // Push progress values to the loader to update it
+
+                // Here I just simulate 300ms of work time per unit of percentage,
+                // to give you enough time to see and substantially watch the loaders
+                Thread.sleep(3);
             }
+
+            // After all your processing, its finally time to join back up and resume
+            // control...
+            // Now its time to deal with the finally block before moving on
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             // because I KNOW you're impatient and will be using ctrl-c...
@@ -85,7 +88,7 @@ public class ExampleTask {
         }
 
         // 7. By this point everything should be cleared up and ended
-        // Continue with the rest of your following code
+        // Continue with the rest of your program's following code
 
         // ...
         // ... ▼ your existing code ▼

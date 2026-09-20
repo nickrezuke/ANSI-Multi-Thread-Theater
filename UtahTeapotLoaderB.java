@@ -1,21 +1,57 @@
-// This is now the REAL Utah Teapot: the exact 306 control points and 32
-// bicubic Bezier patches Martin Newell measured off a real Melitta teapot
-// in 1975 and Jim Blinn later rescaled -- the same dataset baked into
-// glutSolidTeapot() and every OpenGL textbook demo since. No more
-// hand-eyeballed lathe profile: the body, lid, handle, spout and bottom
-// are each genuine Bezier surfaces, tessellated with real De Casteljau
-// evaluation and analytic (not guessed) surface normals.
+// "B" variant of the Utah Teapot loader: instead of plotting each baked
+// surface point as an isolated character, this fills in real triangular
+// faces and Gouraud-shades them from the same per-vertex analytic normals
+// UtahTeapotLoaderA already evaluated -- so the teapot reads as a
+// continuous glossy surface instead of a scatter of dots.
+//
+// SuzanneTheMonkeyLoaderB / StanfordDragonLoaderB / StanfordBunnyLoaderB
+// all have to *reconstruct* face connectivity from a raw, unstructured
+// point cloud: for every point, find its nearest neighbors, sort them by
+// angle around that point's own tangent plane, fan them into triangles,
+// then dedupe the same physical triangle away from however many
+// different apex points rediscovered it. None of that applies here.
+// bakeMesh() below tessellates each of the 32 patches on its own regular
+// (PATCH_RES+1) x (PATCH_RES+1) grid, in a fixed, already-known row-major
+// order -- so the quad between tessellated grid cell (i, j) and its
+// neighbors (i+1, j), (i, j+1), (i+1, j+1) is always exactly four
+// particular array indices, known in closed form, with zero search and
+// zero ambiguity. buildFaces() below just walks that grid directly and
+// splits each quad into two triangles -- cheaper and exact, instead of
+// approximate and O(n^2).
+//
+// (Triangle winding is not oriented to match the vertex normals the way
+// the other loaders' buildFaces() do, because it doesn't need to be:
+// rasterizeTriangle()'s barycentric weights are invariant to swapping two
+// corners -- doing so flips the sign of `area` and every w0/w1/w2 term
+// that divides by it in lockstep, leaving the inside/outside test and the
+// interpolated depth/luminance untouched -- and the backface cull below
+// reads each vertex's own already-analytic normal directly rather than
+// any winding-derived face normal.)
+//
+// A few patches (the lid's knob and rim) repeat a single control point
+// across an entire row of their 4x4 grid, which collapses one whole edge
+// of that patch's tessellated grid down to a single physical 3D point.
+// The quads touching that collapsed edge end up with two of their three
+// corners landing on the exact same point -- physically correct (that's
+// what a real cone tip looks like) and harmless: rasterizeTriangle()'s
+// existing near-zero-area guard already skips them with no special
+// casing needed here.
 
-public class UtahTeapotLoader extends Loader {
-    private static final StatusStage[] TEAPOT_STAGES = {
+public class UtahTeapotLoaderB extends Loader {
+    private static final StatusStage[] STAGES = {
         new StatusStage(10, "Loading 32 bicubic Bezier patches (Newell/Blinn dataset)..."),
         new StatusStage(30, "Evaluating De Casteljau control point lattice..."),
-        new StatusStage(55, "Deriving analytic tangents and surface normals..."),
-        new StatusStage(80, "Baking high-density point mesh (spout, handle, lid, body)..."),
-        new StatusStage(100, "Orthographic Rasterization Complete!")
+        new StatusStage(50, "Deriving analytic tangents and surface normals..."),
+        new StatusStage(70, "Meshing patch grids into quad-split triangular faces..."),
+        new StatusStage(90, "Z-Buffer occlusion test successful..."),
+        new StatusStage(100, "Gouraud-Shaded Rasterization Complete!")
     };
 
-    // Automated rotation tracking angles
+    // Automated rotation tracking angles. angleX is set once in
+    // initialize() to a fixed tilt and never touched again inside
+    // renderGeometry() -- only angleY advances per frame -- so the teapot
+    // spins steadily around a single upright axis, matching
+    // UtahTeapotLoaderA and every other loader in this set.
     private double angleX = 0.0;
     private double angleY = 0.0;
 
@@ -145,39 +181,66 @@ public class UtahTeapotLoader extends Loader {
 
     // How many samples per patch edge (inclusive) when the surface is
     // tessellated. Higher = smoother/denser silhouette, at the one-time
-    // cost of baking a bigger point cloud.
+    // cost of baking a bigger point cloud and mesh.
     private static final int PATCH_RES = 12;
 
-    // Baked once at class-load: rotating/projecting is all that happens
-    // per frame, not surface evaluation.
+    // Baked once at class-load: centered/scaled positions, a real
+    // analytic normal for every tessellated point, and the triangular
+    // faces meshed directly from each patch's known grid connectivity
+    // (see buildFaces() near the bottom of this file).
     private static final double[][] MESH_POSITIONS;
     private static final double[][] MESH_NORMALS;
+    private static final int[][] FACES;
 
     static {
         double[][][] baked = bakeMesh();
         MESH_POSITIONS = baked[0];
         MESH_NORMALS = baked[1];
+        FACES = buildFaces();
     }
 
-    public UtahTeapotLoader(StatusStage[] stages, int width, int height) {
+    // Reusable per-vertex scratch buffers (screen position, depth, and
+    // shaded luminance), computed ONCE per frame in renderGeometry()'s
+    // first pass and then read many times over by the triangle
+    // rasterizer in its second pass -- allocated once here, per
+    // instance, to keep this at 0% GC pressure per frame just like the
+    // rest of the pipeline.
+    private final double[] screenX;
+    private final double[] screenY;
+    private final double[] depthBuf;
+    private final double[] vertexLum;
+    private final double[] rotNormalY;
+
+    public UtahTeapotLoaderB(StatusStage[] stages, int width, int height) {
         super(stages, width, height);
         this.width = width;
         this.height = height;
+        int vertexCount = MESH_POSITIONS.length;
+        this.screenX = new double[vertexCount];
+        this.screenY = new double[vertexCount];
+        this.depthBuf = new double[vertexCount];
+        this.vertexLum = new double[vertexCount];
+        this.rotNormalY = new double[vertexCount];
     }
 
-    public UtahTeapotLoader() {
+    public UtahTeapotLoaderB() {
         // This one uses 80x22 specifically
-        super(TEAPOT_STAGES, 80, 22);
+        super(STAGES, 80, 22);
         this.width = this.window_width;
         this.height = this.window_height;
+        int vertexCount = MESH_POSITIONS.length;
+        this.screenX = new double[vertexCount];
+        this.screenY = new double[vertexCount];
+        this.depthBuf = new double[vertexCount];
+        this.vertexLum = new double[vertexCount];
+        this.rotNormalY = new double[vertexCount];
     }
 
     @Override
     protected void initialize() {
-        this.angleX = 0.0;
+        this.angleX = 0.3;
         this.angleY = 0.0;
 
-        // Ensure standard newline rendering is clean
         if (!this.isRawCanvas) {
             TerminalConfig.restoreMode();
         }
@@ -185,114 +248,163 @@ public class UtahTeapotLoader extends Loader {
 
     @Override
     protected void renderGeometry(String[] outputBuffer, double[] zBuffer) {
-        // Increment automated spin angles over time
-        angleX += 0.022;
-        angleY += 0.038;
+        // Only the azimuth advances per frame -- angleX stays pinned at
+        // the tilt initialize() set it to -- so this spins steadily
+        // around one upright axis instead of tumbling end over end.
+        angleY -= 0.028;
 
         double cosX = Math.cos(angleX), sinX = Math.sin(angleX);
         double cosY = Math.cos(angleY), sinY = Math.sin(angleY);
 
-        // Clean white directional 3D light vector coming from the top-front-right
         double lightX = 0.577;
         double lightY = -0.577;
         double lightZ = 0.577;
 
+        // Pass 1: transform every baked point exactly once per frame --
+        // rotated screen position, depth, and Blinn-Phong luminance --
+        // and cache the results in the scratch buffers above. FACES only
+        // ever references points by index, so nothing here is
+        // recomputed per-triangle-corner in pass 2 below.
         for (int i = 0; i < MESH_POSITIONS.length; i++) {
             double[] p = MESH_POSITIONS[i];
-            double[] n = MESH_NORMALS[i];
-            projectPointToBuffer(p[0], p[1], p[2], n[0], n[1], n[2],
-                    cosX, sinX, cosY, sinY, lightX, lightY, lightZ, outputBuffer, zBuffer);
+            double[] nrm = MESH_NORMALS[i];
+
+            double r1x = p[0] * cosY - p[1] * sinY;
+            double r1y = p[0] * sinY + p[1] * cosY;
+            double r1z = p[2];
+            double rotX = r1x;
+            double rotY = r1y * cosX - r1z * sinX;
+            double rotZ = r1y * sinX + r1z * cosX;
+
+            double n1x = nrm[0] * cosY - nrm[1] * sinY;
+            double n1y = nrm[0] * sinY + nrm[1] * cosY;
+            double n1z = nrm[2];
+            double rotNX = n1x;
+            double rotNY = n1y * cosX - n1z * sinX;
+            double rotNZ = n1y * sinX + n1z * cosX;
+            double nLen = Math.sqrt(rotNX * rotNX + rotNY * rotNY + rotNZ * rotNZ);
+            if (nLen > 0) {
+                rotNX /= nLen;
+                rotNY /= nLen;
+                rotNZ /= nLen;
+            }
+
+            double cameraDepth = rotY + 5.0;
+            double D = 1.0 / cameraDepth;
+
+            this.screenX[i] = width / 2.0 + (width * 0.6) * D * rotX;
+            this.screenY[i] = height / 2.0 - (height * 1.0) * D * rotZ;
+            this.depthBuf[i] = D;
+            this.rotNormalY[i] = rotNY;
+
+            // Same Blinn-Phong ambient + diffuse + specular shader as
+            // UtahTeapotLoaderA, just cached per-vertex here instead of
+            // applied to one pixel at a time.
+            double dotNL = rotNX * lightX + rotNY * lightY + rotNZ * lightZ;
+            double diffuse = Math.max(0.0, dotNL);
+
+            double halfX = lightX;
+            double halfY = lightY - 1.0;
+            double halfZ = lightZ;
+            double halfLen = Math.sqrt(halfX * halfX + halfY * halfY + halfZ * halfZ);
+            halfX /= halfLen;
+            halfY /= halfLen;
+            halfZ /= halfLen;
+            double dotNH = Math.max(0.0, rotNX * halfX + rotNY * halfY + rotNZ * halfZ);
+            double specular = Math.pow(dotNH, 24.0);
+
+            double luminance = 0.15 + 0.65 * diffuse + 0.35 * specular;
+            if (luminance > 1.0) luminance = 1.0;
+            this.vertexLum[i] = luminance;
+        }
+
+        // Pass 2: fill in every meshed triangular face, z-buffered and
+        // Gouraud-shaded from the three cached vertex luminances above
+        // instead of only ever touching three isolated pixels.
+        for (int[] face : FACES) {
+            rasterizeTriangle(face[0], face[1], face[2], outputBuffer, zBuffer);
         }
     }
 
-    private void projectPointToBuffer(double lx, double ly, double lz, double nx, double ny, double nz,
-                                      double cosX, double sinX, double cosY, double sinY,
-                                      double lightX, double lightY, double lightZ, String[] out, double[] zb) {
-        // 1. Apply multi-axis 3D rotations sequentially
-        double r1x = lx * cosY - ly * sinY;
-        double r1y = lx * sinY + ly * cosY;
-        double r1z = lz;
-
-        double rotX = r1x;
-        double rotY = r1y * cosX - r1z * sinX;
-        double rotZ = r1y * sinX + r1z * cosX;
-
-        // 2. Rotate the (already analytically-correct) surface normal the same way
-        double n1x = nx * cosY - ny * sinY;
-        double n1y = nx * sinY + ny * cosY;
-        double n1z = nz;
-
-        double rotNX = n1x;
-        double rotNY = n1y * cosX - n1z * sinX;
-        double rotNZ = n1y * sinX + n1z * cosX;
-
-        double nLen = Math.sqrt(rotNX * rotNX + rotNY * rotNY + rotNZ * rotNZ);
-        if (nLen > 0) {
-            rotNX /= nLen;
-            rotNY /= nLen;
-            rotNZ /= nLen;
+    // Fills one triangular face into out/zb using the per-vertex values
+    // pass 1 (above) already cached for its three corner indices.
+    // Barycentric weights across the triangle interpolate depth (for
+    // the z-buffer test) and luminance (for the character chosen from
+    // the palette) the same way a GPU would Gouraud-shade a polygon --
+    // just landing on ASCII cells instead of real pixels.
+    private void rasterizeTriangle(int ia, int ib, int ic, String[] out, double[] zb) {
+        // Backface cull: the camera looks toward +Y (see cameraDepth
+        // in pass 1), so a face whose averaged, rotated normal is still
+        // pointing toward +Y is facing away from the viewer this frame
+        // -- skip it rather than let it fight the z-buffer. This reads
+        // the vertices' own analytic normals directly, so it doesn't
+        // depend on the winding order buildFaces() happened to emit.
+        double avgNY = (rotNormalY[ia] + rotNormalY[ib] + rotNormalY[ic]) / 3.0;
+        if (avgNY > 0.0) {
+            return;
         }
 
-        // 3. Perspective Projection Calculations (Y represents deep distance)
-        double cameraDepth = rotY + 5.0;
-        double D = 1.0 / cameraDepth;
+        double x0 = screenX[ia], y0 = screenY[ia], d0 = depthBuf[ia], l0 = vertexLum[ia];
+        double x1 = screenX[ib], y1 = screenY[ib], d1 = depthBuf[ib], l1 = vertexLum[ib];
+        double x2 = screenX[ic], y2 = screenY[ic], d2 = depthBuf[ic], l2 = vertexLum[ic];
 
-        // Map coordinates into the canvas, scaled relative to its actual
-        // dimensions (rather than a fixed 80x22 assumption) so the model
-        // stays correctly proportioned at any resolution.
-        int sx = (int) (width / 2.0 + (width * 0.6) * D * rotX);
-        int sy = (int) (height / 2.0 - (height * 1.0) * D * rotZ);
-        int o = sx + width * sy;
+        int minX = (int) Math.floor(Math.min(x0, Math.min(x1, x2)));
+        int maxX = (int) Math.ceil(Math.max(x0, Math.max(x1, x2)));
+        int minY = (int) Math.floor(Math.min(y0, Math.min(y1, y2)));
+        int maxY = (int) Math.ceil(Math.max(y0, Math.max(y1, y2)));
+        if (minX < 0) minX = 0;
+        if (minY < 0) minY = 0;
+        if (maxX >= width) maxX = width - 1;
+        if (maxY >= height) maxY = height - 1;
+        if (minX > maxX || minY > maxY) {
+            return;
+        }
 
-        // 4. BLINN-PHONG-STYLE MONOCHROME SHADER (ambient + diffuse + a
-        // touch of specular, echoing the glossy look most Utah Teapot
-        // renders are famous for)
-        double dotNL = rotNX * lightX + rotNY * lightY + rotNZ * lightZ;
-        double diffuse = Math.max(0.0, dotNL);
+        double area = (x1 - x0) * (y2 - y0) - (x2 - x0) * (y1 - y0);
+        if (Math.abs(area) < 1e-9) {
+            // Zero-area triangle -- this is exactly what a quad touching
+            // a collapsed pole edge (the lid knob/rim) looks like once
+            // two of its corners land on the same physical point. Skip
+            // it; there's nothing to draw.
+            return;
+        }
+        double invArea = 1.0 / area;
 
-        // Approximate view direction: camera sits back along -Y looking
-        // toward +Y, matching the cameraDepth = rotY + 5 setup above.
-        double halfX = lightX;
-        double halfY = lightY - 1.0;
-        double halfZ = lightZ;
-        double halfLen = Math.sqrt(halfX * halfX + halfY * halfY + halfZ * halfZ);
-        halfX /= halfLen;
-        halfY /= halfLen;
-        halfZ /= halfLen;
-        double dotNH = Math.max(0.0, rotNX * halfX + rotNY * halfY + rotNZ * halfZ);
-        double specular = Math.pow(dotNH, 24.0);
+        for (int py = minY; py <= maxY; py++) {
+            for (int px = minX; px <= maxX; px++) {
+                double w0 = ((x1 - px) * (y2 - py) - (x2 - px) * (y1 - py)) * invArea;
+                double w1 = ((x2 - px) * (y0 - py) - (x0 - px) * (y2 - py)) * invArea;
+                double w2 = 1.0 - w0 - w1;
+                if (w0 < -1e-6 || w1 < -1e-6 || w2 < -1e-6) {
+                    continue;
+                }
 
-        double luminance = 0.15 + 0.65 * diffuse + 0.35 * specular;
-        if (luminance > 1.0) luminance = 1.0;
+                double D = w0 * d0 + w1 * d1 + w2 * d2;
+                int o = px + width * py;
+                if (D > zb[o] + 0.0001) {
+                    zb[o] = D;
 
-        if (sy < height && sy >= 0 && sx >= 0 && sx < width && D > (zb[o] + 0.0001)) {
-            zb[o] = D;
+                    double luminance = w0 * l0 + w1 * l1 + w2 * l2;
 
-            // Finer-grained grayscale ramp (the classic "ASCII density"
-            // ordering) gives noticeably smoother shading gradients than
-            // a coarse dozen-character palette.
-            String palette = " .'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$";
-            int charIndex = (int) (luminance * (palette.length() - 1));
-            charIndex = Math.max(0, Math.min(palette.length() - 1, charIndex));
-            char asciiChar = palette.charAt(charIndex);
+                    String palette = " .'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$";
+                    int charIndex = (int) (luminance * (palette.length() - 1));
+                    charIndex = Math.max(0, Math.min(palette.length() - 1, charIndex));
+                    char asciiChar = palette.charAt(charIndex);
 
-            if (asciiChar != ' ') {
-                out[o] = WHITE + asciiChar + RESET;
-            } else {
-                out[o] = " ";
+                    out[o] = (asciiChar != ' ') ? (WHITE + asciiChar + RESET) : " ";
+                }
             }
         }
     }
 
     // -----------------------------------------------------------------
     // Bezier surface math: real De Casteljau/Bernstein evaluation of the
-    // 32 patches into a dense point+normal cloud, computed once.
+    // 32 patches into a dense point+normal cloud, computed once. Identical
+    // to UtahTeapotLoaderA -- both loaders share the same baked geometry,
+    // just a different renderer on top of it.
     // -----------------------------------------------------------------
 
     private static double[][][] bakeMesh() {
-        // Bounding box of the raw control lattice, so we can center the
-        // teapot on the origin and scale it to a canvas-friendly size
-        // regardless of the dataset's original units.
         double minX = Double.MAX_VALUE, minY = Double.MAX_VALUE, minZ = Double.MAX_VALUE;
         double maxX = -Double.MAX_VALUE, maxY = -Double.MAX_VALUE, maxZ = -Double.MAX_VALUE;
         for (double[] p : CONTROL_POINTS) {
@@ -321,7 +433,7 @@ public class UtahTeapotLoader extends Loader {
         int idx = 0;
         for (int[] patch : PATCHES) {
             for (int k = 0; k < 16; k++) {
-                cp[k] = CONTROL_POINTS[patch[k] - 1]; // stored 1-based, convert to 0-based
+                cp[k] = CONTROL_POINTS[patch[k] - 1];
             }
             for (int i = 0; i <= PATCH_RES; i++) {
                 double u = i / (double) PATCH_RES;
@@ -342,9 +454,6 @@ public class UtahTeapotLoader extends Loader {
         return new double[][][] { positions, normals };
     }
 
-    // Evaluates one bicubic Bezier patch at (u, v), returning both the
-    // surface position and the analytic normal (cross product of the
-    // partial-derivative tangents dP/du and dP/dv).
     private static void evalPatch(double[][] cp, double u, double v, double[] outPos, double[] outNormal) {
         double[][] uCurve = new double[4][];
         double[][] uDeriv = new double[4][];
@@ -366,11 +475,6 @@ public class UtahTeapotLoader extends Loader {
         double nz = dPdu[0] * dPdv[1] - dPdu[1] * dPdv[0];
         double len = Math.sqrt(nx * nx + ny * ny + nz * nz);
         if (len < 1e-9) {
-            // A handful of true poles exist (the knob tip, the flat
-            // bottom center) where the patch collapses to a point and
-            // the tangent basis degenerates. Default to a vertical
-            // normal there so the point still shades sensibly instead
-            // of producing NaNs.
             nx = 0;
             ny = 0;
             nz = (pos[2] >= 0) ? 1 : -1;
@@ -409,5 +513,38 @@ public class UtahTeapotLoader extends Loader {
                 d0 * p0[1] + d1 * p1[1] + d2 * p2[1] + d3 * p3[1],
                 d0 * p0[2] + d1 * p1[2] + d2 * p2[2] + d3 * p3[2]
         };
+    }
+
+    // -----------------------------------------------------------------
+    // Surface reconstruction: turns the baked point grid into an actual
+    // triangle mesh. Each of the 32 patches was tessellated into its own
+    // regular (PATCH_RES+1) x (PATCH_RES+1) grid, stored row-major
+    // (outer loop = i, inner loop = j) starting at patch index p's base
+    // offset p * perPatch -- so grid cell (i, j) and its three neighbors
+    // (i, j+1), (i+1, j), (i+1, j+1) are always four exact, known array
+    // indices. No search, no angular sort, no dedup pass: every quad is
+    // visited exactly once, split into two triangles.
+    // -----------------------------------------------------------------
+
+    private static int[][] buildFaces() {
+        int perPatch = (PATCH_RES + 1) * (PATCH_RES + 1);
+        java.util.List<int[]> faces = new java.util.ArrayList<>();
+
+        for (int p = 0; p < PATCHES.length; p++) {
+            int base = p * perPatch;
+            for (int i = 0; i < PATCH_RES; i++) {
+                for (int j = 0; j < PATCH_RES; j++) {
+                    int i00 = base + i * (PATCH_RES + 1) + j;
+                    int i01 = base + i * (PATCH_RES + 1) + (j + 1);
+                    int i10 = base + (i + 1) * (PATCH_RES + 1) + j;
+                    int i11 = base + (i + 1) * (PATCH_RES + 1) + (j + 1);
+
+                    faces.add(new int[] { i00, i10, i11 });
+                    faces.add(new int[] { i00, i11, i01 });
+                }
+            }
+        }
+
+        return faces.toArray(new int[0][]);
     }
 }

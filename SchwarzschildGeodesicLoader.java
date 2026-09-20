@@ -1,5 +1,3 @@
-// TODO: Make this look better its hard to follow at the moment
-
 public class SchwarzschildGeodesicLoader extends Loader {
     private static final StatusStage[] STAGES = {
             new StatusStage(30, "Generating singularity core:"),
@@ -27,7 +25,6 @@ public class SchwarzschildGeodesicLoader extends Loader {
     private final double[] camRight = new double[3];
 
     public SchwarzschildGeodesicLoader() {
-        // This uses 80x22 specifically
         super(STAGES, WIDTH, HEIGHT);
     }
 
@@ -46,7 +43,7 @@ public class SchwarzschildGeodesicLoader extends Loader {
         // 1. DYNAMIC CAMERA ORBIT: Gentle cinematic rotation around the gravity well
         cameraAngle += 0.020;
         double rCam = 13.5; // Pulled closer to maximize lens distortions across the viewport
-        double pitch = 0.32 + 0.08 * Math.sin(timeClock * 0.4); // Subtle camera bobbing
+        double pitch = -0.24 + 0.35 * Math.sin(timeClock * 0.5); // Subtle camera bobbing
 
         camPos[0] = rCam * Math.cos(cameraAngle) * Math.cos(pitch);
         camPos[1] = rCam * Math.sin(pitch);
@@ -115,7 +112,6 @@ public class SchwarzschildGeodesicLoader extends Loader {
                 double interR = Math.sqrt(interX * interX + interZ * interZ);
 
                 if (interR >= DISK_INNER && interR <= DISK_OUTER) {
-                    zBuf[offset] = r;
                     double diskAngle = Math.atan2(interZ, interX);
                     double swirl = diskAngle + (5.5 / (interR + 0.1)) - timeClock;
 
@@ -162,6 +158,7 @@ public class SchwarzschildGeodesicLoader extends Loader {
 
                         // Blit the color code and custom particle texture down to the screen buffer
                         if (blockChar != ' ') {
+                            zBuf[offset] = r;
                             outBuf[offset] = ansiColor + blockChar + RESET;
                             return;
                         }

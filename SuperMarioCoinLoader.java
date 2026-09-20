@@ -170,7 +170,7 @@ public class SuperMarioCoinLoader extends Loader {
             // Suppress shiny highlights inside the occluded slot to maintain realism
             specularHighlight *= occlusion;
             
-            String lString = " .,-~:;=!*#$@"; 
+            String lString = " .::;;==!!**##$$@@"; 
             int charIndex = (int) (lightIntensity * (lString.length() - 1)); 
             char asciiChar = lString.charAt(charIndex); 
             

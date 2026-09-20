@@ -1,5 +1,3 @@
-// TODO: Improve this... Maybe make surfaces instead of points??
-
 public class SuzanneTheMonkeyLoaderA extends Loader {
     private static final StatusStage[] STAGES = {
         new StatusStage(15, "Loading suzanne.obj (507 mesh vertices)..."),

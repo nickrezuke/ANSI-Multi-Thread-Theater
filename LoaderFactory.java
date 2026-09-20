@@ -70,7 +70,8 @@ public class LoaderFactory {
         register("TexelFlatEarth", TexelFlatEarthLoader::new);
         register("TexelMario64CapBlock",TexelMario64CapBlockLoader::new);
         register("TexelGlitch", TexelGlitchLoader::new);
-        // register("StanfordDragon", StanfordDragonLoader::new); TODO Make a "Stanford Dragon" Loader
+        register("StanfordDragonA", StanfordDragonLoaderA::new);
+        register("StanfordDragonB", StanfordDragonLoaderB::new);
         register(List.of("Aizawa", "AizawaAttractor"), AizawaLoader::new);
         register("TexelRubixCube", TexelRubixCubeLoader::new);
         register("TexelGreyRubix", TexelGreyRubixLoader::new);
@@ -128,7 +129,10 @@ public class LoaderFactory {
         register(List.of("GraphPlot", "XYGraph", "Desmos", "XYPlot"), GraphLoader::new);
         register("WireframeFisheyeGlobe", WireframeFisheyeGlobeLoader::new);
         register("BadApple", () -> new ImageFolderLoader("Bad Apple"));
-        register("BlueDevil", () -> new GifFilePlayerLoader("Blue Devil"));
+        register("BlueDevilDance", () -> new GifFilePlayerLoader("Blue Devil"));
+        register("CCSULogo", () -> new LogoExtrusionLoader("ImageFolderLogoIcon/CCBlueDevil.png"));
+        register("LehighLogo", () -> new LogoExtrusionLoader("ImageFolderLogoIcon/LehighHawk.png"));
+        register("IUseArchBTW", () -> new LogoExtrusionLoader("ImageFolderLogoIcon/ArchLinuxLogo.png"));
         register(List.of("HotDog", "Glizzy"), HotDogLoader::new);
         register("RainbowRing", RainbowRingLoader::new);
         register("CosmicBrownie", CosmicBrownieLoader::new);
@@ -182,6 +186,7 @@ public class LoaderFactory {
         register("TexelHyperchromaticKaleidoscope", TexelHyperchromaticKaleidoscopeLoader::new);
         register("DancingBanana", DancingBananaLoader::new);
         register("ThreeBody", ThreeBodyLoader::new);
+        register("ChryslerBuilding", ChryslerBuildingLoader::new);
         //register("LeaningTowerOfPisa", LeaningTowerOfPisaLoader::new); TODO Make a "Leaning Tower Of Pisa" loader
         register("Mars", MarsLoader::new);
         register("LogoExtrusion", LogoExtrusionLoader::new);
@@ -210,7 +215,8 @@ public class LoaderFactory {
         register("BaukusManifold", BaukusManifoldLoader::new);
         register("Galaga", GalagaLoader::new);
         register("LangtonsAnt", LangtonsAntLoader::new);
-        register("UtahTeapot", UtahTeapotLoader::new);
+        register("UtahTeapotA", UtahTeapotLoaderA::new);
+        register("UtahTeapotB", UtahTeapotLoaderB::new);
         //register(List.of("Carousel", "MerryGoRound"), CarouselLoader::new); TODO Make a "Merry-Go-Round" or "Carousel" loader
         register(List.of("Boids", "HerdingAndFlocking"), BoidsLoader::new);
         register(List.of("TriColorChromeSpheres", "TriColorSpheres", "TriColorCheckerboard"), TriColorChromeSpheresLoader::new);

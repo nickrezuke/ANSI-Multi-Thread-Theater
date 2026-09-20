@@ -98,17 +98,25 @@ This project comes packed with a ton of different variants, all derived from a c
 ### Real Models
 I also included a few classic "graphics processing" loaders
 
--> **UtahTeapot**: <!-- TODO: Elaborate on this section -->
+-> **UtahTeapotA**: <!-- TODO: Elaborate on this section -->
 
--> **StanfordBunny**: <!-- TODO: Elaborate on this section -->
+-> **UtahTeapotB**: <!-- TODO: Elaborate on this section -->
 
--> **CornellBox**: <!-- TODO: Elaborate on this section -->
+-> **StanfordBunnyA**: <!-- TODO: Elaborate on this section -->
 
--> **SuzanneTheMonkey**: <!-- TODO: Elaborate on this section -->
+-> **StanfordBunnyB**: <!-- TODO: Elaborate on this section -->
 
--> **StanfordDragon**: <!-- TODO: Elaborate on this section -->
+-> **SuzanneTheMonkeyA**: <!-- TODO: Elaborate on this section -->
+
+-> **SuzanneTheMonkeyB**: <!-- TODO: Elaborate on this section -->
+
+-> **StanfordDragonA**: <!-- TODO: Elaborate on this section -->
+
+-> **StanfordDragonB**: <!-- TODO: Elaborate on this section -->
 
 -> **BadApple**: <!-- TODO: Elaborate on this section -->
+
+-> **CornellBox**: <!-- TODO: Elaborate on this section -->
 
 ### Texel Cube
 
@@ -511,6 +519,7 @@ White House?
 Gherkin Tower?
 Space Needle?
 St Louis Arch?
+Happy Buddah
 Wireframe rainbow cube with a rainbow triangle inside?
 Lissajous Oscilloscope
 CRT Scanlines & Phosphor Decay (Like use scanline sweep with bloom and phosphor persistence; simulate interlacing and curvature warp for a retro monitor look.  Use fast column sweep and exponential decay on brightness buffer.)
@@ -519,6 +528,7 @@ Interactive Tile Sliding Puzzle (like pokemon ice dungeon)
 Interactive Sokoban game
 Interactive Type & Text appears Loader (other than the alphabet loader?)
 (MAYBE MAKE SOME OF THE EXISTING GAMES PLAYABLE / INTERACTIVE????)
+Can it run Doom?
 
 ---
 

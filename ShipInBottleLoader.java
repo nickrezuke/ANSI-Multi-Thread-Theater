@@ -1,5 +1,4 @@
-//TODO: Fix the zooming and rotation speed to get better viewing angles
-//TODO: Increase the sampling granularity of the cork and etc I can see the "sparse grid" from step size being too big
+// TODO: Fix the sails getting dark as it rotates
 
 import java.util.Arrays;
 
@@ -13,9 +12,8 @@ public class ShipInBottleLoader extends Loader {
 
     private static final char[] SHADE_RAMP = { '.', ',', '-', '~', ':', ';', '=', '!', '*', '#', '$', '@' };
 
-    // Raw RGB color arrays for analog transmissive alpha blending
+    // Raw RGB color
     private static final int[] RGB_STAND = { 65, 35, 20 }; // Mahogany wood cradle
-    private static final int[] RGB_BOTTLE = { 170, 245, 230 }; // Translucent sea-glass cyan
     private static final int[] RGB_CORK = { 180, 130, 80 }; // Porous cork
     private static final int[] RGB_WATER = { 20, 95, 175 }; // Deep ocean blue
     private static final int[] RGB_WAVES = { 180, 220, 245 }; // Frothy wave caps
@@ -43,7 +41,7 @@ public class ShipInBottleLoader extends Loader {
     }
 
     private double getBottleRadius(double x) {
-        if (x < -0.8 || x > 0.75) return 0.0; // Outside glass bounds
+        if (x < -0.96 || x > 0.75) return 0.0; // Outside glass bounds fixed to cover full hemisphere
         if (x < -0.5) {
             // Hemispherical base of the bottle
             double dx = x + 0.5;
@@ -63,14 +61,14 @@ public class ShipInBottleLoader extends Loader {
 
     @Override
     protected void renderGeometry(String[] outputBuffer, double[] zBuffer) {
-        double cosA = Math.cos(A), sinA = Math.sin(A);
+        double cosA = Math.cos(A);
+        double sinA = Math.sin(A);
+        double cos2A = Math.cos(2.0 * A);
         double lightX = 0.577, lightY = -0.707, lightZ = -0.408;
 
-        double timeStep = System.currentTimeMillis() / 1500.0;
-        double sinTimeStep = Math.sin(timeStep);
-        double midDist = 1.9;
-        double swingFactor = 1.0;
-        double distanceToCamera = midDist + swingFactor * Math.signum(sinTimeStep) * Math.sqrt(Math.abs(sinTimeStep));
+        double midDist = 1.1;
+        double swingFactor = 0.4;
+        double distanceToCamera = midDist - swingFactor * cos2A;
 
         // Clear raw mirroring text buffers
         Arrays.fill(rawCharBuffer, ' ');
@@ -86,11 +84,12 @@ public class ShipInBottleLoader extends Loader {
 
         // INTERIOR A: The Ocean Water inside the bottle
         double waterY = 0.18;
-        for (double wx = -0.75; wx <= 0.65; wx += 0.015) {
+        // Expanded to fill the newly patched hole at the bottom of the bottle (-0.95)
+        for (double wx = -0.95; wx <= 0.65; wx += 0.008) {
             double rSq = Math.pow(getBottleRadius(wx), 2) - waterY * waterY;
             if (rSq > 0) {
                 double maxZ = Math.sqrt(rSq);
-                for (double wz = -maxZ; wz <= maxZ; wz += 0.015) {
+                for (double wz = -maxZ; wz <= maxZ; wz += 0.008) {
                     // Check if water point is hidden inside the ship's hull footprint
                     double L = wx - (-0.1);
                     double hullMaxZ = 0.14 * (1.0 - (L * L) / 0.1225);
@@ -139,7 +138,7 @@ public class ShipInBottleLoader extends Loader {
                 double progress = (sy - (mastsTop[m] + 0.04)) / (-0.05 - (mastsTop[m] + 0.04));
                 double bowX = 0.12 * Math.sin(progress * Math.PI); // Wind pushes sail forward (+X)
                 double sWidth = 0.03 + 0.16 * progress; // Sail widens towards deck
-                for (double sz = -sWidth; sz <= sWidth; sz += 0.015) {
+                for (double sz = -sWidth; sz <= sWidth; sz += 0.008) {
                     double sx = mastsX[m] + bowX;
                     plotRawElement(sx, sy, sz, 1, -0.2, sz, 7, cosA, sinA, lightX, lightY, lightZ, distanceToCamera, zBuffer);
                 }
@@ -165,16 +164,16 @@ public class ShipInBottleLoader extends Loader {
         }
 
         // INTERIOR E: Cork sealing the bottle neck
-        for (double cx = 0.70; cx <= 0.85; cx += 0.015) {
-            for (double cphi = 0; cphi < 2.0 * Math.PI; cphi += 0.1) {
+        for (double cx = 0.70; cx <= 0.85; cx += 0.005) {
+            for (double cphi = 0; cphi < 2.0 * Math.PI; cphi += 0.05) {
                 double cr = 0.135;
                 double cy = cr * Math.cos(cphi);
                 double cz = cr * Math.sin(cphi);
                 plotRawElement(cx, cy, cz, 1, Math.cos(cphi), Math.sin(cphi), 2, cosA, sinA, lightX, lightY, lightZ, distanceToCamera, zBuffer);
             }
             if (cx >= 0.835) { // Outer flat end of the cork
-                for (double cr = 0.0; cr <= 0.135; cr += 0.015) {
-                    for (double cphi = 0; cphi < 2.0 * Math.PI; cphi += 0.2) {
+                for (double cr = 0.0; cr <= 0.135; cr += 0.005) {
+                    for (double cphi = 0; cphi < 2.0 * Math.PI; cphi += 0.05) {
                         plotRawElement(cx, cr * Math.cos(cphi), cr * Math.sin(cphi), 1, 0, 0, 2, cosA, sinA, lightX, lightY, lightZ, distanceToCamera, zBuffer);
                     }
                 }
@@ -184,9 +183,9 @@ public class ShipInBottleLoader extends Loader {
         // -------------------------------------------------------------
         // STEP 2: EXTERIOR WOODEN PEDESTAL STAND
         // -------------------------------------------------------------
-        for (double h = 0.35; h <= 0.65; h += 0.015) {
-            for (double sx = -0.65; sx <= 0.50; sx += 0.015) {
-                for (double sz = -0.25; sz <= 0.25; sz += 0.015) {
+        for (double h = 0.35; h <= 0.65; h += 0.008) {
+            for (double sx = -0.65; sx <= 0.50; sx += 0.008) {
+                for (double sz = -0.25; sz <= 0.25; sz += 0.008) {
                     // Create two cradles and a connecting base plate
                     boolean inCradle1 = (sx >= -0.55 && sx <= -0.35);
                     boolean inCradle2 = (sx >= 0.15 && sx <= 0.35);
@@ -210,8 +209,8 @@ public class ShipInBottleLoader extends Loader {
         // -------------------------------------------------------------
         // STEP 3: CHROMATIC TRANSMISSIVE BOTTLE GLASS (Color Filter Overwrite)
         // -------------------------------------------------------------
-        for (int xIndex = 0; xIndex < 160; xIndex++) {
-            double bx = -0.8 + xIndex * 1.55 / 160.0;
+        // Expanded to render the full hemisphere out to -0.95
+        for (double bx = -0.95; bx <= 0.75; bx += 0.008) {
             double r = getBottleRadius(bx);
             if (r < 0.01) continue;
             
@@ -247,17 +246,16 @@ public class ShipInBottleLoader extends Loader {
                         // Rotate normal to camera space for dynamic lighting
                         double gNx = nxU * cosA + nzU * sinA;
                         double gNy = nyU;
-                        double luminance = gNx * lightX + gNy * lightY;
+                        double gNz = -nxU * sinA + nzU * cosA;
+                        double luminance = gNx * lightX + gNy * lightY + gNz * lightZ;
 
                         int rCol, gCol, bCol;
                         char finalChar;
 
                         if (rawCharBuffer[bufferIndex] != ' ' && rawCharBuffer[bufferIndex] != 0) {
-                            // --- GLASS TINT INJECTION: gentle sea-green wash over the interior scene ---
-                            double alpha = 0.28; 
-                            rCol = (int) (rawColorBuffer[bufferIndex][0] * (1.0 - alpha) + RGB_BOTTLE[0] * alpha);
-                            gCol = (int) (rawColorBuffer[bufferIndex][1] * (1.0 - alpha) + RGB_BOTTLE[1] * alpha);
-                            bCol = (int) (rawColorBuffer[bufferIndex][2] * (1.0 - alpha) + RGB_BOTTLE[2] * alpha);
+                            rCol = (int) (rawColorBuffer[bufferIndex][0]);
+                            gCol = (int) (rawColorBuffer[bufferIndex][1]);
+                            bCol = (int) (rawColorBuffer[bufferIndex][2]);
                             finalChar = rawCharBuffer[bufferIndex]; 
 
                             // Soft specular sheen on catch-light spots
@@ -268,8 +266,8 @@ public class ShipInBottleLoader extends Loader {
                                 bCol = (int) (bCol * (1.0 - sheen) + 255 * sheen);
                             }
                         } else {
-                            // Empty canvas glass layer background profiles
-                            double rim = 1.0 - Math.abs(gNx);
+                            // Empty canvas glass layer background profiles (fixed silhouette lighting)
+                            double rim = 1.0 - Math.abs(gNz); 
                             if (rim > 0.94) {
                                 rCol = 220; gCol = 245; bCol = 235; finalChar = '░'; // narrow rim glint
                             } else if (luminance > 0.75) {
@@ -300,7 +298,7 @@ public class ShipInBottleLoader extends Loader {
                 }
             }
         }
-        A += 0.012; // Slow continuous rotation to admire the ship profile
+        A += 0.01; // Slow continuous rotation to smoothly admire the ship profile
     }
 
     private void plotRawElement(double localX, double localY, double localZ, double rNx, double rNy, double rNz,
