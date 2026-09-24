@@ -5,7 +5,7 @@ import java.util.Random;
 
 public class PinballLoader extends InteractiveLoader {
     private static final StatusStage[] PINBALL_STAGES = {
-            new StatusStage(100, "ARCADE BOOT SEQUENCE INITIATED... [Arrow Keys Control Flippers!]")
+            new StatusStage(100, "[Arrow Keys Control Flippers!]")
     };
 
     private static final int WIDTH = 110;

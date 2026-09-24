@@ -30,3 +30,6 @@ replay_pid*
 .DS_Store
 .DS_Store?
 ._*
+
+# The CHIP-8 ROMs to be used by that loader shouldn't be included in the project files
+Chip8ROMs/

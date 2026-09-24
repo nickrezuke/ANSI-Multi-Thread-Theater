@@ -95,6 +95,8 @@ This project comes packed with a ton of different variants, all derived from a c
 
 -> **FerrisWheel**: <!-- TODO: Elaborate on this section -->
 
+-> **Yoyo**: <!-- TODO: Elaborate on this section -->
+
 ### Real Models
 I also included a few classic "graphics processing" loaders
 
@@ -176,9 +178,15 @@ I also included a few classic "graphics processing" loaders
 
 -> **MengerSponge**: <!-- TODO: Elaborate on this section -->
 
+-> **RainbowPrism**: <!-- TODO: Elaborate on this section -->
+
 -> **PsychedelicIcosahedron**: <!-- TODO: Elaborate on this section -->
 
 -> **PsychedelicOctahedron**: <!-- TODO: Elaborate on this section -->
+
+-> **CubeGrid**: <!-- TODO: Elaborate on this section -->
+
+-> **InfinityFoldCube**: <!-- TODO: Elaborate on this section -->
 
 -> **RainbowRing**: A Ring with morphing colors and also a variable radius that changes over time
 
@@ -362,6 +370,8 @@ I also included a few classic "graphics processing" loaders
 
 -> **GoldenGateBridge**: <!-- TODO: Elaborate on this section -->
 
+-> **StLouisArch**: <!-- TODO: Elaborate on this section -->
+
 -> **AcropolisOfAthens**: <!-- TODO: Elaborate on this section -->
 
 -> **StatueOfLiberty**: <!-- TODO: Elaborate on this section -->
@@ -387,6 +397,8 @@ I also included a few classic "graphics processing" loaders
 ### Scenery and Ambience
 
 -> **HillTree**: <!-- TODO: Elaborate on this section -->
+
+-> **ForestLake**: <!-- TODO: Elaborate on this section -->
 
 -> **Waterfall**: <!-- TODO: Elaborate on this section -->
 
@@ -466,6 +478,8 @@ I also included a few classic "graphics processing" loaders
 
 -> **LogoExtrusion**: <!-- TODO: Elaborate on this section -->
 
+-> **CHIP8Runner**: <!-- TODO: Elaborate on this section -->
+
 ### Real-Time Interactive (Play the games yourself using keypresses)
 
 -> **KleinRing**: <!-- TODO: Elaborate on this section -->
@@ -509,8 +523,6 @@ Tower of Hanoi Solver?
 Factorio-style conveyor belt factory like things moving around making new things
 Something to do with Lehigh or CCSU (3D model of The Blue Devil Itself??)
 Teacup on a plate
-Yoyo goin up and down
-Jimmothy????
 Rick Roll?
 Notre-Dame Cathedral?
 Arc de Triomphe?
@@ -518,9 +530,10 @@ Chrysler Building?
 White House?
 Gherkin Tower?
 Space Needle?
-St Louis Arch?
 Happy Buddah
-Wireframe rainbow cube with a rainbow triangle inside?
+STL format file reader??
+The Game 2048 like the slide tile game
+Minesweeper? (Like the arrow keys are a cursor and selecting it with space brings up a side menu with dig/flag/back)
 Lissajous Oscilloscope
 CRT Scanlines & Phosphor Decay (Like use scanline sweep with bloom and phosphor persistence; simulate interlacing and curvature warp for a retro monitor look.  Use fast column sweep and exponential decay on brightness buffer.)
 Interactive Tanks-like Aiming & Shooting game w/ breakable ground

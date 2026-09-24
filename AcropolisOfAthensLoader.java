@@ -1,4 +1,4 @@
-// TODO: Fix the camera angle and the zooming (double zoom peak??)
+// TODO: Fix the camera angle and the zooming to give a better glimpse of the structure
 
 public class AcropolisOfAthensLoader extends Loader {
     private static final StatusStage[] ACROPOLIS_STAGES = {
@@ -43,13 +43,11 @@ public class AcropolisOfAthensLoader extends Loader {
             currentAngleRad += (2.0 * Math.PI);
 
         // 1. ICONIC ANGLE ENGINE: Focus on the classic 3/4 front view (~25 degrees)
-        double targetAngle1 = Math.PI / 7.0; 
-        double targetAngle2 = 2.0 * Math.PI - Math.PI / 7.0;
+        double targetAngle = Math.PI / 7.0; 
 
-        // Calculate shortest circular distance to the two front 3/4 views
-        double d1 = Math.min(Math.abs(currentAngleRad - targetAngle1), 2.0 * Math.PI - Math.abs(currentAngleRad - targetAngle1));
-        double d2 = Math.min(Math.abs(currentAngleRad - targetAngle2), 2.0 * Math.PI - Math.abs(currentAngleRad - targetAngle2));
-        double distToIconicAngle = Math.min(d1, d2);
+        // Calculate shortest circular distance to the SINGLE front 3/4 view
+        double rawDist = Math.abs(currentAngleRad - targetAngle);
+        double distToIconicAngle = Math.min(rawDist, 2.0 * Math.PI - rawDist);
 
         // GAUSSIAN ROTATION SLOWDOWN (Tracks iconic viewing angle proximity)
         double iconicWindow = Math.exp(-Math.pow(distToIconicAngle, 2.0) / (2.0 * Math.pow(0.35, 2.0)));

@@ -1,4 +1,4 @@
-public class TexelGreyRubixLoader extends TexelCubeLoader {
+public class TexelGreyRubiksLoader extends TexelCubeLoader {
     private static final StatusStage[] TEXEL_CUBE_STAGES = new StatusStage[] {
             new StatusStage(12, "Scrambling:"),
             new StatusStage(24, "Rotating:"),
@@ -11,7 +11,7 @@ public class TexelGreyRubixLoader extends TexelCubeLoader {
             new StatusStage(100, "Scramble Solved!")
     };
 
-    public TexelGreyRubixLoader() {
+    public TexelGreyRubiksLoader() {
         // This uses 80x22 specifically
         super(TEXEL_CUBE_STAGES, 80, 22);
     }

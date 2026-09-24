@@ -1,6 +1,24 @@
 import java.io.IOException;
 
 public abstract class InteractiveLoader extends Loader {
+    // Distinct key codes for the arrow keys. Only delivered to a subclass that opts in
+    // by overriding useDistinctArrowCodes() to return true (see below). They sit above
+    // the byte range, so they can never collide with a typed character.
+    public static final int KEY_UP = 0x101;
+    public static final int KEY_DOWN = 0x102;
+    public static final int KEY_RIGHT = 0x103;
+    public static final int KEY_LEFT = 0x104;
+
+    // By default (false) arrows keep their legacy behaviour: the third byte of the ANSI
+    // sequence is passed straight to handleKeyInput(), so Up/Down/Right/Left arrive as
+    // 'A'/'B'/'C'/'D' - indistinguishable from a typed capital letter. A subclass that
+    // needs real letter keys (like Chip8Loader) overrides this to return true and gets
+    // KEY_UP/KEY_DOWN/KEY_RIGHT/KEY_LEFT instead. Other escape sequences (Delete, Home,
+    // F-keys, Ctrl+Arrow, ...) are then swallowed whole instead of leaking stray
+    // characters into handleKeyInput().
+    protected boolean useDistinctArrowCodes() {
+        return false;
+    }
 
     public InteractiveLoader(StatusStage[] stages) {
         super(stages);
@@ -35,9 +53,13 @@ public abstract class InteractiveLoader extends Loader {
                         // meant they'd get silently dropped on the next loop iteration.
                         int secondByte = waitForNextByte(50);
                         if (secondByte == '[' || secondByte == 'O') {
-                            int thirdByte = waitForNextByte(50);
-                            if (thirdByte != -1) {
-                                handleKeyInput(thirdByte);
+                            if (useDistinctArrowCodes()) {
+                                handleEscapeSequence();
+                            } else {
+                                int thirdByte = waitForNextByte(50);
+                                if (thirdByte != -1) {
+                                    handleKeyInput(thirdByte);
+                                }
                             }
                         } else if (secondByte == -1) {
                             // Nothing followed within the timeout: this was a genuine,
@@ -67,6 +89,30 @@ public abstract class InteractiveLoader extends Loader {
 
         // Allow child classes to run their own custom initialization if needed
         onInitialize();
+    }
+
+    // Consumes the remainder of a CSI ("ESC [") / SS3 ("ESC O") sequence after its
+    // introducer. Only a bare arrow (no parameters, final byte A-D) is delivered, as
+    // KEY_UP/KEY_DOWN/KEY_RIGHT/KEY_LEFT; everything else is read to its final byte and
+    // dropped so its trailing bytes can't be mistaken for keypresses.
+    private void handleEscapeSequence() throws IOException {
+        int b = waitForNextByte(50);
+        boolean hasParams = false;
+        // Parameter bytes (0x30-0x3F) and intermediate bytes (0x20-0x2F)
+        while (b >= 0x20 && b <= 0x3F) {
+            hasParams = true;
+            b = waitForNextByte(50);
+        }
+        if (b == -1 || hasParams) {
+            return;
+        }
+        switch (b) {
+            case 'A': handleKeyInput(KEY_UP); break;
+            case 'B': handleKeyInput(KEY_DOWN); break;
+            case 'C': handleKeyInput(KEY_RIGHT); break;
+            case 'D': handleKeyInput(KEY_LEFT); break;
+            default: break; // Home/End/F1-F4/etc: swallow
+        }
     }
 
     // Waits up to timeoutMillis for another byte to become available, polling in
