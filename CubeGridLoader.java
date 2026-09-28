@@ -1,5 +1,3 @@
-// TODO: Fix the flightpath sometimes goes inside of cubes.  The step density could use a bump when close to the camera too
-
 import java.util.Arrays;
 
 public class CubeGridLoader extends Loader {
@@ -38,15 +36,17 @@ public class CubeGridLoader extends Loader {
     }
 
     public CubeGridLoader() {
-        super(GRID_STAGES, 80, 22);
-        this.width = 80;
-        this.height = 22;
+        super(GRID_STAGES, 120, 30);
+        this.width = 120;
+        this.height = 30;
     }
 
     @Override
     protected void initialize() {
-        this.camX = 0.0;
-        this.camY = 0.0;
+        setTargetFps(120); // This looks best when running as past as possible
+        // Center the starting position exactly between the cubes (spacing is 2.8)
+        this.camX = 1.4; 
+        this.camY = 1.4;
         this.camZ = 0.0;
         this.pitch = 0.1;
         this.yaw = 0.2;
@@ -62,8 +62,10 @@ public class CubeGridLoader extends Loader {
 
         // Camera flight controls: scrolling continuously forward and drifting
         camZ += 0.08;
-        camX += 0.03 * Math.sin(frameTick * 0.02);
-        camY += 0.02 * Math.cos(frameTick * 0.025);
+        
+        // Lock camera X/Y to securely drift within the empty space between the cubes.
+        camX = 1.5 + 0.4 * Math.sin(frameTick * 0.02);
+        camY = 1.5 + 0.4 * Math.cos(frameTick * 0.025);
 
         // Gradually tumbling camera rotation (Pitch, Yaw, Roll)
         pitch = 0.35 * Math.sin(frameTick * 0.015);
@@ -81,9 +83,9 @@ public class CubeGridLoader extends Loader {
         lightX /= lLen; lightY /= lLen; lightZ /= lLen;
 
         // Infinite Grid Spacing parameters
-        double spacing = 2.8; 
+        double spacing = 2.4; 
         double cubeSize = 1.0;
-        int gridRadius = 4; // Renders 9x9x9 grid neighborhood wrapping around camera
+        int gridRadius = 6; // Renders 13x13x13 grid neighborhood wrapping around camera
 
         int baseIx = (int) Math.floor(camX / spacing);
         int baseIy = (int) Math.floor(camY / spacing);
@@ -126,7 +128,13 @@ public class CubeGridLoader extends Loader {
                             double lx, double ly, double lz, String[] out, double[] zb) {
 
         double hs = size / 2.0;
-        double step = 0.05; // Sampling density along cube face quads
+        
+        // Dynamic Level of Detail (LOD): step size based on distance from camera
+        double dist = Math.sqrt(cx * cx + cy * cy + cz * cz);
+        
+        // Closer cubes get smaller steps (denser geometry points) to avoid grid-gaps.
+        // Farther cubes get larger steps to heavily optimize the rendering speed.
+        double step = Math.max(0.015, Math.min(0.20, dist * 0.012));
 
         // Render 6 faces of the cube
         // Front (+Z) & Back (-Z)
@@ -204,8 +212,8 @@ public class CubeGridLoader extends Loader {
         double D = 1.0 / rotZ;
 
         // Screen mapping to terminal character grid
-        int sx = (int) (width / 2.0 + 40.0 * D * rotX);
-        int sy = (int) (height / 2.0 - 20.0 * D * rotY);
+        int sx = (int) (width / 2.0 + 60.0 * D * rotX);
+        int sy = (int) (height / 2.0 - 30.0 * D * rotY);
 
         if (sx >= 0 && sx < width && sy >= 0 && sy < height) {
             int idx = sx + width * sy;

@@ -1,5 +1,3 @@
-// TODO: Make the sub cubes have better black borders between them
-
 import java.util.Arrays;
 
 public class RubiksCubeLoader extends Loader {
@@ -176,8 +174,22 @@ public class RubiksCubeLoader extends Loader {
                             double[][] cMat, String colorCode,
                             double lx, double ly, double lz, String[] out, double[] zb) {
 
-        for (double u = -hs; u <= hs; u += step) {
-            for (double v = -hs; v <= hs; v += step) {
+        // Threshold to determine if a point is near the edge of the cubie face (creates outline)
+        double outlineThreshold = hs - 0.04;
+
+        // Added 1e-6 to bounds to prevent floating point truncation on the far edge
+        for (double u = -hs; u <= hs + 1e-6; u += step) {
+            for (double v = -hs; v <= hs + 1e-6; v += step) {
+                
+                String pixelColor = colorCode;
+                
+                // If this is a colored sticker, apply a black outline at the edges
+                if (!colorCode.equals(C_BLACK)) {
+                    if (Math.abs(u) > outlineThreshold || Math.abs(v) > outlineThreshold) {
+                        pixelColor = C_BLACK;
+                    }
+                }
+
                 double px = 0, py = 0, pz = 0;
                 if (Math.abs(nz) > 0.5) { px = u; py = v; pz = nz * hs; }
                 else if (Math.abs(ny) > 0.5) { px = u; py = ny * hs; pz = v; }
@@ -195,7 +207,8 @@ public class RubiksCubeLoader extends Loader {
                 double wy = ry + cy;
                 double wz = rz + cz;
 
-                projectPoint(wx, wy, wz, rnx, rny, rnz, colorCode, lx, ly, lz, out, zb);
+                // Pass the dynamically calculated pixelColor instead of the whole-face colorCode
+                projectPoint(wx, wy, wz, rnx, rny, rnz, pixelColor, lx, ly, lz, out, zb);
             }
         }
     }

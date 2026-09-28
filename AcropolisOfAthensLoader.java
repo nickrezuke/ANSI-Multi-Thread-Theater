@@ -1,5 +1,3 @@
-// TODO: Fix the camera angle and the zooming to give a better glimpse of the structure
-
 public class AcropolisOfAthensLoader extends Loader {
     private static final StatusStage[] ACROPOLIS_STAGES = {
             new StatusStage(25, "Quarrying Pentelic marble foundations:"),
@@ -24,7 +22,7 @@ public class AcropolisOfAthensLoader extends Loader {
 
     private double rotationY = 0.0;
     // Wider base distance to fit the 2:1 rectangular footprint of the Parthenon
-    private static final double CAMERA_DISTANCE = 8.5; 
+    private static final double CAMERA_DISTANCE = 6.5; 
 
     public AcropolisOfAthensLoader() {
         // This uses 80x22 specifically
@@ -42,8 +40,8 @@ public class AcropolisOfAthensLoader extends Loader {
         if (currentAngleRad < 0)
             currentAngleRad += (2.0 * Math.PI);
 
-        // 1. ICONIC ANGLE ENGINE: Focus on the classic 3/4 front view (~25 degrees)
-        double targetAngle = Math.PI / 7.0; 
+        // 1. ICONIC ANGLE ENGINE: Focus on the classic front view
+        double targetAngle = Math.PI / 24.0; 
 
         // Calculate shortest circular distance to the SINGLE front 3/4 view
         double rawDist = Math.abs(currentAngleRad - targetAngle);
@@ -57,10 +55,10 @@ public class AcropolisOfAthensLoader extends Loader {
 
         // 2. GAUSSIAN CAMERA VERTICAL TILT DYNAMICS
         // Less tilt at the front for a more imposing, monumental ground-level feel
-        double tiltX = 0.35 * (1.0 - iconicWindow) + 0.15 * iconicWindow;
+        double tiltX = 0.35 * (1.0 - iconicWindow) - 0.015 * iconicWindow;
 
         // 3. DYNAMIC ZOOM MODIFIER: Camera zooms deeply IN at the front face
-        double zoomInUnits = 3.5;
+        double zoomInUnits = 1.8;
         double effectiveDistance = CAMERA_DISTANCE - (iconicWindow * zoomInUnits);
 
         double cosX = Math.cos(tiltX);
@@ -100,18 +98,24 @@ public class AcropolisOfAthensLoader extends Loader {
                 double maxZ = 2.05 + stepRadius;
 
                 // Draw perimeter shell for optimization
-                for (double x = -maxX; x <= maxX; x += 0.04) {
+                for (double x = -maxX; x <= maxX; x += 0.02) {
                     renderProjectedPoint(x, y, -maxZ, CH_STONE, cosX, sinX, cosY, sinY, effectiveDistance, outputBuffer, zBuffer);
                     renderProjectedPoint(x, y, maxZ, CH_STONE, cosX, sinX, cosY, sinY, effectiveDistance, outputBuffer, zBuffer);
                 }
-                for (double z = -maxZ; z <= maxZ; z += 0.04) {
+                for (double z = -maxZ; z <= maxZ; z += 0.02) {
                     renderProjectedPoint(-maxX, y, z, CH_STONE, cosX, sinX, cosY, sinY, effectiveDistance, outputBuffer, zBuffer);
                     renderProjectedPoint(maxX, y, z, CH_STONE, cosX, sinX, cosY, sinY, effectiveDistance, outputBuffer, zBuffer);
                 }
-                // Fill the uppermost floor beneath the columns
-                if (y < 1.05) {
-                    for (double x = -maxX; x <= maxX; x += 0.05) {
-                        for (double z = -maxZ; z <= maxZ; z += 0.05) {
+                
+                // Fill the horizontal treads so the stairs aren't hollow when looking down.
+                // We use Math.abs tolerance to catch the specific 'y' layers right before the steps shrink.
+                boolean isBottomTread = Math.abs(y - 1.22) < 0.01;
+                boolean isMiddleTread = Math.abs(y - 1.12) < 0.01;
+                boolean isTopFloor = y < 1.05;
+
+                if (isBottomTread || isMiddleTread || isTopFloor) {
+                    for (double x = -maxX; x <= maxX; x += 0.02) {
+                        for (double z = -maxZ; z <= maxZ; z += 0.02) {
                             renderProjectedPoint(x, y, z, CH_STONE, cosX, sinX, cosY, sinY, effectiveDistance, outputBuffer, zBuffer);
                         }
                     }
@@ -122,11 +126,11 @@ public class AcropolisOfAthensLoader extends Loader {
                 // Inner Cella walls (hollow rectangle housing the statue)
                 double cellaMaxX = 0.6;
                 double cellaMaxZ = 1.4;
-                for (double x = -cellaMaxX; x <= cellaMaxX; x += 0.04) {
+                for (double x = -cellaMaxX; x <= cellaMaxX; x += 0.03) {
                     renderProjectedPoint(x, y, -cellaMaxZ, CH_STONE, cosX, sinX, cosY, sinY, effectiveDistance, outputBuffer, zBuffer);
                     renderProjectedPoint(x, y, cellaMaxZ, CH_STONE, cosX, sinX, cosY, sinY, effectiveDistance, outputBuffer, zBuffer);
                 }
-                for (double z = -cellaMaxZ; z <= cellaMaxZ; z += 0.04) {
+                for (double z = -cellaMaxZ; z <= cellaMaxZ; z += 0.03) {
                     renderProjectedPoint(-cellaMaxX, y, z, CH_STONE, cosX, sinX, cosY, sinY, effectiveDistance, outputBuffer, zBuffer);
                     renderProjectedPoint(cellaMaxX, y, z, CH_STONE, cosX, sinX, cosY, sinY, effectiveDistance, outputBuffer, zBuffer);
                 }
@@ -147,8 +151,8 @@ public class AcropolisOfAthensLoader extends Loader {
             else if (isEntablature) {
                 double eMaxX = 1.05;
                 double eMaxZ = 2.05;
-                for (double x = -eMaxX; x <= eMaxX; x += 0.03) {
-                    for (double z = -eMaxZ; z <= eMaxZ; z += 0.03) {
+                for (double x = -eMaxX; x <= eMaxX; x += 0.02) {
+                    for (double z = -eMaxZ; z <= eMaxZ; z += 0.02) {
                         // Draw structural shell
                         if (Math.abs(x) >= eMaxX - 0.04 || Math.abs(z) >= eMaxZ - 0.04 || y > -0.03) {
                             // Frieze details (metopes and triglyphs) on the upper half
@@ -160,12 +164,12 @@ public class AcropolisOfAthensLoader extends Loader {
             }
             // --- D. PEDIMENT & SLOPED ROOF ---
             else if (isPedimentRoof) {
-                for (double x = -1.05; x <= 1.05; x += 0.03) {
+                for (double x = -1.05; x <= 1.05; x += 0.02) {
                     // Calculate the peak logic - sloped triangle from center out
                     double currentRoofEdgeY = -0.2 - 0.5 * (1.0 - Math.abs(x) / 1.05);
                     
                     if (y >= currentRoofEdgeY) {
-                        for (double z = -2.05; z <= 2.05; z += 0.03) {
+                        for (double z = -2.05; z <= 2.05; z += 0.02) {
                             boolean isFrontBackFace = Math.abs(z) > 1.95;
                             boolean isRoofSurface = Math.abs(y - currentRoofEdgeY) < 0.04;
 
@@ -205,7 +209,7 @@ public class AcropolisOfAthensLoader extends Loader {
         
         double ooz = 1.0 / (rz + effectiveDistance);
         int xp = (int) (40 + 54 * ooz * rx * 1.95);
-        int yp = (int) (11 + 25 * ooz * ry);
+        int yp = (int) (6 + 25 * ooz * ry);
         
         if (xp >= 0 && xp < 80 && yp >= 0 && yp < 22) {
             int index = xp + 80 * yp;

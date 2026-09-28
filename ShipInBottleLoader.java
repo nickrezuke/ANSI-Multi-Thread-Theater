@@ -1,5 +1,3 @@
-// TODO: Fix the sails getting dark as it rotates
-
 import java.util.Arrays;
 
 public class ShipInBottleLoader extends Loader {
@@ -127,28 +125,34 @@ public class ShipInBottleLoader extends Loader {
         double[] mastsX = { -0.25, 0.05 }; // Fore mast and Main mast
         double[] mastsTop = { -0.35, -0.42 };
         for (int m = 0; m < 2; m++) {
-            // Mast pole
-            for (double my = mastsTop[m]; my <= -0.05; my += 0.01) {
-                for (double mz = -0.01; mz <= 0.01; mz += 0.01) {
-                    plotRawElement(mastsX[m], my, mz, 1, 0, mz, 6, cosA, sinA, lightX, lightY, lightZ, distanceToCamera, zBuffer);
+            // Mast pole (Added mx loop for X-axis thickness)
+            for (double mx = mastsX[m] - 0.01; mx <= mastsX[m] + 0.01; mx += 0.01) {
+                for (double my = mastsTop[m]; my <= -0.05; my += 0.01) {
+                    for (double mz = -0.01; mz <= 0.01; mz += 0.01) {
+                        plotRawElement(mx, my, mz, 1, 0, mz, 6, cosA, sinA, lightX, lightY, lightZ, distanceToCamera, zBuffer);
+                    }
                 }
             }
-            // Billowing Sail (curved forward via sine wave)
+            // Billowing Sail (Added sx_offset loop for X-axis thickness)
             for (double sy = mastsTop[m] + 0.04; sy <= -0.05; sy += 0.01) {
                 double progress = (sy - (mastsTop[m] + 0.04)) / (-0.05 - (mastsTop[m] + 0.04));
-                double bowX = 0.12 * Math.sin(progress * Math.PI); // Wind pushes sail forward (+X)
-                double sWidth = 0.03 + 0.16 * progress; // Sail widens towards deck
+                double bowX = 0.12 * Math.sin(progress * Math.PI); 
+                double sWidth = 0.03 + 0.16 * progress; 
                 for (double sz = -sWidth; sz <= sWidth; sz += 0.008) {
-                    double sx = mastsX[m] + bowX;
-                    plotRawElement(sx, sy, sz, 1, -0.2, sz, 7, cosA, sinA, lightX, lightY, lightZ, distanceToCamera, zBuffer);
+                    for (double sx_offset = -0.01; sx_offset <= 0.01; sx_offset += 0.01) {
+                        double sx = mastsX[m] + bowX + sx_offset;
+                        plotRawElement(sx, sy, sz, 1, -0.2, sz, 7, cosA, sinA, lightX, lightY, lightZ, distanceToCamera, zBuffer);
+                    }
                 }
             }
-            // Fluttering Flag
+            // Fluttering Flag (Added fz_offset loop for Z-axis thickness)
             for (double fx = mastsX[m]; fx >= mastsX[m] - 0.10; fx -= 0.01) {
                 double fz = 0.015 * Math.sin(fx * 25.0 + A * 6.0); // Wind flutter
                 double flagHeight = (fx - (mastsX[m] - 0.10)) * 0.4;
                 for (double fy = mastsTop[m]; fy <= mastsTop[m] + flagHeight; fy += 0.01) {
-                    plotRawElement(fx, fy, fz, -1, 0, 1, 8, cosA, sinA, lightX, lightY, lightZ, distanceToCamera, zBuffer);
+                    for (double fz_offset = -0.01; fz_offset <= 0.01; fz_offset += 0.01) {
+                        plotRawElement(fx, fy, fz + fz_offset, -1, 0, 1, 8, cosA, sinA, lightX, lightY, lightZ, distanceToCamera, zBuffer);
+                    }
                 }
             }
         }
@@ -237,6 +241,9 @@ public class ShipInBottleLoader extends Loader {
 
                     // Only affect screen positions where glass is closer than previously drawn background nodes
                     if (ooz > zBuffer[bufferIndex]) {
+                        
+                        zBuffer[bufferIndex] = ooz; 
+
                         // Normalize local unrotated surface gradient
                         double len = Math.sqrt(dr * dr + 1.0);
                         double nxU = -dr / len;
@@ -249,6 +256,9 @@ public class ShipInBottleLoader extends Loader {
                         double gNz = -nxU * sinA + nzU * cosA;
                         double luminance = gNx * lightX + gNy * lightY + gNz * lightZ;
 
+                        double wobble = 0.06 * Math.sin(bx * 40.0 + phi * 6.0 - A * 5.0) + 0.04 * Math.cos(bx * 15.0 - phi * 3.0 + A * 3.0);
+                        luminance += wobble;
+
                         int rCol, gCol, bCol;
                         char finalChar;
 
@@ -259,11 +269,12 @@ public class ShipInBottleLoader extends Loader {
                             finalChar = rawCharBuffer[bufferIndex]; 
 
                             // Soft specular sheen on catch-light spots
-                            if (luminance > 0.82) {
+                            if (luminance > 0.75) {
                                 double sheen = 0.35;
                                 rCol = (int) (rCol * (1.0 - sheen) + 255 * sheen);
                                 gCol = (int) (gCol * (1.0 - sheen) + 255 * sheen);
                                 bCol = (int) (bCol * (1.0 - sheen) + 255 * sheen);
+                                finalChar = '░';
                             }
                         } else {
                             // Empty canvas glass layer background profiles (fixed silhouette lighting)
@@ -316,6 +327,11 @@ public class ShipInBottleLoader extends Loader {
                 zBuffer[bufferIndex] = ooz;
                 
                 double luminance = nx * lightX + ny * lightY + nz * lightZ;
+
+                if (surfaceType == 7) {
+                    luminance = 0.96;
+                }
+
                 int shadeIndex = (int) ((luminance + 1.0) * 5.5);
                 shadeIndex = Math.max(0, Math.min(SHADE_RAMP.length - 1, shadeIndex));
                 char asciiChar = SHADE_RAMP[shadeIndex];
@@ -343,6 +359,8 @@ public class ShipInBottleLoader extends Loader {
                     asciiChar = '█';
                 } else if (surfaceType == 7) {
                     rgb = RGB_SAIL;
+                    fixedFullShade = true; // Forces the RGB color to stay at 100% brightness
+                    asciiChar = '#';
                 } else if (surfaceType == 8) {
                     rgb = RGB_FLAG;
                     asciiChar = '▶';
