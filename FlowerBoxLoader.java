@@ -1,4 +1,4 @@
-// TODO: Finish this its inprogress.... maybe make another like it using similar behavior
+// TODO: Make this more accurate?
 
 import java.util.Arrays;
 
@@ -48,7 +48,7 @@ public class FlowerBoxLoader extends Loader {
 
         frameTick++;
 
-        // Smooth continuous 3D rotation angles (Pitch, Yaw, Roll)
+        // Smooth continuous 3D rotation angles
         double pitch = frameTick * 0.012;
         double yaw = frameTick * 0.018;
         double roll = frameTick * 0.008;
@@ -57,39 +57,41 @@ public class FlowerBoxLoader extends Loader {
         double cY = Math.cos(yaw),   sY = Math.sin(yaw);
         double cR = Math.cos(roll),  sR = Math.sin(roll);
 
-        // Directional light source for 3D metallic shading
+        // Directional light source
         double lx = 0.5, ly = -0.7, lz = 0.5;
         double lLen = Math.hypot(lx, Math.hypot(ly, lz));
         lx /= lLen; ly /= lLen; lz /= lLen;
 
-        // Blooming factor: rhythmic expansion/unfolding of the box faces
-        double bloomPhase = (Math.sin(frameTick * 0.025) + 1.0) / 2.0; 
-        double unfold = 0.4 + bloomPhase * 1.5; // Panel slide distance
+        // Classic Flower Box Morphing Cycles
+        // Cycle drives the loop: Cube -> Bubbled Flower -> Cube -> Spiky Star -> Cube
+        double cycle = frameTick * 0.015;
+        double blend = (1.0 - Math.cos(cycle * 2.0)) / 2.0; // Pulses 0.0 to 1.0 (0 = Cube, 1 = Morphed)
+        double shape = Math.sin(cycle);                     // -1.0 to +1.0 dictates Star vs Flower
 
-        // Gentle floating drift of the whole box in world space
+        // Drift and Camera
         double driftX = Math.sin(frameTick * 0.015) * 1.5;
         double driftY = Math.cos(frameTick * 0.02) * 1.0;
-        double baseZ = 12.0; // Distance from camera
+        double baseZ = 12.0; 
 
-        double boxSize = 2.0;
+        double boxSize = 3.0; // Slightly larger base box
         double hs = boxSize / 2.0;
-        double step = 0.08; 
+        double step = 0.05;   // Denser step size so curved surfaces don't have gaps
 
         // Define the 6 primary faces
         FaceConfig[] faces = {
-            new FaceConfig(0, 0, 1, C_PINK),     // Front (+Z)
-            new FaceConfig(0, 0, -1, C_PURPLE),  // Back (-Z)
-            new FaceConfig(0, 1, 0, C_CYAN),     // Top (+Y)
-            new FaceConfig(0, -1, 0, C_YELLOW),  // Bottom (-Y)
-            new FaceConfig(1, 0, 0, C_GREEN),    // Right (+X)
-            new FaceConfig(-1, 0, 0, C_PINK)     // Left (-X)
+            new FaceConfig(0, 0, 1, C_PINK),     
+            new FaceConfig(0, 0, -1, C_PURPLE),  
+            new FaceConfig(0, 1, 0, C_CYAN),     
+            new FaceConfig(0, -1, 0, C_YELLOW),  
+            new FaceConfig(1, 0, 0, C_GREEN),    
+            new FaceConfig(-1, 0, 0, C_PINK)     
         };
 
         for (FaceConfig fc : faces) {
-            // Local face center offset by the bloom expansion distance
-            double faceCenterX = fc.nx * (hs + unfold);
-            double faceCenterY = fc.ny * (hs + unfold);
-            double faceCenterZ = fc.nz * (hs + unfold);
+            // Keep the base centers strictly at the edges of the cube (no unfolding)
+            double faceCenterX = fc.nx * hs;
+            double faceCenterY = fc.ny * hs;
+            double faceCenterZ = fc.nz * hs;
 
             for (double u = -hs; u <= hs; u += step) {
                 for (double v = -hs; v <= hs; v += step) {
@@ -97,7 +99,6 @@ public class FlowerBoxLoader extends Loader {
                     double localY = faceCenterY;
                     double localZ = faceCenterZ;
 
-                    // Map grid coordinates to face plane
                     if (Math.abs(fc.nz) > 0.5) {
                         localX += u; localY += v;
                     } else if (Math.abs(fc.ny) > 0.5) {
@@ -106,11 +107,40 @@ public class FlowerBoxLoader extends Loader {
                         localY += u; localZ += v;
                     }
 
-                    // 1. Rotate local point around box center (0,0,0)
+                    // --- MORPHING LOGIC ---
+                    // Calculate distance and normalized vector from the center of the box
+                    double len = Math.sqrt(localX*localX + localY*localY + localZ*localZ);
+                    double dirX = localX / len;
+                    double dirY = localY / len;
+                    double dirZ = localZ / len;
+
+                    // 'mag' is highest (1.0) at the center of a face, and lowest (~0.33) at the cube corners.
+                    double mag = (dirX*dirX*dirX*dirX) + (dirY*dirY*dirY*dirY) + (dirZ*dirZ*dirZ*dirZ);
+                    
+                    // Create the flower/star target shape
+                    // If shape > 0: Centers push out, corners pull in (Flower)
+                    // If shape < 0: Corners push out, centers pull in (Star)
+                    double targetR = hs * (1.2 + shape * (mag - 0.6) * 1.8);
+                    
+                    // Interpolate between the rigid Cube coordinate and the morphed shape
+                    double morphedX = localX + ((dirX * targetR) - localX) * blend;
+                    double morphedY = localY + ((dirY * targetR) - localY) * blend;
+                    double morphedZ = localZ + ((dirZ * targetR) - localZ) * blend;
+
+                    // Blend the normals for lighting. When it's a cube, it has flat sharp shading. 
+                    // When it morphs, the normals interpolate towards a sphere for smooth, rounded shading.
+                    double blendNormX = fc.nx + (dirX - fc.nx) * blend;
+                    double blendNormY = fc.ny + (dirY - fc.ny) * blend;
+                    double blendNormZ = fc.nz + (dirZ - fc.nz) * blend;
+                    
+                    double nLen = Math.sqrt(blendNormX*blendNormX + blendNormY*blendNormY + blendNormZ*blendNormZ);
+                    blendNormX /= nLen; blendNormY /= nLen; blendNormZ /= nLen;
+
+                    // --- 1. Rotate morphed local point around box center ---
                     // Yaw
-                    double x1 = localX * cY + localZ * sY;
-                    double y1 = localY;
-                    double z1 = -localX * sY + localZ * cY;
+                    double x1 = morphedX * cY + morphedZ * sY;
+                    double y1 = morphedY;
+                    double z1 = -morphedX * sY + morphedZ * cY;
                     // Pitch
                     double x2 = x1;
                     double y2 = y1 * cP - z1 * sP;
@@ -120,28 +150,30 @@ public class FlowerBoxLoader extends Loader {
                     double rotY = x2 * sR + y2 * cR;
                     double rotZ = z2;
 
-                    // Rotate Normal vectors for lighting
-                    double nx1 = fc.nx * cY + fc.nz * sY;
-                    double ny1 = fc.ny;
-                    double nz1 = -fc.nx * sY + fc.nz * cY;
+                    // --- Rotate Blended Normals ---
+                    double nx1 = blendNormX * cY + blendNormZ * sY;
+                    double ny1 = blendNormY;
+                    double nz1 = -blendNormX * sY + blendNormZ * cY;
+                    
                     double nx2 = nx1;
                     double ny2 = ny1 * cP - nz1 * sP;
                     double nz2 = ny1 * sP + nz1 * cP;
+                    
                     double rotNX = nx2 * cR - ny2 * sR;
                     double rotNY = nx2 * sR + ny2 * cR;
                     double rotNZ = nz2;
 
-                    // 2. Translate to world space coordinates
+                    // --- 2. Translate to world space ---
                     double worldX = rotX + driftX;
                     double worldY = rotY + driftY;
                     double worldZ = rotZ + baseZ;
 
                     if (worldZ <= 0.2) continue;
 
-                    // 3. Perspective projection
+                    // --- 3. Perspective projection ---
                     double D = 1.0 / worldZ;
-                    int sx = (int) (width / 2.0 + 75.0 * D * worldX);
-                    int sy = (int) (height / 2.0 - 37.0 * D * worldY);
+                    int sx = (int) (width / 2.0 + 85.0 * D * worldX);
+                    int sy = (int) (height / 2.0 - 42.0 * D * worldY);
 
                     if (sx >= 0 && sx < width && sy >= 0 && sy < height) {
                         int idx = sx + width * sy;
@@ -150,14 +182,13 @@ public class FlowerBoxLoader extends Loader {
                             zBuffer[idx] = D;
 
                             double dot = rotNX * lx + rotNY * ly + rotNZ * lz;
-                            double illuminance = Math.min(1.0, Math.max(0.15, dot + 0.3));
+                            double illuminance = Math.min(1.0, Math.max(0.1, dot + 0.35));
 
                             char[] ramp = {'.', ',', '-', '~', ':', '=', '+', '*', '#', '%', '@', '█'};
                             int rampIdx = (int) (illuminance * (ramp.length - 1));
                             rampIdx = Math.max(0, Math.min(ramp.length - 1, rampIdx));
-                            char glyph = ramp[rampIdx];
-
-                            outputBuffer[idx] = fc.color + glyph + RESET;
+                            
+                            outputBuffer[idx] = fc.color + ramp[rampIdx] + RESET;
                         }
                     }
                 }

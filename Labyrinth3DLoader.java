@@ -1,6 +1,9 @@
 public class Labyrinth3DLoader extends InteractiveLoader {
     private static final StatusStage[] MAZE_STAGES = { new StatusStage(100, "[Arrow Keys to Control!]") };
 
+    private static final int SCREEN_WIDTH = 80;
+    private static final int SCREEN_HEIGHT = 22;
+
     private static int MAP_HEIGHT;
     private static int MAP_WIDTH;
     private static int[][] MAZE_MAP;
@@ -121,20 +124,20 @@ public class Labyrinth3DLoader extends InteractiveLoader {
     private static final String RESET = "\u001B[0m";
 
     // 1. PRE-CACHED STRING POOLS (Eliminates runtime per-frame allocations)
-    private final String[] ceilingCache = new String[3]; // █, ▓, ▒
-    private final String[] floorCache = new String[2];   // ·, " "
-    private final String[][] wallCache = new String[2][3]; // [SideX/Y][CharType]
+    private final String[] ceilingCache = new String[3]; // █, ▓, ▒ for texture, fading as distance farthens
+    private final String[] floorCache = new String[2];   // ⢕, ⡪ for floor texture
+    private final String[][] wallCache = new String[2][3]; // █, ▓, ▒ for texture, fading as distance farthens
 
     public Labyrinth3DLoader() {
-        super(MAZE_STAGES, 80, 22);
+        super(MAZE_STAGES, SCREEN_WIDTH, SCREEN_HEIGHT);
         
         // Populate string cache targets once during program birth
         ceilingCache[0] = COLOR_CEILING + '█' + RESET;
         ceilingCache[1] = COLOR_CEILING + '▓' + RESET;
         ceilingCache[2] = COLOR_CEILING + '▒' + RESET;
 
-        floorCache[0] = COLOR_FLOOR + '·' + RESET;
-        floorCache[1] = COLOR_FLOOR + ' ' + RESET;
+        floorCache[0] = COLOR_FLOOR + '⢕' + RESET;
+        floorCache[1] = COLOR_FLOOR + '⡪' + RESET;
 
         char[] wallChars = {'█', '▓', '▒'};
         for (int i = 0; i < 3; i++) {
@@ -226,8 +229,8 @@ public class Labyrinth3DLoader extends InteractiveLoader {
         posX += deltaX * 0.18;
         posY += deltaY * 0.18;
 
-        for (int x = 0; x < 80; x++) {
-            double cameraX = 0.025 * x - 1.0;
+        for (int x = 0; x < SCREEN_WIDTH; x++) {
+            double cameraX = (0.025) * x - 1.0; // check this????  whats the right number not 0.025 it should be dependant on screen width right????
             double rayDirX = dirX + planeX * cameraX;
             double rayDirY = dirY + planeY * cameraX;
             int mapX = (int) posX;
@@ -292,17 +295,17 @@ public class Labyrinth3DLoader extends InteractiveLoader {
             }
 
             if (perpendicularWallDist < 0.01) perpendicularWallDist = 0.01;
-            int lineHeight = (int) (22 / perpendicularWallDist);
-            int drawStart = -lineHeight / 2 + 11;
-            int drawEnd = lineHeight / 2 + 11;
+            int lineHeight = (int) (SCREEN_HEIGHT / perpendicularWallDist);
+            int drawStart = -lineHeight / 2 + (SCREEN_HEIGHT / 2);
+            int drawEnd = lineHeight / 2 + (SCREEN_HEIGHT / 2);
             double inverseDepth = 1.0 / perpendicularWallDist;
 
             // Resolve wall texture indices safely from pre-cached fields
             int wallCharIdx = (perpendicularWallDist < 1.8) ? 0 : (perpendicularWallDist < 3.2) ? 1 : 2;
             String cachedWallBlock = (side >= 0) ? wallCache[side][wallCharIdx] : " ";
 
-            for (int y = 0; y < 22; y++) {
-                int index = x + 80 * y;
+            for (int y = 0; y < SCREEN_HEIGHT; y++) {
+                int index = x + SCREEN_WIDTH * y;
                 zBuffer[index] = inverseDepth;
 
                 if (y < drawStart) {

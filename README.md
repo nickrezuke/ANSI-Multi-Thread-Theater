@@ -77,6 +77,8 @@ This project comes packed with a ton of different variants, all derived from a c
 
 -> **ToyTrain**: <!-- TODO: Elaborate on this section -->
 
+-> **Bagel**: <!-- TODO: Elaborate on this section -->
+
 -> **SpiderWeb**: <!-- TODO: Elaborate on this section -->
 
 -> **Sunflower**: <!-- TODO: Elaborate on this section -->
@@ -430,6 +432,8 @@ I also included a few classic "graphics processing" loaders
 
 -> **VaporWave**: <!-- TODO: Elaborate on this section -->
 
+-> **Cowboys**: <!-- TODO: Elaborate on this section -->
+
 -> **AndysFire**: <!-- TODO: Elaborate on this section -->
 
 -> **Nightclub**: <!-- TODO: Elaborate on this section -->
@@ -442,17 +446,27 @@ I also included a few classic "graphics processing" loaders
 
 -> **Campfire**: <!-- TODO: Elaborate on this section -->
 
+-> **Highway**: <!-- TODO: Elaborate on this section -->
+
+-> **Arcade**: <!-- TODO: Elaborate on this section -->
+
 -> **DJTurntable**: <!-- TODO: Elaborate on this section -->
 
 -> **Radar**: <!-- TODO: Elaborate on this section -->
 
 -> **WarpStarfield**: <!-- TODO: Elaborate on this section -->
 
+-> **Graveyard**: <!-- TODO: Elaborate on this section -->
+
 -> **Endoh**: <!-- TODO: Elaborate on this section -->
 
 ### Magnifying Glass
 
+-> **RefractiveMagnifierBusyCrowd**: <!-- TODO: Elaborate on this section -->
+
 -> **RefractiveMagnifierLake**: <!-- TODO: Elaborate on this section -->
+
+-> **RefractiveMagnifierNewspaper**: <!-- TODO: Elaborate on this section -->
 
 ### References and Jokes
 
@@ -555,6 +569,7 @@ Space Needle?
 Happy Buddah
 Sports Balls
 Katamari Starting Ball
+Sorting Algorithm Animation of different algorithms
 STL format file reader??
 The Game 2048 like the slide tile game
 Minesweeper? (Like the arrow keys are a cursor and selecting it with space brings up a side menu with dig/flag/back)

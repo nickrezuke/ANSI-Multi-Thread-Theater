@@ -144,6 +144,7 @@ public class LoaderFactory {
         register(List.of("HotDog", "Glizzy"), HotDogLoader::new);
         register("RainbowRing", RainbowRingLoader::new);
         register("CosmicBrownie", CosmicBrownieLoader::new);
+        register("RefractiveMagnifierBusyCrowd", RefractiveMagnifierBusyCrowdLoader::new);
         register(List.of("Pokeball", "Pokéball"), PokeballLoader::new);
         register(List.of("SonicRing", "SonicRings"), SonicRingLoader::new);
         register("HaloRing", HaloRingLoader::new);
@@ -163,6 +164,7 @@ public class LoaderFactory {
         register("PacManSphere", PacManSphereLoader::new);
         register(List.of("ShipInABottle", "ShipInBottle", "BottledShip"), ShipInBottleLoader::new);
         register(List.of("InternationalSpaceStation", "ISS"), InternationalSpaceStationLoader::new);
+        register("RefractiveMagnifierNewspaper", RefractiveMagnifierNewspaperLoader::new);
         register("PsychedelicOctahedron", PsychedelicOctahedronLoader::new);
         register("RainbowWhispPyramid", RainbowWhispPyramidLoader::new);
         register(List.of("Tesseract", "4D Cube"), TesseractLoader::new);
@@ -230,6 +232,8 @@ public class LoaderFactory {
         register("LangtonsAnt", LangtonsAntLoader::new);
         register("UtahTeapotA", UtahTeapotLoaderA::new);
         register("UtahTeapotB", UtahTeapotLoaderB::new);
+        register("Highway", HighwayLoader::new);
+        register("Graveyard", GraveyardLoader::new);
         //register(List.of("Carousel", "MerryGoRound"), CarouselLoader::new); TODO Make a "Merry-Go-Round" or "Carousel" loader
         register(List.of("Boids", "HerdingAndFlocking"), BoidsLoader::new);
         register(List.of("TriColorChromeSpheres", "TriColorSpheres", "TriColorCheckerboard"), TriColorChromeSpheresLoader::new);
@@ -250,8 +254,12 @@ public class LoaderFactory {
         register("ToyTrain", ToyTrainLoader::new);
         register("ToyCar", ToyCarLoader::new);
         register("Uranus", UranusLoader::new);
+        register("DragonGold", DragonGoldLoader::new);
         register("LavaLamp", LavaLampLoader::new);
         register("FlappyBird", FlappyBirdLoader::new);
+        register("Arcade", ArcadeLoader::new);
+        register("Cowboys", CowboyLoader::new);
+        register("Bagel", BagelLoader::new);
         register("Venus", VenusLoader::new);
         register("GravityFabric", GravityFabricLoader::new); 
         register("TexelMagicalGlyph", TexelMagicalGlyphCubeLoader::new); 

@@ -1,4 +1,4 @@
-//TODO: Make these looks like dogs right now they're complete trash lmao
+//TODO: Make these look more like dogs and fix the eye balls, and expand the breeds to include more dogs
 
 public class DogHeadLoader extends Loader {
     private static final StatusStage[] DOG_STAGES = {
@@ -11,8 +11,8 @@ public class DogHeadLoader extends Loader {
     private static final char[] SHADE_RAMP = { ':', ';', '=', '!', '*', '#', '$', '@', '▒', '▓', '█' };
 
     private String furColor;
-    private String secondaryFurColor; // Mask / spots / saddle, depending on breed
-    private String tertiaryFurColor;  // Third tone (tri-color patches / white blaze)
+    private String secondaryFurColor; // Mask / spots / saddle
+    private String tertiaryFurColor;  // Muzzle highlight / Blaze / Tan patches
     private String earColor;
     private String noseColor;
     private String eyeBorderColor;
@@ -21,20 +21,11 @@ public class DogHeadLoader extends Loader {
     private int breedVariant = 1;
     private double A = 0;
 
-    // Golden Retriever: which side gets slightly heavier crown feathering
+    // Breed-specific dynamic parameters
     private double crownFeatherSide;
-
-    // Dalmatian: oversized, iconic "over-the-eye" spot side & randomized body spots
     private double dalmatianEyeSpotSide;
     private double[] spotX, spotY, spotZ, spotR;
-
-    // Husky: per-instance mask width so no two huskies have an identical mask edge
     private double huskyMaskWidth;
-
-    // American Foxhound: how far down the saddle patch extends
-    private double saddleDepth;
-
-    // Snout length varies by breed
     private double snoutLength;
 
     public DogHeadLoader() {
@@ -48,38 +39,37 @@ public class DogHeadLoader extends Loader {
         crownFeatherSide = Math.random() < 0.5 ? -1.0 : 1.0;
         dalmatianEyeSpotSide = Math.random() < 0.5 ? -1.0 : 1.0;
         huskyMaskWidth = 0.28 + Math.random() * 0.08;
-        saddleDepth = 0.05 + Math.random() * 0.12;
 
-        int spotCount = 14;
+        int spotCount = 18;
         spotX = new double[spotCount];
         spotY = new double[spotCount];
         spotZ = new double[spotCount];
         spotR = new double[spotCount];
         for (int i = 0; i < spotCount; i++) {
-            spotX[i] = (Math.random() * 2 - 1) * 1.10;
-            spotY[i] = (Math.random() * 2 - 1) * 0.85;
-            spotZ[i] = (Math.random() * 2 - 1) * 0.90;
-            spotR[i] = 0.10 + Math.random() * 0.07;
+            spotX[i] = (Math.random() * 2 - 1) * 0.55;
+            spotY[i] = (Math.random() * 2 - 1) * 0.45;
+            spotZ[i] = (Math.random() * 2 - 1) * 0.40;
+            spotR[i] = 0.08 + Math.random() * 0.06;
         }
 
         switch (breedVariant) {
             case 1: // --- 1. GOLDEN RETRIEVER ---
-                furColor = "\u001B[38;5;179m";          // Warm Honey Gold
-                secondaryFurColor = "\u001B[38;5;172m"; // Slightly Darker Amber (crown feathering)
-                tertiaryFurColor = "\u001B[38;5;223m";  // Pale Golden (muzzle highlight)
-                earColor = "\u001B[38;5;173m";          // Rich Caramel Floppy Ears
-                noseColor = "\u001B[38;5;232m";          // Deep Black Nose Leather
-                eyeBorderColor = "\u001B[38;5;94m";     // Warm Chestnut Brown Eyes
+                furColor = "\u001B[38;5;179m";          // Honey Gold
+                secondaryFurColor = "\u001B[38;5;172m"; // Amber Feathering
+                tertiaryFurColor = "\u001B[38;5;223m";  // Pale Muzzle
+                earColor = "\u001B[38;5;173m";          // Caramel Floppy Ears
+                noseColor = "\u001B[38;5;232m";         // Black Nose
+                eyeBorderColor = "\u001B[38;5;94m";     // Chestnut Eyes
                 eyePupilColor = "\u001B[30m";
                 whiskerColor = "\u001B[38;5;255m";
-                snoutLength = 1.28;
+                snoutLength = 1.25;
                 break;
 
             case 2: // --- 2. DALMATIAN ---
-                furColor = "\u001B[38;5;255m";          // Crisp White Base Coat
-                secondaryFurColor = "\u001B[38;5;232m"; // Ink Black Spots
+                furColor = "\u001B[38;5;255m";          // Crisp White
+                secondaryFurColor = "\u001B[38;5;232m"; // Black Spots
                 tertiaryFurColor = secondaryFurColor;
-                earColor = "\u001B[38;5;232m";          // Classic Solid Black Ear
+                earColor = "\u001B[38;5;232m";          // Black Ear
                 noseColor = "\u001B[38;5;232m";
                 eyeBorderColor = "\u001B[38;5;94m";     // Deep Brown Eyes
                 eyePupilColor = "\u001B[30m";
@@ -88,28 +78,28 @@ public class DogHeadLoader extends Loader {
                 break;
 
             case 3: // --- 3. HUSKY ---
-                furColor = "\u001B[38;5;251m";          // Cool Silver-Grey Base
-                secondaryFurColor = "\u001B[38;5;236m"; // Charcoal/Black Mask & Cap
+                furColor = "\u001B[38;5;251m";          // Silver-Grey
+                secondaryFurColor = "\u001B[38;5;236m"; // Charcoal Cap/Mask
                 tertiaryFurColor = "\u001B[38;5;255m";  // Bright White Muzzle/Cheeks
                 earColor = "\u001B[38;5;239m";          // Dark Grey Erect Ears
                 noseColor = "\u001B[38;5;232m";
-                eyeBorderColor = "\u001B[38;5;153m";    // Striking Icy Blue Eyes
+                eyeBorderColor = "\u001B[38;5;153m";    // Icy Blue Eyes
                 eyePupilColor = "\u001B[30m";
                 whiskerColor = "\u001B[38;5;255m";
-                snoutLength = 1.10;
+                snoutLength = 1.12;
                 break;
 
             case 4:
             default: // --- 4. AMERICAN FOXHOUND ---
                 furColor = "\u001B[38;5;255m";          // White Base
                 secondaryFurColor = "\u001B[38;5;232m"; // Black Saddle
-                tertiaryFurColor = "\u001B[38;5;173m";  // Tan/Brown Patches
-                earColor = "\u001B[38;5;173m";          // Tan Floppy Ears
+                tertiaryFurColor = "\u001B[38;5;173m";  // Tan Patches
+                earColor = "\u001B[38;5;173m";          // Long Tan Ears
                 noseColor = "\u001B[38;5;232m";
-                eyeBorderColor = "\u001B[38;5;130m";    // Amber-Brown Eyes
+                eyeBorderColor = "\u001B[38;5;130m";    // Amber Eyes
                 eyePupilColor = "\u001B[30m";
                 whiskerColor = "\u001B[38;5;255m";
-                snoutLength = 1.45;
+                snoutLength = 1.38;
                 break;
         }
     }
@@ -119,98 +109,139 @@ public class DogHeadLoader extends Loader {
         double cosA = Math.cos(A), sinA = Math.sin(A);
         double lightX = 0.577, lightY = -0.707, lightZ = -0.408;
 
-        // STEP 1: RENDER SCULPTED CANINE SKULL (Replaces generic spheroid)
-        for (int tIndex = 0; tIndex < 120; tIndex++) {
-            double theta = (tIndex / 120.0) * Math.PI;
-            double sinTheta = Math.sin(theta), cosTheta = Math.cos(theta);
-            for (int pIndex = 0; pIndex < 240; pIndex++) {
-                double phi = (pIndex / 240.0) * 2.0 * Math.PI;
-                double sinPhi = Math.sin(phi), cosPhi = Math.max(-1.0, Math.min(1.0, Math.cos(phi)));
+        // --- 1. CRANIUM & SKULL DOME ---
+        for (int i = 0; i <= 36; i++) {
+            double u = (double) i / 36.0;
+            double lat = -Math.PI / 2.0 + u * Math.PI;
+            double sinLat = Math.sin(lat), cosLat = Math.cos(lat);
 
-                // Base shape: slightly narrower, natural depth
-                double localX = 1.10 * sinTheta * cosPhi;
-                double localY = cosTheta;
-                double localZ = 0.95 * sinTheta * sinPhi;
+            for (int j = 0; j < 72; j++) {
+                double v = (double) j / 72.0;
+                double lon = v * 2.0 * Math.PI;
+                double cosLon = Math.cos(lon), sinLon = Math.sin(lon);
 
-                // Sculpting the skull: flatter crown, wider cheeks/jowls
-                if (localY > 0) {
-                    localX *= 1.15; // Thicker cheeks
-                    localY *= 1.05; // Slightly elongated jaw line
-                } else {
-                    localY *= 0.85; // Flatter forehead/crown
-                    localZ *= 1.05; // Longer back of skull
+                double rx = 0.52;
+                double ry = 0.42;
+                double rz = 0.50;
+
+                // Flatten crown top slightly
+                if (lat < -0.3) {
+                    ry *= 0.88;
                 }
 
-                double rNx = sinTheta * cosPhi;
-                double rNy = cosTheta;
-                double rNz = sinTheta * sinPhi;
+                double localX = rx * cosLat * cosLon;
+                double localY = -0.28 + ry * sinLat;
+                double localZ = 0.05 + rz * cosLat * sinLon;
 
-                plotProjectedPoint(localX, localY, localZ, rNx, rNy, rNz, 0, cosA, sinA, lightX, lightY, lightZ,
-                        outputBuffer, zBuffer);
+                // Brow ridge contouring above eyes
+                if (localZ < -0.20 && localY < -0.15) {
+                    localY -= 0.04 * Math.cos(lon);
+                }
+
+                plotProjectedPoint(localX, localY, localZ, cosLat * cosLon, sinLat, cosLat * sinLon,
+                        0, cosA, sinA, lightX, lightY, lightZ, outputBuffer, zBuffer);
             }
         }
 
-        // STEP 2: ROUNDED TAPERED MUZZLE (Replaces the blocky rectangular snout)
-        double actualSnoutLen = snoutLength * 0.65; // Scaled for better proportion
-        for (double sz = 0.0; sz <= actualSnoutLen; sz += 0.035) {
-            double progress = sz / actualSnoutLen;
-            double taper = 1.0 - 0.35 * progress; // Muzzle naturally narrows towards the nose
-            
-            // Creates a gentle dip/arc on the bridge of the nose
-            double bridgeArc = Math.sin(progress * Math.PI) * 0.04;
+        // --- 2. FOREHEAD STOP & UPPER MUZZLE BRIDGE ---
+        double muzzleStartZ = -0.45;
+        double muzzleLen = snoutLength * 0.68;
+
+        for (double sz = 0.0; sz <= 1.0; sz += 0.025) {
+            double z = muzzleStartZ - sz * muzzleLen;
+            double taper = 1.0 - 0.38 * sz; // Taper towards nose tip
+            double bridgeY = -0.12 + 0.08 * sz;
+            double lipY = 0.12 + 0.02 * sz;
+
+            for (double angle = 0; angle < Math.PI * 2; angle += 0.10) {
+                double cosAng = Math.cos(angle);
+                double sinAng = Math.sin(angle);
+
+                // Boxy cross-section profile
+                double lx = cosAng * 0.25 * taper;
+                double ly = (sinAng < 0)
+                        ? bridgeY + sinAng * 0.12 * taper
+                        : lipY + sinAng * 0.08 * taper;
+
+                double rNx = cosAng;
+                double rNy = sinAng;
+                double rNz = -0.35 * sz;
+
+                plotProjectedPoint(lx, ly, z, rNx, rNy, rNz, 0, cosA, sinA, lightX, lightY, lightZ, outputBuffer, zBuffer);
+            }
+        }
+
+        // --- 3. LOWER JAW / CHIN ---
+        double lowerJawLen = muzzleLen * 0.82;
+        for (double sz = 0.0; sz <= 1.0; sz += 0.03) {
+            double z = muzzleStartZ - sz * lowerJawLen;
+            double taper = 0.85 - 0.32 * sz;
+            double jawY = 0.14 + 0.04 * sz;
+
+            for (double angle = 0; angle <= Math.PI; angle += 0.15) {
+                double cosAng = Math.cos(angle - Math.PI / 2.0);
+                double sinAng = Math.sin(angle - Math.PI / 2.0);
+
+                double lx = cosAng * 0.20 * taper;
+                double ly = jawY + Math.max(0, sinAng) * 0.08 * taper;
+
+                plotProjectedPoint(lx, ly, z, cosAng, 0.8, -0.2, 0, cosA, sinA, lightX, lightY, lightZ, outputBuffer, zBuffer);
+            }
+        }
+
+        // --- 4. NOSE LEATHER CAP (Rhinarium) ---
+        double noseZ = muzzleStartZ - muzzleLen - 0.01;
+        for (double ny = -0.07; ny <= 0.07; ny += 0.012) {
+            double widthFactor = (ny < 0) ? (1.0 + ny * 3.0) : (1.0 - ny * 5.0);
+            widthFactor = Math.max(0.2, Math.min(1.1, widthFactor));
+            double noseWidth = 0.11 * widthFactor;
+
+            for (double nx = -noseWidth; nx <= noseWidth; nx += 0.012) {
+                boolean isNostril = (Math.abs(Math.abs(nx) - 0.04) < 0.02) && (ny > 0.01 && ny < 0.05);
+                if (isNostril) continue; // Indent nostrils
+
+                double nz = noseZ - Math.sqrt(Math.max(0, 0.008 - nx * nx - ny * ny));
+                plotProjectedPoint(nx, -0.04 + ny, nz, nx * 2.0, ny * 2.0, -1.0, 2, cosA, sinA, lightX, lightY, lightZ, outputBuffer, zBuffer);
+            }
+        }
+
+        // --- 5. CHEEKS & NECK ANCHOR ---
+        for (double ny = 0.10; ny <= 0.70; ny += 0.035) {
+            double progress = (ny - 0.10) / 0.60;
+            double neckRadiusX = 0.42 + 0.18 * progress;
+            double neckRadiusZ = 0.45 + 0.20 * progress;
+            double neckCenterZ = 0.10 + 0.22 * progress;
 
             for (double angle = 0; angle < Math.PI * 2; angle += 0.12) {
-                double sx = Math.cos(angle);
-                double sy = Math.sin(angle);
-                
-                double localX = sx * 0.32 * taper;
-                // Offset Y to build out upper bridge vs lower jaw
-                double localY = 0.12 + (sy > 0 ? sy * 0.28 * taper : sy * 0.20 * taper) + (sy < 0 ? bridgeArc : 0);
-                double localZ = -0.75 - sz + (sy > 0 ? 0.05 * progress : 0); // Slight underbite slant
+                double lx = Math.cos(angle) * neckRadiusX;
+                double lz = neckCenterZ + Math.sin(angle) * neckRadiusZ;
 
-                int surfaceType = 0;
-                double rNx = sx;
-                double rNy = sy;
-                double rNz = -0.3; // Slight forward normal
-
-                // Black nose leather cap right at the tip
-                if (progress > 0.92) {
-                    surfaceType = 2;
-                    localX *= 1.08; // Slightly bulbous nose
-                    localY *= 1.08;
+                if (lz > -0.20 || Math.abs(lx) > 0.22) {
+                    plotProjectedPoint(lx, ny, lz, Math.cos(angle), 0.2, Math.sin(angle), 0, cosA, sinA, lightX, lightY, lightZ, outputBuffer, zBuffer);
                 }
-
-                plotProjectedPoint(localX, localY, localZ, rNx, rNy, rNz, surfaceType, cosA, sinA, lightX,
-                        lightY, lightZ, outputBuffer, zBuffer);
             }
         }
 
-        // STEP 3: BREED-SPECIFIC EAR LAYER
+        // --- 6. EARS ---
         if (breedVariant == 3) {
             renderPointyEars(cosA, sinA, lightX, lightY, lightZ, outputBuffer, zBuffer);
         } else {
             renderFloppyEars(cosA, sinA, lightX, lightY, lightZ, outputBuffer, zBuffer);
         }
 
-        // STEP 4: PERSPECTIVE-SQUEEZED DYNAMIC EYE BILLBOARD TRACKER
-        // Adjusted anchor points to sit flush on the newly sculpted skull
-        double localEyeY = -0.22;
-        double localEyeZ = -0.80;
-        double leftLocalEyeX = -0.35;
-        double rightLocalEyeX = 0.35;
-        trackAndRenderSqueezedEye(leftLocalEyeX, localEyeY, localEyeZ, cosA, sinA, outputBuffer, zBuffer);
-        trackAndRenderSqueezedEye(rightLocalEyeX, localEyeY, localEyeZ, cosA, sinA, outputBuffer, zBuffer);
+        // --- 7. EYES & WHISKERS ---
+        double localEyeY = -0.20;
+        double localEyeZ = -0.58;
+        trackAndRenderSqueezedEye(-0.28, localEyeY, localEyeZ, cosA, sinA, outputBuffer, zBuffer);
+        trackAndRenderSqueezedEye(0.28, localEyeY, localEyeZ, cosA, sinA, outputBuffer, zBuffer);
 
-        // STEP 5: 4-WHISKER LINEAR LAYER
         for (double side : new double[] { -1.0, 1.0 }) {
-            double rootX = side * 0.14;
-            double rootY = 0.15;
-            double rootZ = -0.75 - actualSnoutLen * 0.85; // Rooted dynamically near nose tip
+            double rootX = side * 0.18;
+            double rootY = -0.02;
+            double rootZ = -0.88;
 
-            renderWhiskerLine(rootX, rootY - 0.02, rootZ, side * 1.10, -0.05, rootZ + 0.05, side, cosA, sinA,
-                    outputBuffer, zBuffer);
-            renderWhiskerLine(rootX, rootY + 0.02, rootZ, side * 1.10, 0.20, rootZ + 0.05, side, cosA, sinA,
-                    outputBuffer, zBuffer);
+            renderWhiskerLine(rootX, rootY - 0.02, rootZ, side * 0.65, rootY - 0.08, rootZ + 0.10, side, cosA, sinA, outputBuffer, zBuffer);
+            renderWhiskerLine(rootX, rootY + 0.02, rootZ, side * 0.65, rootY + 0.08, rootZ + 0.10, side, cosA, sinA, outputBuffer, zBuffer);
         }
 
         A += 0.015;
@@ -219,20 +250,25 @@ public class DogHeadLoader extends Loader {
     private void renderPointyEars(double cosA, double sinA, double lightX, double lightY, double lightZ,
             String[] outputBuffer, double[] zBuffer) {
         for (double side = -1.0; side <= 1.0; side += 2.0) {
+            double baseAnchorX = side * 0.32;
+            double baseAnchorY = -0.58;
+            double baseAnchorZ = -0.05;
+
             for (double h = 0.0; h <= 1.0; h += 0.02) {
-                for (double w = -1.0; w <= 1.0; w += 0.05) {
-                    double earBaseX = side * 0.50;
-                    double earBaseY = -0.75; // Lowered to rest on flatter crown
-                    double earBaseZ = 0.0;
-                    double currentWidthScale = 1.25 - h;
-                    double localX = earBaseX + (side * 0.28 * h) + (w * 0.20 * currentWidthScale);
-                    double localY = earBaseY - (0.55 * h);
-                    double localZ = earBaseZ + (Math.abs(w) * 0.12 * currentWidthScale);
-                    double rNx = side * 0.6;
-                    double rNy = -0.55;
-                    double rNz = 0.30;
-                    plotProjectedPoint(localX, localY, localZ, rNx, rNy, rNz, 1, cosA, sinA, lightX, lightY, lightZ,
-                            outputBuffer, zBuffer);
+                double height = h * 0.60;
+                double widthScale = (1.0 - h);
+                double tipForward = Math.pow(h, 1.8) * 0.10;
+                double tiltX = side * h * 0.14;
+
+                for (double w = -1.0; w <= 1.0; w += 0.06) {
+                    double earW = w * 0.18 * widthScale;
+                    double earDepth = (1.0 - w * w) * 0.08 * widthScale;
+
+                    double lx = baseAnchorX + tiltX + side * Math.abs(earW) * 0.6;
+                    double ly = baseAnchorY - height;
+                    double lz = baseAnchorZ - tipForward + earDepth;
+
+                    plotProjectedPoint(lx, ly, lz, side * 0.5 + w * 0.4, -0.4, -0.6, 1, cosA, sinA, lightX, lightY, lightZ, outputBuffer, zBuffer);
                 }
             }
         }
@@ -240,22 +276,28 @@ public class DogHeadLoader extends Loader {
 
     private void renderFloppyEars(double cosA, double sinA, double lightX, double lightY, double lightZ,
             String[] outputBuffer, double[] zBuffer) {
+        double earLength = (breedVariant == 4) ? 1.05 : (breedVariant == 1 ? 0.95 : 0.85);
+        double earBroadness = (breedVariant == 1) ? 0.26 : (breedVariant == 4 ? 0.24 : 0.22);
+
         for (double side = -1.0; side <= 1.0; side += 2.0) {
-            for (double h = 0.0; h <= 1.0; h += 0.03) {
-                double droop = h * h; 
-                for (double w = -1.0; w <= 1.0; w += 0.10) {
-                    double earBaseX = side * 0.88; // Tucked slightly closer to narrower head
-                    double earBaseY = -0.15;
-                    double earBaseZ = 0.0;
-                    double currentWidthScale = 1.0 - 0.35 * h;
-                    double localX = earBaseX + (side * 0.12 * h) + (w * 0.20 * currentWidthScale);
-                    double localY = earBaseY + (0.95 * h) + (0.25 * droop);
-                    double localZ = earBaseZ - (0.04 * h) + (Math.abs(w) * 0.10 * currentWidthScale);
-                    double rNx = side * 0.65;
-                    double rNy = 0.45;
-                    double rNz = 0.20;
-                    plotProjectedPoint(localX, localY, localZ, rNx, rNy, rNz, 1, cosA, sinA, lightX, lightY, lightZ,
-                            outputBuffer, zBuffer);
+            double attachX = side * 0.44;
+            double attachY = -0.42;
+            double attachZ = -0.05;
+
+            for (double h = 0.0; h <= 1.0; h += 0.02) {
+                double curLen = h * earLength;
+                double foldOut = Math.sin(h * Math.PI * 0.5) * 0.12 * side;
+                double foldForward = Math.sin(h * Math.PI) * 0.08;
+                double widthProfile = Math.sin(Math.pow(h, 0.7) * Math.PI) * earBroadness + 0.04 * (1.0 - h);
+
+                for (double w = -1.0; w <= 1.0; w += 0.08) {
+                    double earW = w * widthProfile;
+
+                    double lx = attachX + foldOut + side * Math.abs(earW) * 0.4;
+                    double ly = attachY + curLen;
+                    double lz = attachZ - foldForward + earW * 0.2;
+
+                    plotProjectedPoint(lx, ly, lz, side * 0.7, 0.2, 0.4, 1, cosA, sinA, lightX, lightY, lightZ, outputBuffer, zBuffer);
                 }
             }
         }
@@ -272,29 +314,22 @@ public class DogHeadLoader extends Loader {
             double ry = localY;
             double rz = -localX * sinA + localZ * cosA;
 
-            if (rz > 0.3)
-                continue;
+            if (rz > 0.3) continue;
 
-            double distanceToCamera = 4.0;
-            double ooz = 1.0 / (rz + distanceToCamera);
+            double ooz = 1.0 / (rz + 3.8);
 
             int xp = (int) (40 + 38 * ooz * rx * 1.85);
             int yp = (int) (14 + 19 * ooz * ry * 1.25);
 
             if (yp >= 0 && yp < 22 && xp >= 0 && xp < 80) {
                 int bufferIndex = xp + 80 * yp;
-
                 if (ooz > (zBuffer[bufferIndex] - 0.02)) {
                     zBuffer[bufferIndex] = ooz;
 
                     char whiskerChar = '-';
                     double slope = (y2 - y1) / Math.abs(x2 - x1);
-
-                    if (slope < -0.05) {
-                        whiskerChar = (side > 0) ? '/' : '\\';
-                    } else if (slope > 0.05) {
-                        whiskerChar = (side > 0) ? '\\' : '/';
-                    }
+                    if (slope < -0.05) whiskerChar = (side > 0) ? '/' : '\\';
+                    else if (slope > 0.05) whiskerChar = (side > 0) ? '\\' : '/';
 
                     outputBuffer[bufferIndex] = whiskerColor + whiskerChar + RESET;
                 }
@@ -310,15 +345,14 @@ public class DogHeadLoader extends Loader {
 
         if (rz > 0.0) return;
 
-        double distanceToCamera = 4.0;
-        double ooz = 1.0 / (rz + distanceToCamera);
-        double eyeOozBias = ooz + 0.0125;
+        double ooz = 1.0 / (rz + 3.8);
+        double eyeOozBias = ooz + 0.015;
 
         int cx = (int) (40 + 38 * ooz * rx * 1.85);
         int cy = (int) (14 + 19 * ooz * ry * 1.25);
 
         double surfaceNormalZ = (lx > 0) ? -cosA : cosA;
-        double horizontalSqueeze = Math.max(0.20, Math.abs(surfaceNormalZ));
+        double horizontalSqueeze = Math.max(0.18, Math.abs(surfaceNormalZ));
 
         for (int dy = -2; dy <= 2; dy++) {
             int maxDX = (int) (4 * horizontalSqueeze);
@@ -375,8 +409,10 @@ public class DogHeadLoader extends Loader {
             ny /= nMag;
             nz /= nMag;
         }
-        double distanceToCamera = 4.0;
+
+        double distanceToCamera = 3.8;
         double ooz = 1.0 / (rz + distanceToCamera);
+
         int xp = (int) (40 + 38 * ooz * rx * 1.85);
         int yp = (int) (14 + 19 * ooz * ry * 1.25);
 
@@ -384,6 +420,7 @@ public class DogHeadLoader extends Loader {
             int bufferIndex = xp + 80 * yp;
             if (ooz > (zBuffer[bufferIndex] + 0.0001)) {
                 zBuffer[bufferIndex] = ooz;
+
                 double luminance = nx * lightX + ny * lightY + nz * lightZ;
                 int shadeIndex = (int) ((luminance + 1.0) * 5.5);
                 shadeIndex = Math.max(0, Math.min(SHADE_RAMP.length - 1, shadeIndex));
@@ -404,72 +441,43 @@ public class DogHeadLoader extends Loader {
     }
 
     private String resolveBreedMarking(double localX, double localY, double localZ, String baseColor) {
-        if (breedVariant == 1) {
-            // GOLDEN RETRIEVER: Added pale highlight around the lower muzzle for depth
-            boolean muzzleHighlight = localZ < -0.7 && localY > 0.05;
-            if (muzzleHighlight) {
-                return tertiaryFurColor;
-            }
-            boolean crownFeather = (localX * crownFeatherSide > 0.15) && localY < -0.45 && localZ > -0.10;
-            if (crownFeather) {
-                return secondaryFurColor;
-            }
+        if (breedVariant == 1) { // Golden Retriever
+            if (localZ < -0.55 && localY > -0.10) return tertiaryFurColor; // Pale muzzle
+            if ((localX * crownFeatherSide > 0.15) && localY < -0.40 && localZ > -0.10) return secondaryFurColor;
             return baseColor;
         }
 
-        if (breedVariant == 2) {
-            // DALMATIAN: Maintained classic single eye-drape spot & random scatter
-            double eyeSpotX = dalmatianEyeSpotSide * 0.38;
-            double dex = localX - eyeSpotX;
-            double dey = localY - (-0.30);
-            double dez = localZ - (-0.65);
-            double eyeSpotDist = (dex * dex * 1.3) + (dey * dey * 1.7) + (dez * dez * 1.1);
-            if (eyeSpotDist < 0.065) {
-                return secondaryFurColor;
-            }
+        if (breedVariant == 2) { // Dalmatian
+            double eyeSpotX = dalmatianEyeSpotSide * 0.28;
+            double dex = localX - eyeSpotX, dey = localY - (-0.20), dez = localZ - (-0.55);
+            if ((dex * dex * 1.3) + (dey * dey * 1.7) + (dez * dez * 1.1) < 0.05) return secondaryFurColor;
 
             for (int i = 0; i < spotX.length; i++) {
-                double ddx = localX - spotX[i];
-                double ddy = localY - spotY[i];
-                double ddz = localZ - spotZ[i];
-                double distSq = ddx * ddx + ddy * ddy + ddz * ddz;
-                if (distSq < spotR[i] * spotR[i]) {
-                    return secondaryFurColor;
-                }
+                double ddx = localX - spotX[i], ddy = localY - spotY[i], ddz = localZ - spotZ[i];
+                if (ddx * ddx + ddy * ddy + ddz * ddz < spotR[i] * spotR[i]) return secondaryFurColor;
             }
             return baseColor;
         }
 
-        if (breedVariant == 3) {
-            // HUSKY: Overhauled to produce a classic "widow's peak" and eye spectacles
-            boolean onMuzzleBridge = localZ < -0.45 && Math.abs(localX) < 0.22;
-            boolean onLowerCheek = localY > 0.10 && localZ < 0.0;
-            boolean eyeBrowDots = localY < -0.30 && localY > -0.40 && Math.abs(Math.abs(localX) - 0.22) < 0.06 && localZ < -0.65;
-            
-            if (onMuzzleBridge || onLowerCheek || eyeBrowDots) {
-                return tertiaryFurColor; // bright white
-            }
+        if (breedVariant == 3) { // Husky
+            // White muzzle/cheeks and eyebrow dots
+            boolean onMuzzle = localZ < -0.35 && localY > -0.12 && Math.abs(localX) < 0.24;
+            boolean eyebrowDots = localY < -0.24 && localY > -0.36 && Math.abs(Math.abs(localX) - 0.20) < 0.07 && localZ < -0.40;
+            if (onMuzzle || eyebrowDots) return tertiaryFurColor;
 
-            // Cap and mask extending organically down the snout sides
-            double maskEdge = huskyMaskWidth + 0.2 * Math.sin(Math.max(0, localY) * 3.14);
-            boolean onMask = localY < 0.05 && Math.abs(localX) < maskEdge && localZ < -0.2;
-            if (onMask) {
-                return secondaryFurColor; // dark mask/cap
-            }
-            return baseColor; // grey sides
+            // Dark widow's peak cap/mask
+            double maskEdge = huskyMaskWidth + 0.12 * Math.sin(localY * 4.0);
+            if (localY < -0.05 && Math.abs(localX) < maskEdge && localZ < -0.15) return secondaryFurColor;
+            return baseColor;
         }
 
-        // AMERICAN FOXHOUND: Improved saddle flow and distinct tan cheek patches
-        boolean saddle = localY < (-0.05 - saddleDepth) && localZ > -0.10;
-        if (saddle) {
-            return secondaryFurColor; // black
-        }
+        // American Foxhound
+        boolean saddle = localY < 0.10 && localZ > -0.10;
+        if (saddle) return secondaryFurColor; // Black saddle
 
-        boolean tanPatch = Math.abs(localX) > 0.30 && localY < 0.20 && localZ < 0.15;
-        if (tanPatch) {
-            return tertiaryFurColor; // tan
-        }
+        boolean tanPatch = Math.abs(localX) > 0.22 && localY < 0.25;
+        if (tanPatch) return tertiaryFurColor; // Tan cheek/ear transition
 
-        return baseColor; // white
+        return baseColor;
     }
 }

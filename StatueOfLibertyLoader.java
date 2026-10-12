@@ -1,10 +1,8 @@
-// TODO: Improve this very basic geometry.  Are the arms the right way?
-
 public class StatueOfLibertyLoader extends Loader {
     private static final StatusStage[] LIBERTY_STAGES = {
             new StatusStage(25, "Laying the star-shaped Fort Wood pedestal:"),
             new StatusStage(50, "Assembling the internal iron pylon framework:"),
-            new StatusStage(75, "Attaching flat-shaded copper repoussé skin:"),
+            new StatusStage(75, "Applying smooth-shaded copper normals:"),
             new StatusStage(100, "Lighting the low-poly golden torch!")
     };
 
@@ -48,12 +46,9 @@ public class StatueOfLibertyLoader extends Loader {
     protected void renderGeometry(String[] outputBuffer, double[] zBuffer) {
         rotationY += 0.02;
 
-        // Cinematic zoom & pan adapted for the much taller, slender model
         double zoomCycle = Math.pow(Math.sin((rotationY + Math.PI) * 0.5), 2.0); 
-        // Camera starts much further back (19.0) to fit the whole height
         double effectiveDistance = 6.0 - (zoomCycle * 4.0); 
-        // Camera pans much higher up the Y-axis to reach the new head position
-        double focusY = zoomCycle * 1.2 + 0.8;                     
+        double focusY = zoomCycle * 1.0 + 1.0;                     
 
         double tiltX = -0.15; 
         double cosX = Math.cos(tiltX);
@@ -74,62 +69,69 @@ public class StatueOfLibertyLoader extends Loader {
             }
         }
 
-        // --- BUILD THE PROPORTIONALLY ACCURATE LOW POLY MESH ---
+        // --- PROPORTIONALLY ACCURATE LOW POLY MESH ---
         
-        // 1. Pedestal (Taller and narrower. Height matches the real 1:1 statue/pedestal ratio)
-        drawPrism(new Vec3(0, -4.5, 0), new Vec3(0, -1.5, 0), 1.0, 0.6, 8, STONE_BASE, STONE_SHD, false, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
+        // 1. Pedestal (Flat Shaded for stone blocks)
+        drawPrism(new Vec3(0, -4.5, 0), new Vec3(0, -3.5, 0), 1.2, 1.0, 8, STONE_BASE, STONE_SHD, false, false, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
+        drawPrism(new Vec3(0, -3.5, 0), new Vec3(0, -1.5, 0), 0.8, 0.6, 8, STONE_BASE, STONE_SHD, false, false, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
 
-        // 2. Body / Robes (Drastically slimmed down radii and stretched Y coordinates)
-        drawPrism(new Vec3(0, -1.5, 0), new Vec3(0, 0.5, 0), 0.55, 0.4, 7, COPPER_BASE, COPPER_SHD, false, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
-        drawPrism(new Vec3(0, 0.5, 0), new Vec3(0, 2.0, 0), 0.4, 0.28, 7, COPPER_BASE, COPPER_SHD, false, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
+        // 2. Body / Robes (Fixed: Tapered columnar drape. Constantly decreasing radius to avoid bulges)
+        drawPrism(new Vec3(0, -1.5, 0.05), new Vec3(0, -0.3, 0.0), 0.65, 0.55, 9, COPPER_BASE, COPPER_SHD, false, true, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
+        drawPrism(new Vec3(0, -0.3, 0.0), new Vec3(0, 0.8, -0.05), 0.55, 0.45, 9, COPPER_BASE, COPPER_SHD, false, true, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
+        drawPrism(new Vec3(0, 0.8, -0.05), new Vec3(0, 1.5, -0.05), 0.45, 0.38, 9, COPPER_BASE, COPPER_SHD, false, true, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
+        drawPrism(new Vec3(0, 1.5, -0.05), new Vec3(0, 1.8, -0.05), 0.38, 0.30, 9, COPPER_BASE, COPPER_SHD, false, true, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
 
-        // 3. Head & Neck (Miniaturized to realistic human proportions)
-        drawPrism(new Vec3(0, 2.0, 0), new Vec3(0, 2.15, 0), 0.1, 0.1, 5, COPPER_BASE, COPPER_SHD, false, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
-        drawPrism(new Vec3(0, 2.15, 0), new Vec3(0, 2.5, 0), 0.15, 0.16, 6, COPPER_BASE, COPPER_SHD, false, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
+        // 3. Head & Neck
+        drawPrism(new Vec3(0, 1.8, -0.05), new Vec3(0, 2.0, -0.05), 0.12, 0.12, 5, COPPER_BASE, COPPER_SHD, false, true, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
+        drawPrism(new Vec3(0, 2.0, -0.05), new Vec3(0, 2.4, -0.05), 0.18, 0.20, 6, COPPER_BASE, COPPER_SHD, false, true, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
 
-        // 4. Right Arm (Raised higher, stretching up to y=2.8)
-        Vec3 rShoulder = new Vec3(0.3, 1.8, 0);
-        Vec3 rElbow = new Vec3(0.5, 2.2, 0.1);
-        Vec3 rWrist = new Vec3(0.5, 2.8, 0.0);
-        drawPrism(rShoulder, rElbow, 0.12, 0.09, 4, COPPER_BASE, COPPER_SHD, false, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
-        drawPrism(rElbow, rWrist, 0.09, 0.07, 4, COPPER_BASE, COPPER_SHD, false, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
+        // 4. RIGHT Arm 
+        Vec3 rShoulder = new Vec3(-0.35, 1.5, -0.05);
+        Vec3 rElbow = new Vec3(-0.6, 1.9, -0.15);
+        Vec3 rWrist = new Vec3(-0.55, 2.7, -0.1);
+        drawPrism(rShoulder, rElbow, 0.12, 0.09, 4, COPPER_BASE, COPPER_SHD, false, true, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
+        drawPrism(rElbow, rWrist, 0.09, 0.07, 4, COPPER_BASE, COPPER_SHD, false, true, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
 
-        // 5. Torch Handle & Emissive Low-Poly Flame (Shifted up to sit in the new higher hand)
-        Vec3 torchBase = new Vec3(0.5, 2.8, 0.0);
-        Vec3 torchMid = new Vec3(0.5, 2.95, 0.0);
-        Vec3 flameMid = new Vec3(0.5, 3.15, 0.0);
-        Vec3 flameTop = new Vec3(0.5, 3.4, 0.0);
+        // 5. Torch Assembly 
+        Vec3 torchBase = new Vec3(-0.55, 2.7, -0.1);
+        Vec3 torchMid = new Vec3(-0.55, 2.85, -0.1);
+        Vec3 balcony = new Vec3(-0.55, 2.9, -0.1);
+        Vec3 flameMid = new Vec3(-0.55, 3.1, -0.1);
+        Vec3 flameTop = new Vec3(-0.55, 3.4, -0.1);
         
-        drawPrism(torchBase, torchMid, 0.05, 0.12, 5, COPPER_BASE, COPPER_SHD, false, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
-        drawPrism(torchMid, flameMid, 0.10, 0.20, 4, FLAME_GLOW, FLAME_GLOW, true, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
-        drawPrism(flameMid, flameTop, 0.20, 0.0, 4, FLAME_GLOW, FLAME_GLOW, true, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
+        drawPrism(torchBase, torchMid, 0.04, 0.08, 5, COPPER_BASE, COPPER_SHD, false, true, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
+        drawPrism(torchMid, balcony, 0.15, 0.15, 6, COPPER_BASE, COPPER_SHD, false, true, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
+        drawPrism(balcony, flameMid, 0.1, 0.18, 5, FLAME_GLOW, FLAME_GLOW, true, false, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
+        drawPrism(flameMid, flameTop, 0.18, 0.0, 4, FLAME_GLOW, FLAME_GLOW, true, false, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
 
-        // 6. Left Arm (Holding Tablet down at waist level)
-        Vec3 lShoulder = new Vec3(-0.3, 1.8, 0);
-        Vec3 lWrist = new Vec3(-0.4, 1.2, 0.2);
-        drawPrism(lShoulder, lWrist, 0.12, 0.10, 4, COPPER_BASE, COPPER_SHD, false, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
+        // 6. LEFT Arm (Fixed: Added an elbow so she curls her arm to hold the tablet)
+        Vec3 lShoulder = new Vec3(0.3, 1.6, -0.05);
+        Vec3 lElbow = new Vec3(0.45, 1.2, 0.0);
+        Vec3 lWrist = new Vec3(0.38, 0.75, -0.12); 
+        drawPrism(lShoulder, lElbow, 0.12, 0.10, 4, COPPER_BASE, COPPER_SHD, false, true, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
+        drawPrism(lElbow, lWrist, 0.10, 0.08, 4, COPPER_BASE, COPPER_SHD, false, true, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
 
-        // 7. Tabula Ansata (The Tablet Quad - repositioned closer to the slimmer body)
-        Vec3 t1 = new Vec3(-0.6, 0.8, 0.2);
-        Vec3 t2 = new Vec3(-0.25, 0.8, 0.35);
-        Vec3 t3 = new Vec3(-0.25, 1.6, 0.35);
-        Vec3 t4 = new Vec3(-0.6, 1.6, 0.2);
+        // 7. Tabula Ansata (Fixed: Coordinates now align perfectly with the wrist so she cradles it)
+        Vec3 t1 = new Vec3(0.2, 0.7, -0.15);  
+        Vec3 t2 = new Vec3(0.55, 0.75, -0.15); 
+        Vec3 t3 = new Vec3(0.55, 1.5, -0.2); 
+        Vec3 t4 = new Vec3(0.2, 1.45, -0.2);  
         drawQuad(t1, t2, t3, t4, COPPER_BASE, COPPER_SHD, false, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
 
-        // 8. The 7-Point Crown (Scaled down and shifted up)
+        // 8. The 7-Point Crown
         for(int i = 0; i < 7; i++) {
-            double angle = Math.PI * 1.15 + i * (Math.PI * 0.7 / 6.0); 
-            Vec3 root1 = new Vec3(Math.cos(angle - 0.1) * 0.17, 2.4, Math.sin(angle - 0.1) * 0.17);
-            Vec3 root2 = new Vec3(Math.cos(angle + 0.1) * 0.17, 2.4, Math.sin(angle + 0.1) * 0.17);
-            Vec3 tip = new Vec3(Math.cos(angle) * 0.35, 2.55, Math.sin(angle) * 0.35);
-            drawTriangle(root1, root2, tip, COPPER_BASE, COPPER_SHD, false, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
+            double angle = Math.PI + (i + 1) * (Math.PI / 8.0); 
+            Vec3 root1 = new Vec3(Math.cos(angle - 0.08) * 0.18, 2.3, Math.sin(angle - 0.08) * 0.18 - 0.05);
+            Vec3 root2 = new Vec3(Math.cos(angle + 0.08) * 0.18, 2.3, Math.sin(angle + 0.08) * 0.18 - 0.05);
+            Vec3 tip = new Vec3(Math.cos(angle) * 0.4, 2.6, Math.sin(angle) * 0.4 - 0.05);
+            drawTriangle(root1, root2, tip, null, null, null, COPPER_BASE, COPPER_SHD, false, false, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
         }
     }
 
     // --- PROCEDURAL GEOMETRY BUILDERS ---
     
     private void drawPrism(Vec3 start, Vec3 end, double rStart, double rEnd, int sides, 
-                           int[] baseCol, int[] shdCol, boolean isEmissive, 
+                           int[] baseCol, int[] shdCol, boolean isEmissive, boolean smoothShade,
                            double cosX, double sinX, double cosY, double sinY, 
                            double effectiveDistance, double focusY, String[] outputBuffer, double[] zBuffer) {
         Vec3 dir = end.sub(start).normalize();
@@ -139,6 +141,7 @@ public class StatueOfLibertyLoader extends Loader {
         
         Vec3[] basePts = new Vec3[sides];
         Vec3[] topPts = new Vec3[sides];
+        Vec3[] normals = new Vec3[sides];
         
         for (int i = 0; i < sides; i++) {
             double angle = i * 2 * Math.PI / sides;
@@ -152,39 +155,66 @@ public class StatueOfLibertyLoader extends Loader {
             topPts[i] = new Vec3(end.x + right.x * cx * rEnd + up.x * cy * rEnd,
                                  end.y + right.y * cx * rEnd + up.y * cy * rEnd,
                                  end.z + right.z * cx * rEnd + up.z * cy * rEnd);
+            
+            normals[i] = new Vec3(right.x * cx + up.x * cy, 
+                                  right.y * cx + up.y * cy, 
+                                  right.z * cx + up.z * cy).normalize();
         }
         
         for (int i = 0; i < sides; i++) {
             int next = (i + 1) % sides;
-            drawQuad(basePts[i], basePts[next], topPts[next], topPts[i], baseCol, shdCol, isEmissive, 
+            drawQuad(basePts[i], basePts[next], topPts[next], topPts[i], 
+                     normals[i], normals[next], normals[next], normals[i], 
+                     baseCol, shdCol, isEmissive, smoothShade,
                      cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
         }
     }
 
-    // Fixed Vec4 typo here in the signature
     private void drawQuad(Vec3 v1, Vec3 v2, Vec3 v3, Vec3 v4, int[] baseCol, int[] shdCol, boolean isEmissive, 
                           double cosX, double sinX, double cosY, double sinY, double effectiveDistance, double focusY, String[] outputBuffer, double[] zBuffer) {
-        drawTriangle(v1, v2, v3, baseCol, shdCol, isEmissive, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
-        drawTriangle(v1, v3, v4, baseCol, shdCol, isEmissive, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
+        drawTriangle(v1, v2, v3, null, null, null, baseCol, shdCol, isEmissive, false, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
+        drawTriangle(v1, v3, v4, null, null, null, baseCol, shdCol, isEmissive, false, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
     }
 
-    // --- BARYCENTRIC RASTERIZER (The core of the Low Poly look) ---
-    private void drawTriangle(Vec3 v1, Vec3 v2, Vec3 v3, int[] baseCol, int[] shdCol, boolean isEmissive, 
+    private void drawQuad(Vec3 v1, Vec3 v2, Vec3 v3, Vec3 v4, Vec3 n1, Vec3 n2, Vec3 n3, Vec3 n4, 
+                          int[] baseCol, int[] shdCol, boolean isEmissive, boolean smoothShade,
+                          double cosX, double sinX, double cosY, double sinY, double effectiveDistance, double focusY, String[] outputBuffer, double[] zBuffer) {
+        drawTriangle(v1, v2, v3, n1, n2, n3, baseCol, shdCol, isEmissive, smoothShade, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
+        drawTriangle(v1, v3, v4, n1, n3, n4, baseCol, shdCol, isEmissive, smoothShade, cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
+    }
+
+    // --- BARYCENTRIC RASTERIZER WITH PHONG INTERPOLATION ---
+    private void drawTriangle(Vec3 v1, Vec3 v2, Vec3 v3, Vec3 n1, Vec3 n2, Vec3 n3, 
+                              int[] baseCol, int[] shdCol, boolean isEmissive, boolean smoothShade,
                               double cosX, double sinX, double cosY, double sinY, double effectiveDistance, double focusY, String[] outputBuffer, double[] zBuffer) {
         
-        Vec3 edge1 = v2.sub(v1);
-        Vec3 edge2 = v3.sub(v1);
-        Vec3 normal = edge1.cross(edge2).normalize();
+        Vec3 flatNormal = null;
+        if (!smoothShade) {
+            Vec3 edge1 = v2.sub(v1);
+            Vec3 edge2 = v3.sub(v1);
+            flatNormal = edge1.cross(edge2).normalize();
+        }
 
         double step = 0.025; 
         for (double u = 0; u <= 1.0; u += step) {
             for (double v = 0; v <= 1.0 - u; v += step) {
                 double w = 1.0 - u - v;
+                
                 double px = u * v1.x + v * v2.x + w * v3.x;
                 double py = u * v1.y + v * v2.y + w * v3.y;
                 double pz = u * v1.z + v * v2.z + w * v3.z;
                 
-                renderProjectedPoint(px, py, pz, normal, baseCol, shdCol, isEmissive, 
+                Vec3 pixelNormal;
+                if (smoothShade) {
+                    double nx = u * n1.x + v * n2.x + w * n3.x;
+                    double ny = u * n1.y + v * n2.y + w * n3.y;
+                    double nz = u * n1.z + v * n2.z + w * n3.z;
+                    pixelNormal = new Vec3(nx, ny, nz).normalize();
+                } else {
+                    pixelNormal = flatNormal;
+                }
+                
+                renderProjectedPoint(px, py, pz, pixelNormal, baseCol, shdCol, isEmissive, 
                                      cosX, sinX, cosY, sinY, effectiveDistance, focusY, outputBuffer, zBuffer);
             }
         }
